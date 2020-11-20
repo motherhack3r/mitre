@@ -2,13 +2,13 @@
 % Please edit documentation in R/shield.R
 \name{getShieldRelations}
 \alias{getShieldRelations}
-\title{Title}
+\title{MITRE Shield objects relations data frame}
 \usage{
 getShieldRelations()
 }
 \value{
-
+data.frame
 }
 \description{
-Title
+MITRE Shield objects relations data frame
 }

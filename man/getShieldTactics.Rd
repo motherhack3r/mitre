@@ -2,13 +2,13 @@
 % Please edit documentation in R/shield.R
 \name{getShieldTactics}
 \alias{getShieldTactics}
-\title{Title}
+\title{MITRE Shield Tactics data frame}
 \usage{
 getShieldTactics()
 }
 \value{
-
+data.frame
 }
 \description{
-Title
+MITRE Shield Tactics data frame
 }

@@ -1,9 +1,7 @@
-#' Title
+#' MITRE Shield Tactics data frame
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldTactics <- function() {
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
   tactics <- jsonlite::fromJSON(tactics_url)
@@ -11,12 +9,10 @@ getShieldTactics <- function() {
   return(tactics)
 }
 
-#' Title
+#' MITRE Shield Techniques data frame
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldTechniques <- function() {
   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
   tech <- jsonlite::fromJSON(tech_url)
@@ -24,12 +20,10 @@ getShieldTechniques <- function() {
   return(tech)
 }
 
-#' Title
+#' MITRE Shield Opportunities data frame
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldOpportunities <- function() {
   opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
   opport <- jsonlite::fromJSON(opport_url)
@@ -37,12 +31,10 @@ getShieldOpportunities <- function() {
   return(opport)
 }
 
-#' Title
+#' MITRE Shield Procedures data frame
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldProcedures <- function() {
   proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
   proced <- jsonlite::fromJSON(proced_url)
@@ -50,12 +42,10 @@ getShieldProcedures <- function() {
   return(proced)
 }
 
-#' Title
+#' MITRE Shield Use Cases data frame
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldUseCases <- function() {
   usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
   usecase <- jsonlite::fromJSON(usecase_url)
@@ -64,11 +54,9 @@ getShieldUseCases <- function() {
   return(usecase)
 }
 
-#' Title
+#' MITRE Shield Tactics detailed data frame
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 getShieldTactictDetail <- function() {
   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
   tact_det <- jsonlite::fromJSON(tact_det_url)
@@ -78,11 +66,9 @@ getShieldTactictDetail <- function() {
   return(tact_det)
 }
 
-#' Title
+#' MITRE Shield Techniques detailed data frame
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 getShieldTechniquesDetail <- function() {
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   tech_det <- jsonlite::fromJSON(tech_det_url)
@@ -90,29 +76,27 @@ getShieldTechniquesDetail <- function() {
   return(tech_det)
 }
 
-#' Title
+#' MITRE Shield objects relations data frame
 #'
-#' @return
-#'
-#' @examples
+#' @return data.frame
 getShieldRelations <- function() {
   tact_det <- getShieldTactictDetail()
   tech_det <- getShieldTechniquesDetail()
 
   ## SHIELD RELATIONS
-  suppressPackageStartupMessages(library(dplyr))
   relations <- data.frame(from = character(0),
                           to = character(0),
                           team = character(0),
                           stringsAsFactors = FALSE)
 
   ## Shield Tactic --> Shield Technique
-  # df <- tact_det[, c("tact_id", "tech_id")]
-  df <- tact_det %>%
-    select(tact_id, tech_id) %>%
-    rename(from = tact_id, to = tech_id)
+  df <- tact_det[, c("tact_id", "tech_id")]
+  df$from <- df$tact_id
+  df$to <- df$tech_id
+  df$tact_id <- NULL
+  df$tech_id <- NULL
   df$team <- rep("BLUE", nrow(df))
-  relations <- bind_rows(relations, df)
+  relations <- dplyr::bind_rows(relations, df)
 
   ## Shield Technique --> ATT&CK Tactic
   df <- plyr::ldply(tech_det,
@@ -121,8 +105,9 @@ getShieldRelations <- function() {
                       d$team = rep("BLUE", nrow(d))
                       d
                     })
-  df <- df %>% rename(from = .id)
-  relations <- bind_rows(relations, df)
+  df$from <- df$.id
+  df$.id <- NULL
+  relations <- dplyr::bind_rows(relations, df)
 
   ## Shield Technique --> ATT&CK Techniques
   df <- plyr::ldply(tech_det,
@@ -131,8 +116,9 @@ getShieldRelations <- function() {
                       d$team = rep("BLUE", nrow(d))
                       d
                     })
-  df <- df %>% rename(from = .id)
-  relations <- bind_rows(relations, df)
+  df$from <- df$.id
+  df$.id <- NULL
+  relations <- dplyr::bind_rows(relations, df)
 
   ## Shield Technique --> Use Cases
   df <- plyr::ldply(tech_det,
@@ -141,8 +127,9 @@ getShieldRelations <- function() {
                       d$team = rep("BLUE", nrow(d))
                       d
                     })
-  df <- df %>% rename(from = .id)
-  relations <- bind_rows(relations, df)
+  df$from <- df$.id
+  df$.id <- NULL
+  relations <- dplyr::bind_rows(relations, df)
 
   ## Shield Technique --> Opportunities
   df <- plyr::ldply(tech_det,
@@ -151,8 +138,9 @@ getShieldRelations <- function() {
                       d$team = rep("BLUE", nrow(d))
                       d
                     })
-  df <- df %>% rename(from = .id)
-  relations <- bind_rows(relations, df)
+  df$from <- df$.id
+  df$.id <- NULL
+  relations <- dplyr::bind_rows(relations, df)
 
   ## Shield Technique --> Procedures
   df <- plyr::ldply(tech_det,
@@ -161,21 +149,20 @@ getShieldRelations <- function() {
                       d$team = rep("BLUE", nrow(d))
                       d
                     })
-  df <- df %>% rename(from = .id)
-  relations <- bind_rows(relations, df)
+  df$from <- df$.id
+  df$.id <- NULL
+  relations <- dplyr::bind_rows(relations, df)
 
   return(relations)
 }
 
-#' Title
+#' MITRE Shield as visNetwork
 #'
-#' @return
+#' @return data.frame
 #' @export
-#'
-#' @examples
 getShieldNetwork <- function() {
   # MITRE Shield Network as igraph
-  relations <- mitre::getShieldRelations()
+  relations <- getShieldRelations()
 
   ## NODES
   # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
@@ -190,7 +177,7 @@ getShieldNetwork <- function() {
   shield_nodes <- nodes
 
   ### Tactics nodes
-  df <- mitre::getShieldTactics()
+  df <- getShieldTactics()
   df$label <- df$id
   df$group <- rep("tactic", nrow(df))
   df$value <- rep(5, nrow(df))
@@ -204,7 +191,7 @@ getShieldNetwork <- function() {
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Techniques nodes
-  df <- mitre::getShieldTechniques()
+  df <- getShieldTechniques()
   df$label <- df$id
   df$group <- rep("technique", nrow(df))
   df$value <- rep(4, nrow(df))
@@ -218,7 +205,7 @@ getShieldNetwork <- function() {
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Opportunities nodes
-  df <- mitre::getShieldOpportunities()
+  df <- getShieldOpportunities()
   df$label <- df$id
   df$group <- rep("opportunity", nrow(df))
   df$value <- rep(2, nrow(df))
@@ -230,7 +217,7 @@ getShieldNetwork <- function() {
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Procedures nodes
-  df <- mitre::getShieldProcedures()
+  df <- getShieldProcedures()
   df$label <- df$id
   df$group <- rep("procedure", nrow(df))
   df$value <- rep(4, nrow(df))
@@ -242,7 +229,7 @@ getShieldNetwork <- function() {
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Use Cases nodes
-  df <- mitre::getShieldUseCases()
+  df <- getShieldUseCases()
   df$label <- df$id
   df$group <- rep("usecase", nrow(df))
   df$value <- rep(4, nrow(df))

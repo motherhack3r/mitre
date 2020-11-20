@@ -2,13 +2,13 @@
 % Please edit documentation in R/shield.R
 \name{getShieldNetwork}
 \alias{getShieldNetwork}
-\title{Title}
+\title{MITRE Shield as visNetwork}
 \usage{
 getShieldNetwork()
 }
 \value{
-
+data.frame
 }
 \description{
-Title
+MITRE Shield as visNetwork
 }

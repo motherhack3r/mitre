@@ -2,13 +2,13 @@
 % Please edit documentation in R/shield.R
 \name{getShieldUseCases}
 \alias{getShieldUseCases}
-\title{Title}
+\title{MITRE Shield Use Cases data frame}
 \usage{
 getShieldUseCases()
 }
 \value{
-
+data.frame
 }
 \description{
-Title
+MITRE Shield Use Cases data frame
 }
