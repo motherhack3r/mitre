@@ -1,6 +1,6 @@
 Package: mitre
-Type: MITRE Standards as data frames and digraphs.
-Title: What the Package Does (Title Case)
+Type: Package
+Title: MITRE Standards Data And Digraphs
 Version: 0.1.0.9000
 Author: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
@@ -21,3 +21,7 @@ Imports:
     jsonlite,
     curl
 RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
