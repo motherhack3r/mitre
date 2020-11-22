@@ -10,8 +10,8 @@ Description: MITRE package gives you an approach to cybersecurity data sets.
     This version includes Shield framework. Soon to be included CAR, ATT&CK, 
     CAPEC, CWE, CPE and CVE.
 License: CC0
-URL: https://github.com/humbertcostas/mitre
-BugReports: https://github.com/humbertcostas/mitre/issues
+URL: https://github.com/motherhack3r/mitre
+BugReports: https://github.com/motherhack3r/mitre/issues
 Encoding: UTF-8
 LazyData: true
 Imports: 
