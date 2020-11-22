@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Travis build
-status](https://travis-ci.org/motherhack3r/mitre.svg?branch=master)](https://travis-ci.org/motherhack3r/mitre)
+status](https://travis-ci.org/motherhack3r/mitre.svg?branch=devel)](https://travis-ci.org/motherhack3r/mitre)
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data
