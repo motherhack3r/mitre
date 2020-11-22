@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 [![Travis build status](https://travis-ci.org/motherhack3r/mitre.svg?branch=devel)](https://travis-ci.org/motherhack3r/mitre)
 <!-- badges: end -->
 
-mitre package is designed to provide easy access to cybersecurity data starndards.
+mitre package is designed to provide easy access to cybersecurity data standards.
 You can expect functions to get data frames for every standard object.
 For deep exploratory, it provide visNetwork objects for graph and relationship
 analysis.

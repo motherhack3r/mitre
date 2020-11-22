@@ -1,14 +1,14 @@
 Package: mitre
 Type: Package
-Title: MITRE Standards Data And Digraphs
+Title: MITRE Standards Data and Digraphs
 Version: 0.1.1
-Author: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
+Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
-Description: MITRE package gives you an approach to cybersecurity data sets.
+Description: Extract, transform and load MITRE standards.
+    This package gives you an approach to cybersecurity data sets.
     All data sets are build on runtime downloading raw data from MITRE public services.
-    This version includes Shield framework. Soon to be included CAR, ATT&CK, 
-    CAPEC, CWE, CPE and CVE.
+    This version includes Shield framework. Soon to be included other standards.
 License: CC0
 URL: https://github.com/motherhack3r/mitre
 BugReports: https://github.com/motherhack3r/mitre/issues
