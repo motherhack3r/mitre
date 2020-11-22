@@ -7,8 +7,14 @@
 getShieldNetwork()
 }
 \value{
-data.frame
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+  It returns a visNetwork object ready for analyze and plot.
 }
 \description{
 MITRE Shield as visNetwork
+}
+\examples{
+\dontrun{
+shieldnetwork <- getShieldNetwork()
+}
 }

@@ -7,8 +7,14 @@
 getShieldOpportunities()
 }
 \value{
-data.frame
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+  The data frame columns are: id, description.
 }
 \description{
 MITRE Shield Opportunities data frame
+}
+\examples{
+\dontrun{
+opportunities <- getShieldOpportunities()
+}
 }

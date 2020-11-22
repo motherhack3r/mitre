@@ -1,6 +1,7 @@
 #' MITRE Shield Tactics data frame
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
 #' \dontrun{
@@ -15,7 +16,8 @@ getShieldTactics <- function() {
 
 #' MITRE Shield Techniques data frame
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
 #' \dontrun{
@@ -30,7 +32,8 @@ getShieldTechniques <- function() {
 
 #' MITRE Shield Opportunities data frame
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   The data frame columns are: id, description.
 #' @export
 #' @examples
 #' \dontrun{
@@ -45,7 +48,8 @@ getShieldOpportunities <- function() {
 
 #' MITRE Shield Procedures data frame
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   The data frame columns are: id, description.
 #' @export
 #' @examples
 #' \dontrun{
@@ -60,7 +64,8 @@ getShieldProcedures <- function() {
 
 #' MITRE Shield Use Cases data frame
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   The data frame columns are: id, description.
 #' @export
 #' @examples
 #' \dontrun{
@@ -190,7 +195,8 @@ getShieldRelations <- function() {
 
 #' MITRE Shield as visNetwork
 #'
-#' @return data.frame
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#'   It returns a visNetwork object ready for analyze and plot.
 #' @export
 #' @examples
 #' \dontrun{

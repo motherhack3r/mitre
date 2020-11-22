@@ -7,8 +7,14 @@
 getShieldTactics()
 }
 \value{
-data.frame
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+  The data frame columns are: id, name, description, long_description.
 }
 \description{
 MITRE Shield Tactics data frame
+}
+\examples{
+\dontrun{
+shield.tactics <- getShieldTactics()
+}
 }
