@@ -1,0 +1,65 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# mitre
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+mitre package is designed to provide easy access to cybersecurity data starndards.
+You can expect functions to get data frames for every standard object.
+For deep exploratory, it provide visNetwork objects for graph and relationship
+analysis.
+
+## Installation
+
+You can install the released version of mitre from [CRAN](https://CRAN.R-project.org) with:
+
+``` r
+install.packages("mitre")
+```
+
+And the development version from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("humbertcostas/mitre")
+```
+## Basic usage
+
+This is a basic example which shows you how to view shield tactics ids and names:
+
+```{r example}
+library(mitre)
+tactics <- getShieldTactics()
+tactics[, 1:2]
+```
+
+## Network visualization
+
+This is a example which shows you how to visualize shield network:
+
+```{r example2}
+# library(mitre)
+# shieldnet <- getShieldNetwork()
+# shieldnet
+```
+
+For more advanced visualizations with shiny, check vignettes.
+
+## Code of conduct
+
+Please note that this project is released with a [Contributor Code of Conduct](https://pkgdown.r-lib.org/CODE_OF_CONDUCT.html). By participating in this project you agree to abide by its terms.
