@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: MITRE Standards Data And Digraphs
-Version: 0.1.0.9000
+Version: 0.1.1
 Author: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
