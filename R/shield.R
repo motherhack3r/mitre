@@ -1,6 +1,6 @@
 #' MITRE Shield Tactics data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
@@ -16,7 +16,7 @@ getShieldTactics <- function() {
 
 #' MITRE Shield Techniques data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
@@ -32,7 +32,7 @@ getShieldTechniques <- function() {
 
 #' MITRE Shield Opportunities data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
@@ -48,7 +48,7 @@ getShieldOpportunities <- function() {
 
 #' MITRE Shield Procedures data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
@@ -64,7 +64,7 @@ getShieldProcedures <- function() {
 
 #' MITRE Shield Use Cases data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
@@ -195,7 +195,7 @@ getShieldRelations <- function() {
 
 #' MITRE Shield as visNetwork
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   It returns a visNetwork object ready for analyze and plot.
 #' @export
 #' @examples

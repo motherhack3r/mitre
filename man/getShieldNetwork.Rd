@@ -7,7 +7,7 @@
 getShieldNetwork()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
   It returns a visNetwork object ready for analyze and plot.
 }
 \description{

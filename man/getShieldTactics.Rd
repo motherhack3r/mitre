@@ -7,7 +7,7 @@
 getShieldTactics()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data}
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
   The data frame columns are: id, name, description, long_description.
 }
 \description{
