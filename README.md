@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Travis build
-status](https://travis-ci.com/humbertcostas/mitre.svg?branch=master)](https://travis-ci.com/humbertcostas/mitre)
+status](https://travis-ci.com/motherhack3r/mitre.svg?branch=master)](https://travis-ci.com/motherhack3r/mitre)
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data
@@ -27,7 +27,7 @@ And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("humbertcostas/mitre")
+devtools::install_github("motherhack3r/mitre")
 ```
 
 ## Basic usage
