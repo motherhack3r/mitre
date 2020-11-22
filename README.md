@@ -10,7 +10,7 @@ status](https://travis-ci.org/motherhack3r/mitre.svg?branch=master)](https://tra
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data
-starndards. You can expect functions to get data frames for every
+standards. You can expect functions to get data frames for every
 standard object. For deep exploratory, it provide visNetwork objects for
 graph and relationship analysis.
 
