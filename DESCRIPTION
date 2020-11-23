@@ -19,9 +19,11 @@ Imports:
     dplyr,
     plyr,
     jsonlite,
+    RJSONIO,
     curl
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    utils
 VignetteBuilder: knitr
