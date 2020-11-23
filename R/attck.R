@@ -201,11 +201,16 @@ getCurrentCTIdata <- function() {
                                            "object_marking_refs", "created_by_ref")]
 
   ####### ATT&CK DATA
-  attck <- list(tactics = attck.tactics,
-                techniques = attck.techniques,
-                groups = attck.groups,
+  attck <- list(tactic = attck.tactics,
+                technique = attck.techniques,
+                group = attck.groups,
                 software = attck.software,
-                mitigations = attck.mitigation)
+                mitigation = attck.mitigation)
 
-  return(attck)
+  df <- plyr::ldply(attck, rbind.data.frame)
+  df$idrel <- df$type
+  df$type <- df$.id
+  df$.id <- NULL
+
+  return(df)
 }
