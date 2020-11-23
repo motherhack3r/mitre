@@ -34,7 +34,8 @@ getCurrentCTIdata <- function() {
                           stringsAsFactors = F)
   attck.mob.raw <- RJSONIO::fromJSON(content = attck.mob.raw.file)
   attck.mob.raw <- attck.mob.raw[["objects"]]
-  attck.raw <- attck.mob.raw[which(attck.mob$type == "x-mitre-tactic")]
+  tactics.raw <- attck.mob.raw[which(attck.mob$type == "x-mitre-tactic")]
+  techniques.raw <- attck.mob.raw[which(attck.mob$type == "attack-pattern")]
 
   # ICS
   attck.ics.raw <- jsonlite::fromJSON(attck.ics.raw.file)[["objects"]]
@@ -43,7 +44,8 @@ getCurrentCTIdata <- function() {
                           stringsAsFactors = F)
   attck.ics.raw <- RJSONIO::fromJSON(content = attck.ics.raw.file)
   attck.ics.raw <- attck.ics.raw[["objects"]]
-  attck.raw <- c(attck.raw, attck.ics.raw[which(attck.ics$type == "x-mitre-tactic")])
+  tactics.raw <- c(tactics.raw, attck.ics.raw[which(attck.ics$type == "x-mitre-tactic")])
+  techniques.raw <- c(techniques.raw, attck.ics.raw[which(attck.ics$type == "attack-pattern")])
 
   # ENT
   attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
@@ -52,26 +54,46 @@ getCurrentCTIdata <- function() {
                           stringsAsFactors = F)
   attck.ent.raw <- RJSONIO::fromJSON(content = attck.ent.raw.file)
   attck.ent.raw <- attck.ent.raw[["objects"]]
-  attck.raw <- c(attck.raw, attck.ent.raw[which(attck.ent$type == "x-mitre-tactic")])
+  tactics.raw <- c(tactics.raw, attck.ent.raw[which(attck.ent$type == "x-mitre-tactic")])
+  techniques.raw <- c(techniques.raw, attck.ent.raw[which(attck.ent$type == "attack-pattern")])
 
-  names(attck.raw) <- sapply(attck.raw,
+  # TIDY TACTICS
+  names(tactics.raw) <- sapply(tactics.raw,
                              function(x) {
                                sapply(x[["external_references"]],
                                       function(y)
                                         y[["external_id"]][which((y[["source_name"]]=="mitre-attack") |
                                                                    (y[["source_name"]]=="mitre-ics-attack"))])
                              })
-
-  # Tidy Tactics data frame
-  attck.tactics <- lapply(attck.raw, function(x) x[names(x) != "external_references"])
+  attck.tactics <- lapply(tactics.raw, function(x) x[names(x) != "external_references"])
   attck.tactics <- plyr::ldply(attck.tactics, rbind.data.frame)
   attck.tactics$mitreid <- attck.tactics$id
   attck.tactics$id <- attck.tactics$.id
   attck.tactics <- attck.tactics[, c("id", "mitreid", "type", "name", "description",
-                                     "x_mitre_shortname", "created", "modified",
+                                     "created", "modified",
                                      "object_marking_refs", "created_by_ref")]
 
-  attck <- list(tactics = attck.tactics)
+  # TIDY TECHNIQUES
+  names(techniques.raw) <- sapply(techniques.raw,
+                               function(x) {
+                                 y <- plyr::ldply(x[["external_references"]],rbind)
+                                 y$external_id[y$source_name %in% c("mitre-attack",
+                                                                    "mitre-ics-attack",
+                                                                    "mitre-mobile-attack")]
+                                 })
+  attck.techniques <- lapply(techniques.raw, function(x) x[names(x) %in% c("id", "type", "name", "description", "created", "modified", "object_marking_refs", "created_by_ref")])
+  attck.techniques <- plyr::ldply(attck.techniques, rbind.data.frame)
+  attck.techniques$mitreid <- attck.techniques$id
+  attck.techniques$id <- attck.techniques$.id
+  attck.techniques <- attck.techniques[, c("id", "mitreid", "type", "name", "description",
+                                     "created", "modified",
+                                     "object_marking_refs", "created_by_ref")]
+
+
+  # ATT&CK DATA
+
+  attck <- list(tactics = attck.tactics,
+                techniques = attck.techniques)
 
   return(attck)
 }
