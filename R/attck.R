@@ -65,8 +65,9 @@ getCurrentCTIdata <- function() {
   # Tidy Tactics data frame
   attck.tactics <- lapply(attck.raw, function(x) x[names(x) != "external_references"])
   attck.tactics <- plyr::ldply(attck.tactics, rbind.data.frame)
-  attck.tactics$mitreid <- attck.tactics$.id
-  attck.tactics <- attck.tactics[, c("mitreid", "id", "type", "name", "description",
+  attck.tactics$mitreid <- attck.tactics$id
+  attck.tactics$id <- attck.tactics$.id
+  attck.tactics <- attck.tactics[, c("id", "mitreid", "type", "name", "description",
                                      "x_mitre_shortname", "created", "modified",
                                      "object_marking_refs", "created_by_ref")]
 
