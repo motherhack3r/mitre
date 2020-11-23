@@ -7,6 +7,8 @@
 
 [![Travis build
 status](https://travis-ci.org/motherhack3r/mitre.svg?branch=devel)](https://travis-ci.org/motherhack3r/mitre)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/mitre)](https://cran.r-project.org/package=mitre)
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data
