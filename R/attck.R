@@ -44,6 +44,7 @@ getCurrentCTIdata <- function() {
   groups.raw <- attck.mob.raw[which(attck.mob$type == "intrusion-set")]
   software.raw <- attck.mob.raw[which(attck.mob$type %in% c("malware", "tool"))]
   mitigation.raw <- attck.mob.raw[which(attck.mob$type == "course-of-action")]
+  relations.raw <- attck.mob.raw[which(attck.mob$type == "relationship")]
 
   # ICS
   attck.ics.raw <- jsonlite::fromJSON(attck.ics.raw.file)[["objects"]]
@@ -62,6 +63,7 @@ getCurrentCTIdata <- function() {
   groups.raw <- c(groups.raw, attck.ics.raw[which(attck.ics$type == "intrusion-set")])
   software.raw <- c(software.raw, attck.ics.raw[which(attck.ics$type %in% c("malware", "tool"))])
   mitigation.raw <- c(mitigation.raw, attck.ics.raw[which(attck.ics$type == "course-of-action")])
+  relations.raw <- c(relations.raw, attck.ics.raw[which(attck.ics$type == "relationship")])
 
   # ENT
   attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
@@ -80,6 +82,7 @@ getCurrentCTIdata <- function() {
   groups.raw <- c(groups.raw, attck.ent.raw[which(attck.ent$type == "intrusion-set")])
   software.raw <- c(software.raw, attck.ent.raw[which(attck.ent$type %in% c("malware", "tool"))])
   mitigation.raw <- c(mitigation.raw, attck.ent.raw[which(attck.ent$type == "course-of-action")])
+  relations.raw <- c(relations.raw, attck.ent.raw[which(attck.ent$type == "relationship")])
 
   # TIDY MODEL
   model.raw <- attck.raw
@@ -101,6 +104,26 @@ getCurrentCTIdata <- function() {
   attck.model <- attck.model[, c("id", "mitreid", "type", "name", "description",
                                            "created", "modified",
                                            "object_marking_refs", "created_by_ref")]
+
+  # TIDY RELATIONS
+  attck.relations <- lapply(relations.raw,
+                             function(x)
+                               x[names(x) %in% c("id", "created_by_ref", "object_marking_refs",
+                                                 "source_ref", "relationship_type", "target_ref",
+                                                 "type", "modified", "created")])
+  attck.relations <- plyr::ldply(attck.relations, rbind.data.frame)
+  attck.relations$mitreid <- attck.relations$id
+  attck.relations$id <- attck.relations$.id
+  attck.relations <- attck.relations[, c("type", "source_ref", "target_ref", "relationship_type",
+                                         "created_by_ref", "object_marking_refs",
+                                         "modified", "created")]
+
+  attck.relations <- dplyr::left_join(attck.relations, attck.model[, c("mitreid","id")], by = c("source_ref" = "mitreid"))
+  attck.relations$source_id <- attck.relations$id
+  attck.relations$id <- NULL
+  attck.relations <- dplyr::left_join(attck.relations, attck.model[, c("mitreid","id")], by = c("target_ref" = "mitreid"))
+  attck.relations$target_id <- attck.relations$id
+  attck.relations$id <- NULL
 
   ####### TIDY TACTICS
   names(tactics.raw) <- sapply(tactics.raw,
@@ -212,5 +235,7 @@ getCurrentCTIdata <- function() {
   df$type <- df$.id
   df$.id <- NULL
 
-  return(df)
+  attck <- list(nodes = df,
+                relations = attck.relations)
+  return(attck)
 }
