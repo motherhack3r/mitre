@@ -12,3 +12,8 @@ data.frame
 \description{
 MITRE Shield Techniques detailed data frame
 }
+\examples{
+\donttest{
+technique <- getShieldTechniquesDetail()
+}
+}

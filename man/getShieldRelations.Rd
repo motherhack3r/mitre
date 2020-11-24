@@ -12,3 +12,8 @@ data.frame
 \description{
 MITRE Shield objects relations data frame
 }
+\examples{
+\donttest{
+relations <- getShieldRelations()
+}
+}
