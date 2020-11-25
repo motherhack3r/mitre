@@ -14,7 +14,7 @@ ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd
 MITRE Shield as visNetwork
 }
 \examples{
-\dontrun{
+\donttest{
 shieldnetwork <- getShieldNetwork()
 }
 }

@@ -4,7 +4,7 @@
 #'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' shield.tactics <- getShieldTactics()
 #' }
 getShieldTactics <- function() {
@@ -20,7 +20,7 @@ getShieldTactics <- function() {
 #'   The data frame columns are: id, name, description, long_description.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' shield.techniques <- getShieldTechniques()
 #' }
 getShieldTechniques <- function() {
@@ -36,7 +36,7 @@ getShieldTechniques <- function() {
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' opportunities <- getShieldOpportunities()
 #' }
 getShieldOpportunities <- function() {
@@ -52,7 +52,7 @@ getShieldOpportunities <- function() {
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' procedures <- getShieldProcedures()
 #' }
 getShieldProcedures <- function() {
@@ -68,7 +68,7 @@ getShieldProcedures <- function() {
 #'   The data frame columns are: id, description.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' usecases <- getShieldUseCases()
 #' }
 getShieldUseCases <- function() {
@@ -82,6 +82,11 @@ getShieldUseCases <- function() {
 #' MITRE Shield Tactics detailed data frame
 #'
 #' @return data.frame
+#' @export
+#' @examples
+#' \donttest{
+#' tactics <- getShieldTactictDetail()
+#' }
 getShieldTactictDetail <- function() {
   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
   tact_det <- jsonlite::fromJSON(tact_det_url)
@@ -94,6 +99,11 @@ getShieldTactictDetail <- function() {
 #' MITRE Shield Techniques detailed data frame
 #'
 #' @return data.frame
+#' @export
+#' @examples
+#' \donttest{
+#' technique <- getShieldTechniquesDetail()
+#' }
 getShieldTechniquesDetail <- function() {
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   tech_det <- jsonlite::fromJSON(tech_det_url)
@@ -104,6 +114,11 @@ getShieldTechniquesDetail <- function() {
 #' MITRE Shield objects relations data frame
 #'
 #' @return data.frame
+#' @export
+#' @examples
+#' \donttest{
+#' relations <- getShieldRelations()
+#' }
 getShieldRelations <- function() {
   tact_det <- getShieldTactictDetail()
   tech_det <- getShieldTechniquesDetail()
@@ -199,7 +214,7 @@ getShieldRelations <- function() {
 #'   It returns a visNetwork object ready for analyze and plot.
 #' @export
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' shieldnetwork <- getShieldNetwork()
 #' }
 getShieldNetwork <- function() {

@@ -14,7 +14,7 @@ ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd
 MITRE Shield Use Cases data frame
 }
 \examples{
-\dontrun{
+\donttest{
 usecases <- getShieldUseCases()
 }
 }
