@@ -1,15 +1,29 @@
-#' Title
+#' ETL process that download current attck definitions and return a list of
+#' data frames for each object. The list also contains a visNetwork object with
+#' ATT&CK objects as nodes and all relations as edges.
 #'
-#' @return
+#' @param verbose Default set as FALSE
+#'
+#' @return list of data frames
 #' @export
 #'
 #' @examples
-getAttckData <- function() {
+#' \dontrun{
+#' attck <- getAttckData()
+#' attck_tactics <- attck[["tactics"]]
+#' attck_techniques <- attck[["techniques"]]
+#' attck_groups <- attck[["groups"]]
+#' attck_software <- attck[["software"]]
+#' attck_mitigation <- attck[["mitigation"]]
+#' }
+getAttckData <- function(verbose = FALSE) {
   # ATT&CK MOBILE
+  if (verbose) print(paste("[*][ATT&CK][MOB] Download ATT&CK MOBILE..."))
   attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
   attck.mob.raw.file <- tempfile(pattern = "mitre_attckmob_", fileext = ".json")
-  utils::download.file(url = attck.mob.raw.url, destfile = attck.mob.raw.file)
+  utils::download.file(url = attck.mob.raw.url, destfile = attck.mob.raw.file, quiet = !verbose)
 
+  if (verbose) print(paste("[*][ATT&CK][MOB] Parsing ..."))
   attck.mob.raw <- jsonlite::fromJSON(attck.mob.raw.file)[["objects"]]
 
   attck.mob.raw$mitreid <- sapply(attck.mob.raw$external_references,
@@ -55,10 +69,12 @@ getAttckData <- function() {
   mitigation.raw <- mob[mob$type == "course-of-action", ]
 
   # ATT&CK ENTERPRISE
+  if (verbose) print(paste("[*][ATT&CK][ENT] Download ATT&CK ENTERPRISE ..."))
   attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
   attck.ent.raw.file <- tempfile(pattern = "mitre_attckent_", fileext = ".json")
-  utils::download.file(url = attck.ent.raw.url, destfile = attck.ent.raw.file)
+  utils::download.file(url = attck.ent.raw.url, destfile = attck.ent.raw.file, quiet = !verbose)
 
+  if (verbose) print(paste("[*][ATT&CK][ENT] Parsing ..."))
   attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
 
   attck.ent.raw$mitreid <- sapply(attck.ent.raw$external_references,
@@ -104,6 +120,7 @@ getAttckData <- function() {
   software.raw <- rbind(software.raw, ent[ent$type %in% c("malware", "tool"), ])
   mitigation.raw <- rbind(mitigation.raw, ent[ent$type == "course-of-action", ])
 
+  if (verbose) print(paste("[*][ATT&CK][graph] Building nodes ..."))
   ## NODES
   # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
   nodes <- data.frame(
@@ -136,6 +153,7 @@ getAttckData <- function() {
 
   attck_nodes <- rbind(attck_nodes, attck.df)
 
+  if (verbose) print(paste("[*][ATT&CK][graph] Building edges ..."))
   ## EDGES
   # Ref: https://datastorm-open.github.io/visNetwork/edges.html
   edges <- data.frame(
@@ -172,10 +190,12 @@ getAttckData <- function() {
 
   attck_edges <- attck.df[, names(edges)]
 
+  if (verbose) print(paste("[!][ATT&CK][graph] CTI issue patch ..."))
   ###### CTI ISSUE: some unique cti-mitre-id are used in different objects
   n_occur <- data.frame(table(attck_nodes$id))
   attck_nodes <- attck_nodes[-which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
 
+  if (verbose) print(paste("[*][ATT&CK][graph] Building visNetwork ..."))
   attcknet <- visNetwork::visNetwork(attck_nodes, attck_edges)
   # attcknet %>% visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>% visLayout(randomSeed = 123)
 
@@ -185,6 +205,7 @@ getAttckData <- function() {
   software.raw <- software.raw[, colSums(is.na(software.raw)) < nrow(software.raw)]
   mitigation.raw <- mitigation.raw[, colSums(is.na(mitigation.raw)) < nrow(mitigation.raw)]
 
+  if (verbose) print(paste("[*][ATT&CK] Building output ..."))
   attck <- list(tactics = tactics.raw,
                 techniques = techniques.raw,
                 groups = groups.raw,
@@ -194,6 +215,3 @@ getAttckData <- function() {
 
   return(attck)
 }
-
-
-
