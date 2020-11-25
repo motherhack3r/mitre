@@ -20,7 +20,7 @@ data frames for each object. The list also contains a visNetwork object with
 ATT&CK objects as nodes and all relations as edges.
 }
 \examples{
-\dontrun{
+\donttest{
 attck <- getAttckData()
 attck_tactics <- attck[["tactics"]]
 attck_techniques <- attck[["techniques"]]

@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' attck <- getAttckData()
 #' attck_tactics <- attck[["tactics"]]
 #' attck_techniques <- attck[["techniques"]]
