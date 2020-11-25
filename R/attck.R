@@ -1,241 +1,199 @@
-#' Retrieve current CTI definitions from github, and return data sets as list of
-#' data frames: tactics, techniques, ...
+#' Title
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
-#'   The data frame columns are: id, name, description, long_description.
+#' @return
 #' @export
+#'
 #' @examples
-#' \dontrun{
-#' attck <- getCurrentCTIdata()
-#' }
-getCurrentCTIdata <- function() {
-  # capec.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/capec/stix-capec.json"
-  # capec.raw.file <- tempfile(pattern = "mitre_capec_", fileext = ".json")
-  # utils::download.file(url = capec.raw.url, destfile = capec.raw.file)
-
+getAttckData <- function() {
+  # ATT&CK MOBILE
   attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
   attck.mob.raw.file <- tempfile(pattern = "mitre_attckmob_", fileext = ".json")
   utils::download.file(url = attck.mob.raw.url, destfile = attck.mob.raw.file)
 
-  attck.ics.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/ics-attack/ics-attack.json"
-  attck.ics.raw.file <- tempfile(pattern = "mitre_attckics_", fileext = ".json")
-  utils::download.file(url = attck.ics.raw.url, destfile = attck.ics.raw.file)
+  attck.mob.raw <- jsonlite::fromJSON(attck.mob.raw.file)[["objects"]]
 
+  attck.mob.raw$mitreid <- sapply(attck.mob.raw$external_references,
+                                    function(x)
+                                      x[x$source_name %in% c("mitre-attack",
+                                                             "mitre-ics-attack",
+                                                             "mitre-mobile-attack"),
+                                        "external_id"])
+  attck.mob.raw$kill_chain_phases <- sapply(attck.mob.raw$kill_chain_phases,
+                                            function(x)
+                                              as.character(jsonlite::toJSON(x, null = "list")))
+  attck.mob.raw$x_mitre_platforms <- sapply(attck.mob.raw$x_mitre_platforms,
+                                            function(x)
+                                              as.character(jsonlite::toJSON(x, null = "list")))
+
+  mob <- attck.mob.raw[c("id", "mitreid", "type", "name", "description",
+                         "x_mitre_is_subtechnique", "x_mitre_deprecated",
+                         "x_mitre_version", "x_mitre_old_attack_id",
+                         "x_mitre_detection", "revoked", "source_ref",
+                         "relationship_type", "target_ref", "identity_class",
+                         "x_mitre_shortname", "definition_type",
+                         "kill_chain_phases", "x_mitre_platforms",
+                         "created_by_ref", "modified", "created")]
+  mob$x_mitre_deprecated[is.na(mob$x_mitre_deprecated)] <- FALSE
+  mob$revoked[is.na(mob$revoked)] <- FALSE
+  mob <- mob[which(!mob$x_mitre_deprecated), ]
+  mob <- mob[which(!mob$revoked), ]
+  mob.rels <- mob[mob$type == "relationship", ]
+  mob.rels$mitreid <- NULL
+  mob.rels <- mob.rels[, colSums(is.na(mob.rels)) < nrow(mob.rels)]
+  mob <- mob[mob$type %in% c("x-mitre-tactic",
+                             "attack-pattern",
+                             "intrusion-set",
+                             "malware", "tool",
+                             "course-of-action"),]
+  mob$mitreid <- unlist(mob$mitreid)
+  mob <- mob[, colSums(is.na(mob)) < nrow(mob)]
+
+  tactics.raw <- mob[mob$type == "x-mitre-tactic", ]
+  techniques.raw <- mob[mob$type == "attack-pattern", ]
+  groups.raw <- mob[mob$type  == "intrusion-set", ]
+  software.raw <- mob[mob$type %in% c("malware", "tool"), ]
+  mitigation.raw <- mob[mob$type == "course-of-action", ]
+
+  # ATT&CK ENTERPRISE
   attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
   attck.ent.raw.file <- tempfile(pattern = "mitre_attckent_", fileext = ".json")
   utils::download.file(url = attck.ent.raw.url, destfile = attck.ent.raw.file)
 
-
-  ####### PARSE ATT&CK Objects
-  # MOBILE
-  attck.mob.raw <- jsonlite::fromJSON(attck.mob.raw.file)[["objects"]]
-  attck.mob <- data.frame(id = attck.mob.raw$id,
-                          type = as.factor(attck.mob.raw$type),
-                          stringsAsFactors = F)
-  attck.mob.raw <- RJSONIO::fromJSON(content = attck.mob.raw.file)
-  attck.mob.raw <- attck.mob.raw[["objects"]]
-  attck.raw <- attck.mob.raw[which(attck.mob$type %in% c("x-mitre-tactic",
-                                                         "attack-pattern",
-                                                         "intrusion-set",
-                                                         "malware", "tool",
-                                                         "course-of-action"))]
-  tactics.raw <- attck.mob.raw[which(attck.mob$type == "x-mitre-tactic")]
-  techniques.raw <- attck.mob.raw[which(attck.mob$type == "attack-pattern")]
-  groups.raw <- attck.mob.raw[which(attck.mob$type == "intrusion-set")]
-  software.raw <- attck.mob.raw[which(attck.mob$type %in% c("malware", "tool"))]
-  mitigation.raw <- attck.mob.raw[which(attck.mob$type == "course-of-action")]
-  relations.raw <- attck.mob.raw[which(attck.mob$type == "relationship")]
-
-  # ICS
-  attck.ics.raw <- jsonlite::fromJSON(attck.ics.raw.file)[["objects"]]
-  attck.ics <- data.frame(id = attck.ics.raw$id,
-                          type = as.factor(attck.ics.raw$type),
-                          stringsAsFactors = F)
-  attck.ics.raw <- RJSONIO::fromJSON(content = attck.ics.raw.file)
-  attck.ics.raw <- attck.ics.raw[["objects"]]
-  attck.raw <- c(attck.raw, attck.ics.raw[which(attck.ics$type %in% c("x-mitre-tactic",
-                                                                      "attack-pattern",
-                                                                      "intrusion-set",
-                                                                      "malware", "tool",
-                                                                      "course-of-action"))])
-  tactics.raw <- c(tactics.raw, attck.ics.raw[which(attck.ics$type == "x-mitre-tactic")])
-  techniques.raw <- c(techniques.raw, attck.ics.raw[which(attck.ics$type == "attack-pattern")])
-  groups.raw <- c(groups.raw, attck.ics.raw[which(attck.ics$type == "intrusion-set")])
-  software.raw <- c(software.raw, attck.ics.raw[which(attck.ics$type %in% c("malware", "tool"))])
-  mitigation.raw <- c(mitigation.raw, attck.ics.raw[which(attck.ics$type == "course-of-action")])
-  relations.raw <- c(relations.raw, attck.ics.raw[which(attck.ics$type == "relationship")])
-
-  # ENT
   attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
-  attck.ent <- data.frame(id = attck.ent.raw$id,
-                          type = as.factor(attck.ent.raw$type),
-                          stringsAsFactors = F)
-  attck.ent.raw <- RJSONIO::fromJSON(content = attck.ent.raw.file)
-  attck.ent.raw <- attck.ent.raw[["objects"]]
-  attck.raw <- c(attck.raw, attck.ent.raw[which(attck.ent$type %in% c("x-mitre-tactic",
-                                                                      "attack-pattern",
-                                                                      "intrusion-set",
-                                                                      "malware", "tool",
-                                                                      "course-of-action"))])
-  tactics.raw <- c(tactics.raw, attck.ent.raw[which(attck.ent$type == "x-mitre-tactic")])
-  techniques.raw <- c(techniques.raw, attck.ent.raw[which(attck.ent$type == "attack-pattern")])
-  groups.raw <- c(groups.raw, attck.ent.raw[which(attck.ent$type == "intrusion-set")])
-  software.raw <- c(software.raw, attck.ent.raw[which(attck.ent$type %in% c("malware", "tool"))])
-  mitigation.raw <- c(mitigation.raw, attck.ent.raw[which(attck.ent$type == "course-of-action")])
-  relations.raw <- c(relations.raw, attck.ent.raw[which(attck.ent$type == "relationship")])
 
-  # TIDY MODEL
-  model.raw <- attck.raw
-  names(model.raw) <- sapply(model.raw,
-                                  function(x) {
-                                    y <- plyr::ldply(x[["external_references"]],rbind)
-                                    y$external_id[y$source_name %in% c("mitre-attack",
-                                                                       "mitre-ics-attack",
-                                                                       "mitre-mobile-attack")]
-                                  })
-  attck.model <- lapply(model.raw,
-                             function(x)
-                               x[names(x) %in% c("id", "type", "name", "description",
-                                                 "created", "modified",
-                                                 "object_marking_refs", "created_by_ref")])
-  attck.model <- plyr::ldply(attck.model, rbind.data.frame)
-  attck.model$mitreid <- attck.model$id
-  attck.model$id <- attck.model$.id
-  attck.model <- attck.model[, c("id", "mitreid", "type", "name", "description",
-                                           "created", "modified",
-                                           "object_marking_refs", "created_by_ref")]
+  attck.ent.raw$mitreid <- sapply(attck.ent.raw$external_references,
+                                  function(x)
+                                    x[x$source_name %in% c("mitre-attack",
+                                                           "mitre-ics-attack",
+                                                           "mitre-mobile-attack"),
+                                      "external_id"])
+  attck.ent.raw$kill_chain_phases <- sapply(attck.ent.raw$kill_chain_phases,
+                                            function(x)
+                                              as.character(jsonlite::toJSON(x, null = "list")))
+  attck.ent.raw$x_mitre_platforms <- sapply(attck.ent.raw$x_mitre_platforms,
+                                            function(x)
+                                              as.character(jsonlite::toJSON(x, null = "list")))
 
-  # TIDY RELATIONS
-  attck.relations <- lapply(relations.raw,
-                             function(x)
-                               x[names(x) %in% c("id", "created_by_ref", "object_marking_refs",
-                                                 "source_ref", "relationship_type", "target_ref",
-                                                 "type", "modified", "created")])
-  attck.relations <- plyr::ldply(attck.relations, rbind.data.frame)
-  attck.relations$mitreid <- attck.relations$id
-  attck.relations$id <- attck.relations$.id
-  attck.relations <- attck.relations[, c("type", "source_ref", "target_ref", "relationship_type",
-                                         "created_by_ref", "object_marking_refs",
-                                         "modified", "created")]
+  ent <- attck.ent.raw[c("id", "mitreid", "type", "name", "description",
+                         "x_mitre_is_subtechnique", "x_mitre_deprecated",
+                         "x_mitre_version", "x_mitre_old_attack_id",
+                         "x_mitre_detection", "revoked", "source_ref",
+                         "relationship_type", "target_ref", "identity_class",
+                         "x_mitre_shortname", "definition_type",
+                         "kill_chain_phases", "x_mitre_platforms",
+                         "created_by_ref", "modified", "created")]
 
-  attck.relations <- dplyr::left_join(attck.relations, attck.model[, c("mitreid","id")], by = c("source_ref" = "mitreid"))
-  attck.relations$source_id <- attck.relations$id
-  attck.relations$id <- NULL
-  attck.relations <- dplyr::left_join(attck.relations, attck.model[, c("mitreid","id")], by = c("target_ref" = "mitreid"))
-  attck.relations$target_id <- attck.relations$id
-  attck.relations$id <- NULL
+  ent$x_mitre_deprecated[is.na(ent$x_mitre_deprecated)] <- FALSE
+  ent$revoked[is.na(ent$revoked)] <- FALSE
+  ent <- ent[which(!ent$x_mitre_deprecated), ]
+  ent <- ent[which(!ent$revoked), ]
+  ent.rels <- ent[ent$type == "relationship", ]
+  ent.rels$mitreid <- NULL
+  ent.rels <- ent.rels[, colSums(is.na(ent.rels)) < nrow(ent.rels)]
+  ent <- ent[ent$type %in% c("x-mitre-tactic",
+                             "attack-pattern",
+                             "intrusion-set",
+                             "malware", "tool",
+                             "course-of-action"),]
+  ent$mitreid <- unlist(ent$mitreid)
+  ent <- ent[, colSums(is.na(ent)) < nrow(ent)]
 
-  ####### TIDY TACTICS
-  names(tactics.raw) <- sapply(tactics.raw,
-                             function(x) {
-                               sapply(x[["external_references"]],
-                                      function(y)
-                                        y[["external_id"]][which(y[["source_name"]] %in%
-                                                                   c("mitre-attack",
-                                                                     "mitre-ics-attack",
-                                                                     "mitre-mobile-attack"))])
-                             })
-  attck.tactics <- lapply(tactics.raw, function(x) x[names(x) != "external_references"])
-  attck.tactics <- plyr::ldply(attck.tactics, rbind.data.frame)
-  attck.tactics$mitreid <- attck.tactics$id
-  attck.tactics$id <- attck.tactics$.id
-  attck.tactics <- attck.tactics[, c("id", "mitreid", "type", "name", "description",
-                                     "created", "modified",
-                                     "object_marking_refs", "created_by_ref")]
+  tactics.raw <- rbind(tactics.raw, ent[ent$type == "x-mitre-tactic", ])
+  techniques.raw <- rbind(techniques.raw, ent[ent$type == "attack-pattern", ])
+  groups.raw <- rbind(groups.raw, ent[ent$type  == "intrusion-set", ])
+  software.raw <- rbind(software.raw, ent[ent$type %in% c("malware", "tool"), ])
+  mitigation.raw <- rbind(mitigation.raw, ent[ent$type == "course-of-action", ])
 
-  ####### TIDY TECHNIQUES
-  names(techniques.raw) <- sapply(techniques.raw,
-                               function(x) {
-                                 y <- plyr::ldply(x[["external_references"]],rbind)
-                                 y$external_id[y$source_name %in% c("mitre-attack",
-                                                                    "mitre-ics-attack",
-                                                                    "mitre-mobile-attack")]
-                                 })
-  attck.techniques <- lapply(techniques.raw,
-                             function(x)
-                               x[names(x) %in% c("id", "type", "name", "description",
-                                                 "created", "modified",
-                                                 "object_marking_refs", "created_by_ref")])
-  attck.techniques <- plyr::ldply(attck.techniques, rbind.data.frame)
-  attck.techniques$mitreid <- attck.techniques$id
-  attck.techniques$id <- attck.techniques$.id
-  attck.techniques <- attck.techniques[, c("id", "mitreid", "type", "name", "description",
-                                     "created", "modified",
-                                     "object_marking_refs", "created_by_ref")]
+  ## NODES
+  # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
+  nodes <- data.frame(
+    id = character(0),
+    label = character(0),
+    group = character(0),
+    value = numeric(0),
+    shape = character(0),
+    title = character(0),
+    color = character(0),
+    shadow = logical(0)
+  )
+  attck_nodes <- nodes
 
-  ####### TIDY GROUPS
-  names(groups.raw) <- sapply(groups.raw,
-                                function(x) {
-                                  y <- plyr::ldply(x[["external_references"]],rbind)
-                                  y$external_id[y$source_name %in% c("mitre-attack",
-                                                                     "mitre-ics-attack",
-                                                                     "mitre-mobile-attack")]
-                                })
-  attck.groups <- lapply(groups.raw,
-                           function(x)
-                             x[names(x) %in% c("id", "type", "name", "description",
-                                               "created", "modified",
-                                               "object_marking_refs", "created_by_ref")])
-  attck.groups <- plyr::ldply(attck.groups, rbind.data.frame)
-  attck.groups$mitreid <- attck.groups$id
-  attck.groups$id <- attck.groups$.id
-  attck.groups <- attck.groups[, c("id", "mitreid", "type", "name", "description",
-                                       "created", "modified",
-                                       "object_marking_refs", "created_by_ref")]
+  attck.raw <- rbind(tactics.raw, techniques.raw, groups.raw, software.raw, mitigation.raw)
+  nodetype <- data.frame(type = c("x-mitre-tactic", "attack-pattern", "intrusion-set",
+                                "malware", "tool", "course-of-action"),
+                       shape = c("triangle", "square", "ellipse",
+                                 "box", "box", "diamond"),
+                       value = c(5, 4, 4, 4, 4, 5),
+                       color = c("darkred", "orange", "brown",
+                                 "red", "magenta", "grey"))
+  attck.df <- dplyr::left_join(attck.raw, nodetype, by = "type")
+  attck.df$id <- attck.df$mitreid
+  attck.df$label <- attck.df$id
+  attck.df$group <- attck.df$type
+  attck.df$title <- paste0("<p><b>", attck.df$name, "</b><br>", attck.df$description, "</p>")
+  attck.df$shadow <- rep(FALSE, nrow(attck.df))
+  attck.df <- attck.df[, names(nodes)]
 
-  ####### TIDY SOFTWARE
-  names(software.raw) <- sapply(software.raw,
-                                function(x) {
-                                  y <- plyr::ldply(x[["external_references"]],rbind)
-                                  y$external_id[y$source_name %in% c("mitre-attack",
-                                                                     "mitre-ics-attack",
-                                                                     "mitre-mobile-attack")]
-                                })
-  attck.software <- lapply(software.raw,
-                           function(x)
-                             x[names(x) %in% c("id", "type", "name", "description",
-                                               "created", "modified",
-                                               "object_marking_refs", "created_by_ref")])
-  attck.software <- plyr::ldply(attck.software, rbind.data.frame)
-  attck.software$mitreid <- attck.software$id
-  attck.software$id <- attck.software$.id
-  attck.software <- attck.software[, c("id", "mitreid", "type", "name", "description",
-                                       "created", "modified",
-                                       "object_marking_refs", "created_by_ref")]
+  attck_nodes <- rbind(attck_nodes, attck.df)
 
-  ####### TIDY MITIGATIONS
-  names(mitigation.raw) <- sapply(mitigation.raw,
-                                  function(x) {
-                                    y <- plyr::ldply(x[["external_references"]],rbind)
-                                    y$external_id[y$source_name %in% c("mitre-attack",
-                                                                       "mitre-ics-attack",
-                                                                       "mitre-mobile-attack")]
-                                  })
-  attck.mitigation <- lapply(mitigation.raw,
-                             function(x)
-                               x[names(x) %in% c("id", "type", "name", "description",
-                                                 "created", "modified",
-                                                 "object_marking_refs", "created_by_ref")])
-  attck.mitigation <- plyr::ldply(attck.mitigation, rbind.data.frame)
-  attck.mitigation$mitreid <- attck.mitigation$id
-  attck.mitigation$id <- attck.mitigation$.id
-  attck.mitigation <- attck.mitigation[, c("id", "mitreid", "type", "name", "description",
-                                           "created", "modified",
-                                           "object_marking_refs", "created_by_ref")]
+  ## EDGES
+  # Ref: https://datastorm-open.github.io/visNetwork/edges.html
+  edges <- data.frame(
+    from = character(0),
+    to = character(0),
+    label = character(0),
+    arrows = numeric(0),
+    title = character(0)
+  )
 
-  ####### ATT&CK DATA
-  attck <- list(tactic = attck.tactics,
-                technique = attck.techniques,
-                group = attck.groups,
-                software = attck.software,
-                mitigation = attck.mitigation)
+  relations <- rbind(mob.rels, ent.rels)
 
-  df <- plyr::ldply(attck, rbind.data.frame)
-  df$idrel <- df$type
-  df$type <- df$.id
-  df$.id <- NULL
+  attck.df <- relations[, c("source_ref", "target_ref", "relationship_type")]
+  attck.df <- attck.df[attck.df$relationship_type != "revoked-by", ]
+  attck.df <- unique(attck.df)
 
-  attck <- list(nodes = df,
-                relations = attck.relations)
+  attck.df <- dplyr::left_join(attck.df,
+                               attck.raw[, c("id", "mitreid")],
+                               by = c("source_ref" = "id"))
+  attck.df$from <- attck.df$mitreid
+  attck.df$mitreid <- NULL
+  attck.df$source_ref <- NULL
+  attck.df <- unique(attck.df)
+  attck.df <- dplyr::left_join(attck.df,
+                               attck.raw[, c("id", "mitreid")],
+                               by = c("target_ref" = "id"))
+  attck.df$to <- attck.df$mitreid
+  attck.df$mitreid <- NULL
+  attck.df$target_ref <- NULL
+  attck.df <- unique(attck.df)
+  attck.df$label <- attck.df$relationship_type
+  attck.df$title <- attck.df$label
+  attck.df$arrows <- rep("to", nrow(attck.df))
+
+  attck_edges <- attck.df[, names(edges)]
+
+  ###### CTI ISSUE: some unique cti-mitre-id are used in different objects
+  n_occur <- data.frame(table(attck_nodes$id))
+  attck_nodes <- attck_nodes[-which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
+
+  attcknet <- visNetwork::visNetwork(attck_nodes, attck_edges)
+  # attcknet %>% visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>% visLayout(randomSeed = 123)
+
+  tactics.raw <- tactics.raw[, colSums(is.na(tactics.raw)) < nrow(tactics.raw)]
+  techniques.raw <- techniques.raw[, colSums(is.na(techniques.raw)) < nrow(techniques.raw)]
+  groups.raw <- groups.raw[, colSums(is.na(groups.raw)) < nrow(groups.raw)]
+  software.raw <- software.raw[, colSums(is.na(software.raw)) < nrow(software.raw)]
+  mitigation.raw <- mitigation.raw[, colSums(is.na(mitigation.raw)) < nrow(mitigation.raw)]
+
+  attck <- list(tactics = tactics.raw,
+                techniques = techniques.raw,
+                groups = groups.raw,
+                software = software.raw,
+                mitigation = mitigation.raw,
+                attcknet = attcknet)
+
   return(attck)
 }
+
+
+
