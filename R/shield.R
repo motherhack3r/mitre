@@ -200,18 +200,14 @@ getShieldRelations <- function() {
   return(relations)
 }
 
-#' MITRE Shield as visNetwork
+#' MITRE Shield objects as nodes in a data frame
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
-#'   It returns a visNetwork object ready for analyze and plot.
+#' @return data.frame
 #' @examples
 #' \donttest{
-#' shieldnetwork <- getShieldNetwork()
+#' shield_nodes <- getShieldNodes()
 #' }
-getShieldNetwork <- function() {
-  # MITRE Shield Network as igraph
-  relations <- getShieldRelations()
-
+getShieldNodes <- function() {
   ## NODES
   # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
   nodes <- data.frame(
@@ -289,6 +285,22 @@ getShieldNetwork <- function() {
   df$description <- NULL
 
   shield_nodes <- rbind(shield_nodes, df)
+
+  return(shield_nodes)
+}
+
+#' MITRE Shield as visNetwork
+#'
+#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#'   It returns a visNetwork object ready for analyze and plot.
+#' @examples
+#' \donttest{
+#' shieldnetwork <- getShieldNetwork()
+#' }
+getShieldNetwork <- function() {
+  # MITRE Shield Network as igraph
+  relations <- getShieldRelations()
+  shield_nodes <- getShieldNodes()
 
   shieldnet <- visNetwork::visNetwork(shield_nodes, relations)
 

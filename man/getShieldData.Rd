@@ -6,7 +6,7 @@
 data frames for each object. The list also contains a visNetwork object with
 SHIELD objects as nodes and all relations as edges.}
 \usage{
-getShieldData()
+getShieldData(verbose = FALSE)
 }
 \value{
 list of data frames
