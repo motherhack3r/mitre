@@ -2,7 +2,6 @@
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, name, description, long_description.
-#' @export
 #' @examples
 #' \donttest{
 #' shield.tactics <- getShieldTactics()
@@ -18,7 +17,6 @@ getShieldTactics <- function() {
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, name, description, long_description.
-#' @export
 #' @examples
 #' \donttest{
 #' shield.techniques <- getShieldTechniques()
@@ -34,7 +32,6 @@ getShieldTechniques <- function() {
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
-#' @export
 #' @examples
 #' \donttest{
 #' opportunities <- getShieldOpportunities()
@@ -50,7 +47,6 @@ getShieldOpportunities <- function() {
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
-#' @export
 #' @examples
 #' \donttest{
 #' procedures <- getShieldProcedures()
@@ -66,7 +62,6 @@ getShieldProcedures <- function() {
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   The data frame columns are: id, description.
-#' @export
 #' @examples
 #' \donttest{
 #' usecases <- getShieldUseCases()
@@ -82,7 +77,6 @@ getShieldUseCases <- function() {
 #' MITRE Shield Tactics detailed data frame
 #'
 #' @return data.frame
-#' @export
 #' @examples
 #' \donttest{
 #' tactics <- getShieldTactictDetail()
@@ -99,7 +93,6 @@ getShieldTactictDetail <- function() {
 #' MITRE Shield Techniques detailed data frame
 #'
 #' @return data.frame
-#' @export
 #' @examples
 #' \donttest{
 #' technique <- getShieldTechniquesDetail()
@@ -114,7 +107,6 @@ getShieldTechniquesDetail <- function() {
 #' MITRE Shield objects relations data frame
 #'
 #' @return data.frame
-#' @export
 #' @examples
 #' \donttest{
 #' relations <- getShieldRelations()
@@ -212,7 +204,6 @@ getShieldRelations <- function() {
 #'
 #' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'   It returns a visNetwork object ready for analyze and plot.
-#' @export
 #' @examples
 #' \donttest{
 #' shieldnetwork <- getShieldNetwork()
@@ -315,7 +306,8 @@ getShieldNetwork <- function() {
 #' \donttest{
 #' shield <- getShieldData()
 #' }
-getShieldData <- function() {
+getShieldData <- function(verbose = FALSE) {
+  if (verbose) print(paste("[*][SHIELD] Building output ..."))
   shield <- list(tactics = getShieldTactics(),
                  techniques = getShieldTechniques(),
                  opportunities = getShieldOpportunities(),
