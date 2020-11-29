@@ -3,3 +3,4 @@
 export(getAttckData)
 export(getMitreNetwork)
 export(getShieldData)
+export(getShieldNetwork)

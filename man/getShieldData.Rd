@@ -8,6 +8,9 @@ SHIELD objects as nodes and all relations as edges.}
 \usage{
 getShieldData(verbose = FALSE)
 }
+\arguments{
+\item{verbose}{Default set as FALSE}
+}
 \value{
 list of data frames
 }

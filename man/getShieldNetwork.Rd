@@ -2,19 +2,21 @@
 % Please edit documentation in R/shield.R
 \name{getShieldNetwork}
 \alias{getShieldNetwork}
-\title{MITRE Shield as visNetwork}
+\title{MITRE  ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+It returns a visNetwork object ready for analyze and plot.}
 \usage{
 getShieldNetwork()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
-  It returns a visNetwork object ready for analyze and plot.
+list of nodes and edges
 }
 \description{
-MITRE Shield as visNetwork
+MITRE  ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+It returns a visNetwork object ready for analyze and plot.
 }
 \examples{
 \donttest{
-shieldnetwork <- getShieldNetwork()
+shieldnet <- getShieldNetwork()
 }
 }
+\keyword{internal}

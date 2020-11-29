@@ -294,14 +294,12 @@ getShieldNodes <- function() {
   return(shield_nodes)
 }
 
-#' MITRE Shield as visNetwork
+#' MITRE  ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' It returns a visNetwork object ready for analyze and plot.
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
-#'   It returns a visNetwork object ready for analyze and plot.
-#' @examples
-#' \donttest{
-#' shieldnetwork <- getShieldNetwork()
-#' }
+#' @return list of nodes and edges
+#'
+#' @keywords internal
 getShieldNetwork <- function() {
   # MITRE Shield Network as igraph
   relations <- getShieldRelations()
@@ -316,6 +314,8 @@ getShieldNetwork <- function() {
 #' ETL process that download current shield definitions and return a list of
 #' data frames for each object. The list also contains a visNetwork object with
 #' SHIELD objects as nodes and all relations as edges.
+#'
+#' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
 #' @export
