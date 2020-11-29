@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Travis build
-status](https://travis-ci.org/motherhack3r/mitre.svg?branch=devel)](https://travis-ci.org/motherhack3r/mitre)
+status](https://travis-ci.org/motherhack3r/mitre.svg?branch=attck)](https://travis-ci.org/motherhack3r/mitre)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/mitre)](https://cran.r-project.org/package=mitre)
 <!-- badges: end -->
