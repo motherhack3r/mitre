@@ -1,0 +1,52 @@
+---
+title: "Mitre"
+author: "Humbert Costas"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+runtime: shiny
+vignette: >
+  %\VignetteIndexEntry{Mitre}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+library(shiny)
+library(visNetwork)
+library(mitre)
+```
+You can explore MITRE Shield data frames as you usually analyze data, but
+the power reside in relations. Let's try to visualize the hole graph with 
+a ShinyApp... let's call it: MITRExplorer.
+  
+# MITRExplorer
+This is as Proof Of Concept project to provide an exploration tool for 
+MITRE data sets.
+
+Try to build your own MITRExplorer app using the following code for ui and server.
+
+## ui.R
+```{r ui_file}
+
+# Define UI for application that draws a histogram
+ui <- shinyUI(fluidPage(
+   # Application title
+   titlePanel("MITRE Shield Explorer"),
+   # Show a plot of the generated distribution
+   mainPanel(
+       visNetworkOutput("shieldnetwork")
+   )
+))
+
+## server.R
+server <- shinyServer(function(input, output) {
+   output$shieldnetwork <- renderVisNetwork({
+       shieldnet <- getShieldNetwork()
+       shieldnet %>%
+           visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
+           visLayout(randomSeed = 123)
+   })
+})
+
+shiny::shinyApp(ui, server)
+```

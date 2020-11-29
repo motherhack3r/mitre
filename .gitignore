@@ -38,3 +38,6 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 inst/doc
+
+# CRAN-RELEASE 131d5d7
+CRAN-RELEASE

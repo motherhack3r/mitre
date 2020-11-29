@@ -303,3 +303,24 @@ getShieldNetwork <- function() {
 
   return(shieldnet)
 }
+
+#' ETL process that download current shield definitions and return a list of
+#' data frames for each object. The list also contains a visNetwork object with
+#' SHIELD objects as nodes and all relations as edges.
+#'
+#' @return list of data frames
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' shield <- getShieldData()
+#' }
+getShieldData <- function() {
+  shield <- list(tactics = getShieldTactics(),
+                 techniques = getShieldTechniques(),
+                 opportunities = getShieldOpportunities(),
+                 procedures = getShieldProcedures(),
+                 usecases = getShieldUseCases(),
+                 shieldnet = getShieldNetwork())
+  return(shield)
+}

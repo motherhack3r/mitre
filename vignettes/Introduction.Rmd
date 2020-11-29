@@ -83,3 +83,7 @@ Try it selecting one object from list or point and click.
 ### Details for DTE0031
 
 ![MITRExplorer](images/mitrexplr_dte0031.PNG)
+
+## MITRExplorer online
+
+[MITRExplorer](https://security.shinyapps.io/mitreshield/)
