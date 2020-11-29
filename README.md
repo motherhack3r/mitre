@@ -39,8 +39,8 @@ and names:
 
 ``` r
 library(mitre)
-tactics <- getShieldTactics()
-tactics[, 1:2]
+shield <- getShieldData()
+shield$tactics[, 1:2]
 #>        id       name
 #> 1 DTA0001    Channel
 #> 2 DTA0002    Collect
@@ -58,8 +58,9 @@ This is a example which shows you how to visualize shield network:
 
 ``` r
 # library(mitre)
-# shieldnet <- getShieldNetwork()
-# shieldnet
+# shield <- getShieldData()
+#visNetwork::visNetwork(nodes = shield$shieldnet$nodes,
+#                       edges = shield$shieldnet$edges)
 ```
 
 For more advanced visualizations with shiny, check vignettes.

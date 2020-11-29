@@ -302,7 +302,8 @@ getShieldNetwork <- function() {
   relations <- getShieldRelations()
   shield_nodes <- getShieldNodes()
 
-  shieldnet <- visNetwork::visNetwork(shield_nodes, relations)
+  shieldnet <- list(nodes = shield_nodes,
+                    edges = relations)
 
   return(shieldnet)
 }

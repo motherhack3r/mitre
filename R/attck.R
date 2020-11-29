@@ -196,8 +196,8 @@ getAttckData <- function(verbose = FALSE) {
   attck_nodes <- attck_nodes[-which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
 
   if (verbose) print(paste("[*][ATT&CK][graph] Building visNetwork ..."))
-  attcknet <- visNetwork::visNetwork(attck_nodes, attck_edges)
-  # attcknet %>% visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>% visLayout(randomSeed = 123)
+  attcknet <- list(nodes = attck_nodes,
+                   edges = attck_edges)
 
   tactics.raw <- tactics.raw[, colSums(is.na(tactics.raw)) < nrow(tactics.raw)]
   techniques.raw <- techniques.raw[, colSums(is.na(techniques.raw)) < nrow(techniques.raw)]
