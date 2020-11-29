@@ -22,14 +22,14 @@ Imports:
     dplyr,
     plyr,
     jsonlite,
-    RJSONIO,
-    curl
+    RJSONIO
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     utils,
-    shiny
+    shiny,
+    curl
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
