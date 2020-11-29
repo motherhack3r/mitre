@@ -1,11 +1,14 @@
-#' Title
+#' Nodes and Edges ready for digraphs. Include shield and att&ck objects.
 #'
-#' @param verbose
+#' @param verbose default is FALSE
 #'
-#' @return
+#' @return list of two data frames: nodes and edges
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' mitrenet <- getMitreNetwork()
+#' }
 getMitreNetwork <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Start ETL process."))
   shield <- getShieldData()

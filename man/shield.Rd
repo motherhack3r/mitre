@@ -3,7 +3,7 @@
 \docType{data}
 \name{shield}
 \alias{shield}
-\title{MITRE SHIELD framework dataset}
+\title{MITRE SHIELD framework data set}
 \format{
 A list of 5 data frames and one visNetwork object:
 \describe{
@@ -22,7 +22,7 @@ A list of 5 data frames and one visNetwork object:
 shield
 }
 \description{
-A dataset containing SHIELD object models as data frames. It also contains
+A data set containing SHIELD object models as data frames. It also contains
 a graph network with the relations between objects.
 }
 \keyword{datasets}

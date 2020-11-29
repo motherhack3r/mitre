@@ -197,6 +197,10 @@ getShieldRelations <- function() {
   df$.id <- NULL
   relations <- dplyr::bind_rows(relations, df)
 
+  relations$label <- rep("uses", nrow(relations))
+  relations$arrows <- rep("to", nrow(relations))
+  relations$title <- rep("uses", nrow(relations))
+
   return(relations)
 }
 
@@ -285,6 +289,7 @@ getShieldNodes <- function() {
   df$description <- NULL
 
   shield_nodes <- rbind(shield_nodes, df)
+  shield_nodes$shadow <- rep(FALSE, nrow(shield_nodes))
 
   return(shield_nodes)
 }

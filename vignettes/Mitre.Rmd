@@ -41,10 +41,12 @@ ui <- shinyUI(fluidPage(
 ## server.R
 server <- shinyServer(function(input, output) {
    output$shieldnetwork <- renderVisNetwork({
-       shieldnet <- getShieldNetwork()
-       shieldnet %>%
-           visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
-           visLayout(randomSeed = 123)
+      mitrenet <- getMitreNetwork()
+      mitrenet <- visNetwork(nodes = mitrenet$nodes,
+                             edges = mitrenet$edges)
+      mitrenet %>%
+         visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
+         visLayout(randomSeed = 123)
    })
 })
 

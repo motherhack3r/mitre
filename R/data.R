@@ -1,6 +1,6 @@
-#' MITRE ATT&CK framework dataset
+#' MITRE ATT&CK framework data set
 #'
-#' A dataset containing ATT&CK object models as data frames. It also contains
+#' A data set containing ATT&CK object models as data frames. It also contains
 #' a graph network with the relations between objects.
 #'
 #' @format A list of 5 data frames and one visNetwork object:
@@ -15,9 +15,9 @@
 #' @source \url{https://github.com/mitre/cti}
 "attck"
 
-#' MITRE SHIELD framework dataset
+#' MITRE SHIELD framework data set
 #'
-#' A dataset containing SHIELD object models as data frames. It also contains
+#' A data set containing SHIELD object models as data frames. It also contains
 #' a graph network with the relations between objects.
 #'
 #' @format A list of 5 data frames and one visNetwork object:

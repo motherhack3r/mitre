@@ -3,7 +3,7 @@
 \docType{data}
 \name{attck}
 \alias{attck}
-\title{MITRE ATT&CK framework dataset}
+\title{MITRE ATT&CK framework data set}
 \format{
 A list of 5 data frames and one visNetwork object:
 \describe{
@@ -22,7 +22,7 @@ A list of 5 data frames and one visNetwork object:
 attck
 }
 \description{
-A dataset containing ATT&CK object models as data frames. It also contains
+A data set containing ATT&CK object models as data frames. It also contains
 a graph network with the relations between objects.
 }
 \keyword{datasets}
