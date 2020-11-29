@@ -206,6 +206,14 @@ getAttckData <- function(verbose = FALSE) {
   mitigation.raw <- mitigation.raw[, colSums(is.na(mitigation.raw)) < nrow(mitigation.raw)]
 
   if (verbose) print(paste("[*][ATT&CK] Building output ..."))
+  tactics.raw$description <- stringr::str_trim(tactics.raw$description)
+  tactics.raw$kill_chain_phases <- NULL
+  tactics.raw$x_mitre_platforms <- NULL
+  groups.raw$kill_chain_phases <- NULL
+  groups.raw$x_mitre_platforms <- NULL
+  software.raw$kill_chain_phases <- NULL
+  mitigation.raw$kill_chain_phases <- NULL
+  mitigation.raw$x_mitre_platforms <- NULL
   attck <- list(tactics = tactics.raw,
                 techniques = techniques.raw,
                 groups = groups.raw,
