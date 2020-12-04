@@ -2,19 +2,14 @@
 % Please edit documentation in R/shield.R
 \name{getShieldOpportunities}
 \alias{getShieldOpportunities}
-\title{MITRE Shield Opportunities data frame}
+\title{ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .}
 \usage{
 getShieldOpportunities()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+MITRE Shield Opportunities data frame
   The data frame columns are: id, description.
 }
 \description{
-MITRE Shield Opportunities data frame
-}
-\examples{
-\donttest{
-opportunities <- getShieldOpportunities()
-}
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 }

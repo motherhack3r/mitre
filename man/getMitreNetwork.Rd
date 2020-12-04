@@ -17,6 +17,6 @@ Nodes and Edges ready for digraphs. Include shield and att&ck objects.
 }
 \examples{
 \donttest{
-mitrenet <- getMitreNetwork()
+mitrenet <- mitre::getMitreNetwork()
 }
 }

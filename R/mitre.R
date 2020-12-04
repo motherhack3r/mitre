@@ -7,7 +7,7 @@
 #'
 #' @examples
 #' \donttest{
-#' mitrenet <- getMitreNetwork()
+#' mitrenet <- mitre::getMitreNetwork()
 #' }
 getMitreNetwork <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Start ETL process."))

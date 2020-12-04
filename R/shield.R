@@ -1,11 +1,7 @@
-#' MITRE Shield Tactics data frame
+#' ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' @return MITRE Shield Tactics data frame
 #'   The data frame columns are: id, name, description, long_description.
-#' @examples
-#' \donttest{
-#' shield.tactics <- getShieldTactics()
-#' }
 getShieldTactics <- function() {
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
   tactics <- jsonlite::fromJSON(tactics_url)
@@ -13,14 +9,10 @@ getShieldTactics <- function() {
   return(tactics)
 }
 
-#' MITRE Shield Techniques data frame
+#' ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' @return MITRE Shield Techniques data frame
 #'   The data frame columns are: id, name, description, long_description.
-#' @examples
-#' \donttest{
-#' shield.techniques <- getShieldTechniques()
-#' }
 getShieldTechniques <- function() {
   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
   tech <- jsonlite::fromJSON(tech_url)
@@ -28,14 +20,10 @@ getShieldTechniques <- function() {
   return(tech)
 }
 
-#' MITRE Shield Opportunities data frame
+#' ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' @return MITRE Shield Opportunities data frame
 #'   The data frame columns are: id, description.
-#' @examples
-#' \donttest{
-#' opportunities <- getShieldOpportunities()
-#' }
 getShieldOpportunities <- function() {
   opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
   opport <- jsonlite::fromJSON(opport_url)
@@ -43,14 +31,10 @@ getShieldOpportunities <- function() {
   return(opport)
 }
 
-#' MITRE Shield Procedures data frame
+#' ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' @return MITRE Shield Procedures data frame
 #'   The data frame columns are: id, description.
-#' @examples
-#' \donttest{
-#' procedures <- getShieldProcedures()
-#' }
 getShieldProcedures <- function() {
   proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
   proced <- jsonlite::fromJSON(proced_url)
@@ -58,14 +42,10 @@ getShieldProcedures <- function() {
   return(proced)
 }
 
-#' MITRE Shield Use Cases data frame
+#' ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 #'
-#' @return ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+#' @return MITRE Shield Use Cases data frame
 #'   The data frame columns are: id, description.
-#' @examples
-#' \donttest{
-#' usecases <- getShieldUseCases()
-#' }
 getShieldUseCases <- function() {
   usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
   usecase <- jsonlite::fromJSON(usecase_url)
@@ -77,10 +57,6 @@ getShieldUseCases <- function() {
 #' MITRE Shield Tactics detailed data frame
 #'
 #' @return data.frame
-#' @examples
-#' \donttest{
-#' tactics <- getShieldTactictDetail()
-#' }
 getShieldTactictDetail <- function() {
   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
   tact_det <- jsonlite::fromJSON(tact_det_url)
@@ -93,11 +69,7 @@ getShieldTactictDetail <- function() {
 #' MITRE Shield Techniques detailed data frame
 #'
 #' @return data.frame
-#' @examples
-#' \donttest{
-#' technique <- getShieldTechniquesDetail()
-#' }
-getShieldTechniquesDetail <- function() {
+etShieldTechniquesDetail <- function() {
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   tech_det <- jsonlite::fromJSON(tech_det_url)
 
@@ -107,10 +79,6 @@ getShieldTechniquesDetail <- function() {
 #' MITRE Shield objects relations data frame
 #'
 #' @return data.frame
-#' @examples
-#' \donttest{
-#' relations <- getShieldRelations()
-#' }
 getShieldRelations <- function() {
   tact_det <- getShieldTactictDetail()
   tech_det <- getShieldTechniquesDetail()
@@ -207,10 +175,6 @@ getShieldRelations <- function() {
 #' MITRE Shield objects as nodes in a data frame
 #'
 #' @return data.frame
-#' @examples
-#' \donttest{
-#' shield_nodes <- getShieldNodes()
-#' }
 getShieldNodes <- function() {
   ## NODES
   # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
@@ -322,7 +286,7 @@ getShieldNetwork <- function() {
 #'
 #' @examples
 #' \donttest{
-#' shield <- getShieldData()
+#' shield <- mitre::getShieldData()
 #' }
 getShieldData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Building output ..."))

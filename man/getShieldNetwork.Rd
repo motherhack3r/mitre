@@ -14,9 +14,4 @@ list of nodes and edges
 MITRE  ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 It returns a visNetwork object ready for analyze and plot.
 }
-\examples{
-\donttest{
-shieldnet <- getShieldNetwork()
-}
-}
 \keyword{internal}

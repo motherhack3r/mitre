@@ -2,19 +2,14 @@
 % Please edit documentation in R/shield.R
 \name{getShieldUseCases}
 \alias{getShieldUseCases}
-\title{MITRE Shield Use Cases data frame}
+\title{ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .}
 \usage{
 getShieldUseCases()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+MITRE Shield Use Cases data frame
   The data frame columns are: id, description.
 }
 \description{
-MITRE Shield Use Cases data frame
-}
-\examples{
-\donttest{
-usecases <- getShieldUseCases()
-}
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 }

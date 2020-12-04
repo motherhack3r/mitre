@@ -2,19 +2,14 @@
 % Please edit documentation in R/shield.R
 \name{getShieldTactics}
 \alias{getShieldTactics}
-\title{MITRE Shield Tactics data frame}
+\title{ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .}
 \usage{
 getShieldTactics()
 }
 \value{
-ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
+MITRE Shield Tactics data frame
   The data frame columns are: id, name, description, long_description.
 }
 \description{
-MITRE Shield Tactics data frame
-}
-\examples{
-\donttest{
-shield.tactics <- getShieldTactics()
-}
+ETL process that read source data from \url{https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data} .
 }

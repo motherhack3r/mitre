@@ -21,6 +21,6 @@ SHIELD objects as nodes and all relations as edges.
 }
 \examples{
 \donttest{
-shield <- getShieldData()
+shield <- mitre::getShieldData()
 }
 }

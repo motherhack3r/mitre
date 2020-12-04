@@ -9,12 +9,13 @@
 #'
 #' @examples
 #' \donttest{
-#' attck <- getAttckData()
+#' attck <- mitre::getAttckData()
 #' attck_tactics <- attck[["tactics"]]
 #' attck_techniques <- attck[["techniques"]]
 #' attck_groups <- attck[["groups"]]
 #' attck_software <- attck[["software"]]
 #' attck_mitigation <- attck[["mitigation"]]
+#' attcknet <- attck[["attcknet"]]
 #' }
 getAttckData <- function(verbose = FALSE) {
   # ATT&CK MOBILE

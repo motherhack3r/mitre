@@ -12,8 +12,3 @@ data.frame
 \description{
 MITRE Shield objects as nodes in a data frame
 }
-\examples{
-\donttest{
-shield_nodes <- getShieldNodes()
-}
-}
