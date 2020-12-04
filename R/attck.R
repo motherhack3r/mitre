@@ -190,10 +190,14 @@ getAttckData <- function(verbose = FALSE) {
   attck.df$arrows <- rep("to", nrow(attck.df))
 
   attck_edges <- attck.df[, names(edges)]
+  ###### CTI ISSUE: remove relations between revoked or deprecated objects
+  attck_edges_rev <- attck_edges[which(is.na(attck_edges$from) | is.na(attck_edges$to)), ]
+  attck_edges <- attck_edges[which(!is.na(attck_edges$from) & !is.na(attck_edges$to)), ]
 
   if (verbose) print(paste("[!][ATT&CK][graph] CTI issue patch ..."))
   ###### CTI ISSUE: some unique cti-mitre-id are used in different objects
   n_occur <- data.frame(table(attck_nodes$id))
+  attck_nodes_bad <- attck_nodes[which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
   attck_nodes <- attck_nodes[-which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
 
   if (verbose) print(paste("[*][ATT&CK][graph] Building visNetwork ..."))
