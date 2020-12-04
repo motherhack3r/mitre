@@ -12,3 +12,4 @@ data.frame
 \description{
 MITRE Shield objects relations data frame
 }
+\keyword{internal}

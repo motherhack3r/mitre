@@ -2,6 +2,7 @@
 #'
 #' @return MITRE Shield Tactics data frame
 #'   The data frame columns are: id, name, description, long_description.
+#' @keywords internal
 getShieldTactics <- function() {
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
   tactics <- jsonlite::fromJSON(tactics_url)
@@ -13,6 +14,7 @@ getShieldTactics <- function() {
 #'
 #' @return MITRE Shield Techniques data frame
 #'   The data frame columns are: id, name, description, long_description.
+#' @keywords internal
 getShieldTechniques <- function() {
   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
   tech <- jsonlite::fromJSON(tech_url)
@@ -24,6 +26,7 @@ getShieldTechniques <- function() {
 #'
 #' @return MITRE Shield Opportunities data frame
 #'   The data frame columns are: id, description.
+#' @keywords internal
 getShieldOpportunities <- function() {
   opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
   opport <- jsonlite::fromJSON(opport_url)
@@ -35,6 +38,7 @@ getShieldOpportunities <- function() {
 #'
 #' @return MITRE Shield Procedures data frame
 #'   The data frame columns are: id, description.
+#' @keywords internal
 getShieldProcedures <- function() {
   proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
   proced <- jsonlite::fromJSON(proced_url)
@@ -46,6 +50,7 @@ getShieldProcedures <- function() {
 #'
 #' @return MITRE Shield Use Cases data frame
 #'   The data frame columns are: id, description.
+#' @keywords internal
 getShieldUseCases <- function() {
   usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
   usecase <- jsonlite::fromJSON(usecase_url)
@@ -57,6 +62,7 @@ getShieldUseCases <- function() {
 #' MITRE Shield Tactics detailed data frame
 #'
 #' @return data.frame
+#' @keywords internal
 getShieldTactictDetail <- function() {
   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
   tact_det <- jsonlite::fromJSON(tact_det_url)
@@ -69,7 +75,8 @@ getShieldTactictDetail <- function() {
 #' MITRE Shield Techniques detailed data frame
 #'
 #' @return data.frame
-etShieldTechniquesDetail <- function() {
+#' @keywords internal
+getShieldTechniquesDetail <- function() {
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   tech_det <- jsonlite::fromJSON(tech_det_url)
 
@@ -79,6 +86,7 @@ etShieldTechniquesDetail <- function() {
 #' MITRE Shield objects relations data frame
 #'
 #' @return data.frame
+#' @keywords internal
 getShieldRelations <- function() {
   tact_det <- getShieldTactictDetail()
   tech_det <- getShieldTechniquesDetail()
@@ -175,6 +183,7 @@ getShieldRelations <- function() {
 #' MITRE Shield objects as nodes in a data frame
 #'
 #' @return data.frame
+#' @keywords internal
 getShieldNodes <- function() {
   ## NODES
   # Ref: https://datastorm-open.github.io/visNetwork/nodes.html
@@ -262,7 +271,6 @@ getShieldNodes <- function() {
 #' It returns a visNetwork object ready for analyze and plot.
 #'
 #' @return list of nodes and edges
-#'
 #' @keywords internal
 getShieldNetwork <- function() {
   # MITRE Shield Network as igraph

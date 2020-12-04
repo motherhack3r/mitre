@@ -12,3 +12,4 @@ data.frame
 \description{
 MITRE Shield Tactics detailed data frame
 }
+\keyword{internal}
