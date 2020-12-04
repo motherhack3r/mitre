@@ -152,7 +152,7 @@ getAttckData <- function(verbose = FALSE) {
   attck.df$shadow <- rep(FALSE, nrow(attck.df))
   attck.df <- attck.df[, names(nodes)]
 
-  attck_nodes <- rbind(attck_nodes, attck.df)
+  attck_nodes <- unique(rbind(attck_nodes, attck.df))
 
   if (verbose) print(paste("[*][ATT&CK][graph] Building edges ..."))
   ## EDGES
