@@ -27,19 +27,49 @@ getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK][MOB] Parsing ..."))
   attck.mob.raw <- jsonlite::fromJSON(attck.mob.raw.file)[["objects"]]
 
+  # Omit deprecated and revoked objects
+  attck.mob.raw$x_mitre_deprecated[is.na(attck.mob.raw$x_mitre_deprecated)] <- FALSE
+  attck.mob.raw$revoked[is.na(attck.mob.raw$revoked)] <- FALSE
+  attck.mob.raw <- attck.mob.raw[which(!attck.mob.raw$x_mitre_deprecated), ]
+  attck.mob.raw <- attck.mob.raw[which(!attck.mob.raw$revoked), ]
+
+  # Extract MITRE id from external references
   attck.mob.raw$mitreid <- sapply(attck.mob.raw$external_references,
                                     function(x)
                                       x[x$source_name %in% c("mitre-attack",
                                                              "mitre-ics-attack",
                                                              "mitre-mobile-attack"),
                                         "external_id"])
+
+  # Extract relations between techniques and tactics from kill chain
+  mob.rels.tt <- attck.mob.raw[which(sapply(attck.mob.raw$kill_chain_phases, length) > 0),
+                     c("id", "kill_chain_phases")]
+  names(mob.rels.tt$kill_chain_phases) <- mob.rels.tt$id
+  mob.rels.tt <- mob.rels.tt$kill_chain_phases
+  mob.rels.tt <- dplyr::bind_rows(mob.rels.tt, .id = "id")
+  mob.rels.tt <- dplyr::left_join(mob.rels.tt,
+                                  attck.mob.raw[, c("id", "x_mitre_shortname")],
+                                  by = c("phase_name" = "x_mitre_shortname"))
+  mob.rels.tt <- mob.rels.tt[ , c("id.x", "id.y")]
+  names(mob.rels.tt) <- c("source_ref", "target_ref")
+  mob.rels.tt$relationship_type <- rep("accomplishes", nrow(mob.rels.tt))
   attck.mob.raw$kill_chain_phases <- sapply(attck.mob.raw$kill_chain_phases,
                                             function(x)
                                               as.character(jsonlite::toJSON(x, null = "list")))
+
+  # Extract relations between techniques and platforms from platforms
+  # mob.platforms <- attck.mob.raw[which(sapply(attck.mob.raw$x_mitre_platforms, length) > 0),
+  #                                c("id", "x_mitre_platforms")]
+  # names(mob.platforms$x_mitre_platforms) <- mob.platforms$id
+  # mob.platforms <- mob.platforms$x_mitre_platforms %>%
+  #   bind_rows(.id = "id") %>%
+  #   gather(key = "from", "to") %>%
+  #   unique
   attck.mob.raw$x_mitre_platforms <- sapply(attck.mob.raw$x_mitre_platforms,
                                             function(x)
                                               as.character(jsonlite::toJSON(x, null = "list")))
 
+  # Tidy mobile data frame
   mob <- attck.mob.raw[c("id", "mitreid", "type", "name", "description",
                          "x_mitre_is_subtechnique", "x_mitre_deprecated",
                          "x_mitre_version", "x_mitre_old_attack_id",
@@ -48,10 +78,7 @@ getAttckData <- function(verbose = FALSE) {
                          "x_mitre_shortname", "definition_type",
                          "kill_chain_phases", "x_mitre_platforms",
                          "created_by_ref", "modified", "created")]
-  mob$x_mitre_deprecated[is.na(mob$x_mitre_deprecated)] <- FALSE
-  mob$revoked[is.na(mob$revoked)] <- FALSE
-  mob <- mob[which(!mob$x_mitre_deprecated), ]
-  mob <- mob[which(!mob$revoked), ]
+
   mob.rels <- mob[mob$type == "relationship", ]
   mob.rels$mitreid <- NULL
   mob.rels <- mob.rels[, colSums(is.na(mob.rels)) < nrow(mob.rels)]
@@ -78,19 +105,42 @@ getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK][ENT] Parsing ..."))
   attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
 
+  # Omit deprecated and revoked objects
+  attck.ent.raw$x_mitre_deprecated[is.na(attck.ent.raw$x_mitre_deprecated)] <- FALSE
+  attck.ent.raw$revoked[is.na(attck.ent.raw$revoked)] <- FALSE
+  attck.ent.raw <- attck.ent.raw[which(!attck.ent.raw$x_mitre_deprecated), ]
+  attck.ent.raw <- attck.ent.raw[which(!attck.ent.raw$revoked), ]
+
+  # Extract MITRE id from external references
   attck.ent.raw$mitreid <- sapply(attck.ent.raw$external_references,
                                   function(x)
                                     x[x$source_name %in% c("mitre-attack",
                                                            "mitre-ics-attack",
                                                            "mitre-mobile-attack"),
                                       "external_id"])
+
+  # Extract relations between techniques and tactics from kill chain
+  ent.rels.tt <- attck.ent.raw[which(sapply(attck.ent.raw$kill_chain_phases, length) > 0),
+                               c("id", "kill_chain_phases")]
+  names(ent.rels.tt$kill_chain_phases) <- ent.rels.tt$id
+  ent.rels.tt <- ent.rels.tt$kill_chain_phases
+  ent.rels.tt <- dplyr::bind_rows(ent.rels.tt, .id = "id")
+  ent.rels.tt <- dplyr::left_join(ent.rels.tt,
+                                  attck.ent.raw[, c("id", "x_mitre_shortname")],
+                                  by = c("phase_name" = "x_mitre_shortname"))
+  ent.rels.tt <- ent.rels.tt[ , c("id.x", "id.y")]
+  names(ent.rels.tt) <- c("source_ref", "target_ref")
+  ent.rels.tt$relationship_type <- rep("accomplishes", nrow(ent.rels.tt))
   attck.ent.raw$kill_chain_phases <- sapply(attck.ent.raw$kill_chain_phases,
                                             function(x)
                                               as.character(jsonlite::toJSON(x, null = "list")))
+
+  # Extract relations between techniques and platforms from platforms
   attck.ent.raw$x_mitre_platforms <- sapply(attck.ent.raw$x_mitre_platforms,
                                             function(x)
                                               as.character(jsonlite::toJSON(x, null = "list")))
 
+  # Tidy mobile data frame
   ent <- attck.ent.raw[c("id", "mitreid", "type", "name", "description",
                          "x_mitre_is_subtechnique", "x_mitre_deprecated",
                          "x_mitre_version", "x_mitre_old_attack_id",
@@ -100,10 +150,6 @@ getAttckData <- function(verbose = FALSE) {
                          "kill_chain_phases", "x_mitre_platforms",
                          "created_by_ref", "modified", "created")]
 
-  ent$x_mitre_deprecated[is.na(ent$x_mitre_deprecated)] <- FALSE
-  ent$revoked[is.na(ent$revoked)] <- FALSE
-  ent <- ent[which(!ent$x_mitre_deprecated), ]
-  ent <- ent[which(!ent$revoked), ]
   ent.rels <- ent[ent$type == "relationship", ]
   ent.rels$mitreid <- NULL
   ent.rels <- ent.rels[, colSums(is.na(ent.rels)) < nrow(ent.rels)]
@@ -168,6 +214,7 @@ getAttckData <- function(verbose = FALSE) {
   relations <- rbind(mob.rels, ent.rels)
 
   attck.df <- relations[, c("source_ref", "target_ref", "relationship_type")]
+  attck.df <- rbind(attck.df, mob.rels.tt, ent.rels.tt)
   attck.df <- attck.df[attck.df$relationship_type != "revoked-by", ]
   attck.df <- unique(attck.df)
 
@@ -196,9 +243,9 @@ getAttckData <- function(verbose = FALSE) {
 
   if (verbose) print(paste("[!][ATT&CK][graph] CTI issue patch ..."))
   ###### CTI ISSUE: some unique cti-mitre-id are used in different objects
-  n_occur <- data.frame(table(attck_nodes$id))
+  n_occur <- as.data.frame(table(attck_nodes$id), stringsAsFactors = FALSE)
   attck_nodes_bad <- attck_nodes[which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
-  attck_nodes <- attck_nodes[-which(attck_nodes$id %in% as.character(n_occur[n_occur$Freq > 1, "Var1"])), ]
+  attck_nodes <- attck_nodes[which((attck_nodes$id %in% as.character(n_occur[n_occur$Freq == 1, "Var1"]))), ]
 
   if (verbose) print(paste("[*][ATT&CK][graph] Building visNetwork ..."))
   attck_edges$team <- rep("RED", nrow(attck_edges))
