@@ -188,8 +188,8 @@ getAttckData <- function(verbose = FALSE) {
                        shape = c("triangle", "square", "ellipse",
                                  "box", "box", "diamond"),
                        value = c(5, 4, 4, 4, 4, 5),
-                       color = c("darkred", "orange", "brown",
-                                 "red", "magenta", "grey"))
+                       color = c("gold2", "lightblue4", "indianred3",
+                                 "azure4vis", "grey", "darkseagreen3"))
   attck.df <- dplyr::left_join(attck.raw, nodetype, by = "type")
   attck.df$id <- attck.df$mitreid
   attck.df$label <- attck.df$id
