@@ -206,7 +206,7 @@ getShieldNodes <- function() {
   df$value <- rep(5, nrow(df))
   df$shape <- rep("triangle", nrow(df))
   df$title <- paste0("<p><b>", df$name, "</b><br>", df$description, "</p>")
-  df$color <- rep("darkred", nrow(df))
+  df$color <- rep("gold", nrow(df))
   df$description <- NULL
   df$name <- NULL
   df$long_description <- NULL

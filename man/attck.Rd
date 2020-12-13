@@ -12,7 +12,7 @@ A list of 5 data frames and one visNetwork object:
   \item{groups}{a data frame with 111 rows and 13 columns.}
   \item{software}{a data frame with 513 rows and 14 columns.}
   \item{mitigation}{a data frame with 55 rows and 14 columns.}
-  \item{attcknet}{a visNetwork with 1310 nodes and 9539 edges.}
+  \item{attcknet}{a visNetwork with 1314 nodes and 10058 edges.}
 }
 }
 \source{
