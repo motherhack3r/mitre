@@ -42,6 +42,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   edges$label <- rep("problem type", nrow(edges))
   edges$arrows <- rep("to", nrow(edges))
   edges$title <- rep("imply", nrow(edges))
+  edges <- edges[-which(edges$to == "NVD-CWE-noinfo"), ]
 
   cvenet <- list(nodes = nodes,
                  edges = edges)
