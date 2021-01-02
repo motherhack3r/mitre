@@ -6,13 +6,34 @@
 #' @export
 getCVEData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][CVE] Building output ..."))
-  cve <- list(cve = ParseCVEsData(verbose),
-              cvenet = getCVENetwork(verbose))
+  cve <- ParseCVEsData(verbose)
+  cvenet <- getCVENetwork(cve, verbose)
+  cve <- list(cve = cve, cvenet = cvenet)
   return(cve)
 }
 
-getCVENetwork <- function(verbose = FALSE) {
-  cvenet <- data.frame(stringsAsFactors = F)
+getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
+  nodes <- dplyr::select(cve, c("cve.id", "cvss2.score", "cvss3.score", "description"))
+  nodes$id <- nodes$cve.id
+  nodes$label <- nodes$cve.id
+  nodes$group <- rep("cve", nrow(nodes))
+  nodes$value <- max(nodes$cvss2.score, nodes$cvss3.score)
+  nodes$shape <- rep("rectangle", nrow(nodes))
+  nodes$title <- nodes$description
+  nodes$color <- rep("grey", nrow(nodes))
+  nodes$shadow <- rep(TRUE, nrow(nodes))
+
+  edges <- dplyr::select(cve, c("cve.id", "problem.type"))
+  edges[edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
+  edges$problem.type <- lapply(edges$problem.type, jsonlite::fromJSON)
+  edges <- tidyr::unnest(edges, cols = c("problem.type"))
+  edges$team <- rep("BLACK", nrow(edges))
+  edges$label <- rep("problem type", nrow(edges))
+  edges$arrows <- rep("to", nrow(edges))
+  edges$title <- rep("imply", nrow(edges))
+
+  cvenet <- list(nodes = nodes,
+                 edges = edges)
 
   return(cvenet)
 }
