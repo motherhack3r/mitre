@@ -15,7 +15,7 @@ getShieldTactics <- function() {
 #'   The data frame columns are: id, name, description, long_description.
 #' @keywords internal
 getShieldTechniques <- function() {
-  tech <- jsonlite::fromJSON("data-raw/shield-technique_details.json")
+  tech <- jsonlite::fromJSON("data-raw/shield-techniques.json")
 
   return(tech)
 }
