@@ -64,5 +64,13 @@ updateRawData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Download Technique details ..."))
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   utils::download.file(url = tech_det_url, destfile = "data-raw/shield-technique_details.json", quiet = !verbose)
+
+  # CVE
+  for (year in 2002:strftime(Sys.Date(), "%Y")) {
+    if (verbose) print(paste0("[*][CVE] Download ", year," CVEs ..."))
+    cve_url <- paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", year,".json.gz")
+    utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = !verbose)
+  }
+
 }
 
