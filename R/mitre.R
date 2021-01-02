@@ -78,5 +78,11 @@ updateRawData <- function(verbose = FALSE) {
     utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = !verbose)
   }
 
+  # CWE
+  cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
+  utils::download.file(url = cwe.url, destfile = paste0("data-raw/cwe-mitre.xml.zip"), quiet = !verbose)
+  utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
+               exdir = paste0("data-raw"),
+               overwrite = T)
 }
 

@@ -23,7 +23,9 @@ Imports:
     plyr,
     jsonlite,
     RJSONIO,
-    stringr
+    stringr,
+    rvest,
+    xml2
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

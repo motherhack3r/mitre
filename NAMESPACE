@@ -2,6 +2,7 @@
 
 export(getAttckData)
 export(getCVEData)
+export(getCWEData)
 export(getMitreNetwork)
 export(getShieldData)
 export(updateRawData)
