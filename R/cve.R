@@ -12,14 +12,17 @@
 #' cves <- mitre::getCVEData()
 #' }
 getCVEData <- function(verbose = FALSE) {
-  if (verbose) print(paste("[*][CVE] Building output ..."))
+  if (verbose) print(paste("[#][CVE] ETL process started."))
+  if (verbose) print(paste("[*][CVE] Building data frame ..."))
   cve <- ParseCVEsData(verbose)
+  if (verbose) print(paste("[*][CVE] Building relationship network ..."))
   cvenet <- getCVENetwork(cve, verbose)
   cve <- list(cve = cve, cvenet = cvenet)
   return(cve)
 }
 
 getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
+  if (verbose) print(paste("[-][CVE] Building nodes ..."))
   nodes <- dplyr::select(cve, c("cve.id", "cvss2.score", "cvss3.score", "description"))
   nodes$id <- nodes$cve.id
   nodes$label <- nodes$cve.id
@@ -33,19 +36,52 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   nodes <- dplyr::select(nodes, c("id", "label", "group", "value", "shape",
                                   "title", "color", "shadow"))
 
+  # CVE -> CWE
+  if (verbose) print(paste("[-][CVE] Searching relations with CWE ..."))
   edges <- dplyr::select(cve, c("cve.id", "problem.type"))
   edges[edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
   edges$problem.type <- lapply(edges$problem.type, jsonlite::fromJSON)
   edges <- tidyr::unnest(edges, cols = c("problem.type"))
   names(edges) <- c("from", "to")
-  edges$team <- rep("BLACK", nrow(edges))
+  edges$team <- rep("SYSADMIN", nrow(edges))
   edges$label <- rep("problem type", nrow(edges))
   edges$arrows <- rep("to", nrow(edges))
   edges$title <- rep("imply", nrow(edges))
   edges <- edges[-which(edges$to == "NVD-CWE-noinfo"), ]
 
+  # CPE -> CVE
+  if (verbose) print(paste("[-][CVE] Searching relations with CPE ..."))
+  edges2 <- dplyr::select(cve, c("cve.id", "vulnerable.configuration"))
+  cpematch <- lapply(cve$vulnerable.configuration,
+                     function(x)
+                       unique(jsonlite::fromJSON(x)$cpe_match[[1]]$cpe23Uri))
+  cpematch <- unlist(lapply(cpematch, function(x) ifelse(is.null(x), NA, x)))
+  cpechild <- lapply(cve$vulnerable.configuration,
+                     function(x)
+                       unique(unlist(sapply(jsonlite::fromJSON(x)$children,
+                                            function(y)
+                                              unlist(sapply(y$cpe_match,
+                                                            function(z) z$cpe23Uri))))))
+  cpechild <- unlist(lapply(cpechild, function(x) ifelse(is.null(x), NA, x)))
+  cpes <- data.frame(cpematch = cpematch,
+                     cpechild = cpechild,
+                     stringsAsFactors = FALSE)
+  edges2$cpes <- apply(cpes, 1,
+                    function(x)
+                      as.character(na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
+
+  edges2 <- tidyr::unnest(edges2, cols = c("cpes"))
+  names(edges2) <- c("to", "conf", "from")
+  edges2$conf <- NULL
+  edges2$team <- rep("SYSADMIN", nrow(edges2))
+  edges2$label <- rep("vulnerable", nrow(edges2))
+  edges2$arrows <- rep("to", nrow(edges2))
+  edges2$title <- rep("has", nrow(edges2))
+
+  edges <- rbind(edges, edges2)
+
   cvenet <- list(nodes = nodes,
-                 edges = edges)
+                 edges = as.data.frame(edges))
 
   return(cvenet)
 }
