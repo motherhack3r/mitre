@@ -2,13 +2,13 @@
 % Please edit documentation in R/mitre.R
 \name{updateRawData}
 \alias{updateRawData}
-\title{Title}
+\title{Download from official sources raw files saving them in [package_path]/data-raw/}
 \usage{
 updateRawData(verbose = FALSE)
 }
-\value{
-
+\arguments{
+\item{verbose}{default is FALSE}
 }
 \description{
-Title
+Download from official sources raw files saving them in [package_path]/data-raw/
 }

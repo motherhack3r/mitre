@@ -1,9 +1,16 @@
-#' Title
+#' ETL process that download current CVE definitions and return a list with a
+#' data frame for CVE objects. The list also contains a visNetwork object with
+#' CVE objects as nodes and all relations as edges.
 #'
-#' @param verbose
+#' @param verbose Default set as FALSE
 #'
-#' @return
+#' @return list of data frames
 #' @export
+#'
+#' @examples
+#' \donttest{
+#' cves <- mitre::getCVEData()
+#' }
 getCVEData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][CVE] Building output ..."))
   cve <- ParseCVEsData(verbose)

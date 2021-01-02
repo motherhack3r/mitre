@@ -2,16 +2,25 @@
 % Please edit documentation in R/cve.R
 \name{getCVEData}
 \alias{getCVEData}
-\title{Title}
+\title{ETL process that download current CVE definitions and return a list with a
+data frame for CVE objects. The list also contains a visNetwork object with
+CVE objects as nodes and all relations as edges.}
 \usage{
 getCVEData(verbose = FALSE)
 }
 \arguments{
-\item{verbose}{}
+\item{verbose}{Default set as FALSE}
 }
 \value{
-
+list of data frames
 }
 \description{
-Title
+ETL process that download current CVE definitions and return a list with a
+data frame for CVE objects. The list also contains a visNetwork object with
+CVE objects as nodes and all relations as edges.
+}
+\examples{
+\donttest{
+cves <- mitre::getCVEData()
+}
 }

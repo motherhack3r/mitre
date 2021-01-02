@@ -1,4 +1,4 @@
-#' Nodes and Edges ready for digraphs. Include shield and att&ck objects.
+#' Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.
 #'
 #' @param verbose default is FALSE
 #'
@@ -7,7 +7,7 @@
 #'
 #' @examples
 #' \donttest{
-#' mitrenet <- mitre::getMitreNetwork()
+#' mitrenet <- mitre::getMitreNetwork(T)
 #' }
 getMitreNetwork <- function(verbose = FALSE) {
   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
@@ -34,9 +34,10 @@ getMitreNetwork <- function(verbose = FALSE) {
   return(mitrenet)
 }
 
-#' Title
+#' Download from official sources raw files saving them in [package_path]/data-raw/
 #'
-#' @return
+#' @param verbose default is FALSE
+#'
 #' @export
 updateRawData <- function(verbose = FALSE) {
   # ATT&CK

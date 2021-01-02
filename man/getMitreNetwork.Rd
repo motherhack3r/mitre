@@ -2,7 +2,7 @@
 % Please edit documentation in R/mitre.R
 \name{getMitreNetwork}
 \alias{getMitreNetwork}
-\title{Nodes and Edges ready for digraphs. Include shield and att&ck objects.}
+\title{Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.}
 \usage{
 getMitreNetwork(verbose = FALSE)
 }
@@ -13,10 +13,10 @@ getMitreNetwork(verbose = FALSE)
 list of two data frames: nodes and edges
 }
 \description{
-Nodes and Edges ready for digraphs. Include shield and att&ck objects.
+Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.
 }
 \examples{
 \donttest{
-mitrenet <- mitre::getMitreNetwork()
+mitrenet <- mitre::getMitreNetwork(T)
 }
 }
