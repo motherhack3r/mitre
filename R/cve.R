@@ -38,8 +38,8 @@ ParseCVEsData <- function(verbose = FALSE) {
   cves$cvss2.c <- as.factor(cves$cvss2.c)
   cves$cvss2.i <- as.factor(cves$cvss2.i)
   cves$cvss2.a <- as.factor(cves$cvss2.a)
-  cves$published.date <- strptime(cves$published.date, "%Y-%m-%dT%H:%MZ")
-  cves$last.modified <- strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ")
+  cves$published.date <- as.POSIXct.POSIXlt(strptime(cves$published.date, "%Y-%m-%dT%H:%MZ"))
+  cves$last.modified <- as.POSIXct.POSIXlt(strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ"))
 
   if (verbose) print("[.][CVE] Parsing NIST data finished.")
   return(cves)
