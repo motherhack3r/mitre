@@ -10,18 +10,23 @@
 #' mitrenet <- mitre::getMitreNetwork()
 #' }
 getMitreNetwork <- function(verbose = FALSE) {
-  if (verbose) print(paste("[*][SHIELD] Start ETL process."))
-  shield <- getShieldData()
+  if (verbose) print(paste("[#][SHIELD] Start ETL process."))
+  shield <- getShieldData(verbose)
   shield_nodes <- shield$shieldnet$nodes
   shield_edges <- shield$shieldnet$edges
 
-  if (verbose) print(paste("[*][ATT&CK] Start ETL process."))
-  attck <- getAttckData()
+  if (verbose) print(paste("[#][ATT&CK] Start ETL process."))
+  attck <- getAttckData(verbose)
   attck_nodes <- attck$attcknet$nodes
   attck_edges <- attck$attcknet$edges
 
-  nodes <- rbind(shield_nodes, attck_nodes)
-  edges <- rbind(shield_edges, attck_edges)
+  if (verbose) print(paste("[#][CVE] Start ETL process."))
+  mitre.cves <- getCVEData(verbose)
+  cve_nodes <- mitre.cves$cvenet$nodes
+  cve_edges <- mitre.cves$cvenet$edges
+
+  nodes <- rbind(shield_nodes, attck_nodes, cve_nodes)
+  edges <- rbind(shield_edges, attck_edges, cve_edges)
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)

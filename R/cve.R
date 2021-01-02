@@ -18,15 +18,19 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   nodes$label <- nodes$cve.id
   nodes$group <- rep("cve", nrow(nodes))
   nodes$value <- max(nodes$cvss2.score, nodes$cvss3.score)
+  nodes$value[which(is.na(nodes$value))] <- -1
   nodes$shape <- rep("rectangle", nrow(nodes))
   nodes$title <- nodes$description
   nodes$color <- rep("grey", nrow(nodes))
   nodes$shadow <- rep(TRUE, nrow(nodes))
+  nodes <- dplyr::select(nodes, c("id", "label", "group", "value", "shape",
+                                  "title", "color", "shadow"))
 
   edges <- dplyr::select(cve, c("cve.id", "problem.type"))
   edges[edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
   edges$problem.type <- lapply(edges$problem.type, jsonlite::fromJSON)
   edges <- tidyr::unnest(edges, cols = c("problem.type"))
+  names(edges) <- c("from", "to")
   edges$team <- rep("BLACK", nrow(edges))
   edges$label <- rep("problem type", nrow(edges))
   edges$arrows <- rep("to", nrow(edges))
