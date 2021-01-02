@@ -19,13 +19,8 @@
 #' }
 getAttckData <- function(verbose = FALSE) {
   # ATT&CK MOBILE
-  if (verbose) print(paste("[*][ATT&CK][MOB] Download ATT&CK MOBILE..."))
-  attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
-  attck.mob.raw.file <- tempfile(pattern = "mitre_attckmob_", fileext = ".json")
-  utils::download.file(url = attck.mob.raw.url, destfile = attck.mob.raw.file, quiet = !verbose)
-
   if (verbose) print(paste("[*][ATT&CK][MOB] Parsing ..."))
-  attck.mob.raw <- jsonlite::fromJSON(attck.mob.raw.file)[["objects"]]
+  attck.mob.raw <- jsonlite::fromJSON("data-raw/attack-mobile.json")[["objects"]]
 
   # Omit deprecated and revoked objects
   attck.mob.raw$x_mitre_deprecated[is.na(attck.mob.raw$x_mitre_deprecated)] <- FALSE
@@ -97,13 +92,8 @@ getAttckData <- function(verbose = FALSE) {
   mitigation.raw <- mob[mob$type == "course-of-action", ]
 
   # ATT&CK ENTERPRISE
-  if (verbose) print(paste("[*][ATT&CK][ENT] Download ATT&CK ENTERPRISE ..."))
-  attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
-  attck.ent.raw.file <- tempfile(pattern = "mitre_attckent_", fileext = ".json")
-  utils::download.file(url = attck.ent.raw.url, destfile = attck.ent.raw.file, quiet = !verbose)
-
   if (verbose) print(paste("[*][ATT&CK][ENT] Parsing ..."))
-  attck.ent.raw <- jsonlite::fromJSON(attck.ent.raw.file)[["objects"]]
+  attck.ent.raw <- jsonlite::fromJSON("data-raw/attack-enterprise.json")[["objects"]]
 
   # Omit deprecated and revoked objects
   attck.ent.raw$x_mitre_deprecated[is.na(attck.ent.raw$x_mitre_deprecated)] <- FALSE

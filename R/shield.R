@@ -4,8 +4,7 @@
 #'   The data frame columns are: id, name, description, long_description.
 #' @keywords internal
 getShieldTactics <- function() {
-  tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
-  tactics <- jsonlite::fromJSON(tactics_url)
+  tactics <- jsonlite::fromJSON("data-raw/shield-tactics.json")
 
   return(tactics)
 }
@@ -16,8 +15,7 @@ getShieldTactics <- function() {
 #'   The data frame columns are: id, name, description, long_description.
 #' @keywords internal
 getShieldTechniques <- function() {
-  tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
-  tech <- jsonlite::fromJSON(tech_url)
+  tech <- jsonlite::fromJSON("data-raw/shield-technique_details.json")
 
   return(tech)
 }
@@ -28,8 +26,7 @@ getShieldTechniques <- function() {
 #'   The data frame columns are: id, description.
 #' @keywords internal
 getShieldOpportunities <- function() {
-  opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
-  opport <- jsonlite::fromJSON(opport_url)
+  opport <- jsonlite::fromJSON("data-raw/shield-opportunities.json")
 
   return(opport)
 }
@@ -40,8 +37,7 @@ getShieldOpportunities <- function() {
 #'   The data frame columns are: id, description.
 #' @keywords internal
 getShieldProcedures <- function() {
-  proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
-  proced <- jsonlite::fromJSON(proced_url)
+  proced <- jsonlite::fromJSON("data-raw/shield-procedures.json")
 
   return(proced)
 }
@@ -52,8 +48,7 @@ getShieldProcedures <- function() {
 #'   The data frame columns are: id, description.
 #' @keywords internal
 getShieldUseCases <- function() {
-  usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
-  usecase <- jsonlite::fromJSON(usecase_url)
+  usecase <- jsonlite::fromJSON("data-raw/shield-use_cases.json")
   usecase <- usecase[, 1:2]
 
   return(usecase)
@@ -64,8 +59,7 @@ getShieldUseCases <- function() {
 #' @return data.frame
 #' @keywords internal
 getShieldTactictDetail <- function() {
-  tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
-  tact_det <- jsonlite::fromJSON(tact_det_url)
+  tact_det <- jsonlite::fromJSON("data-raw/shield-tactic_details.json")
   tact_det <- plyr::ldply(tact_det, function(x) x[["techniques"]])
   names(tact_det)[1:2] <- c("tact_id", "tech_id")
 
@@ -77,7 +71,7 @@ getShieldTactictDetail <- function() {
 #' @return data.frame
 #' @keywords internal
 getShieldTechniquesDetail <- function() {
-  tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
+  tech_det_url <- "data-raw/shield-technique_details.json"
   tech_det <- jsonlite::fromJSON(tech_det_url)
 
   return(tech_det)
