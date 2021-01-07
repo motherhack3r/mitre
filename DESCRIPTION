@@ -21,6 +21,9 @@ Imports:
     visNetwork,
     dplyr,
     plyr,
+    tidyr,
+    xml2,
+    rvest,
     jsonlite,
     RJSONIO,
     stringr

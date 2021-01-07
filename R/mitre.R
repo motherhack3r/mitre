@@ -78,5 +78,9 @@ updateRawData <- function(verbose = FALSE) {
     utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = !verbose)
   }
 
+  # CPE
+  cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
+  utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = !verbose)
+  utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw")
 }
 
