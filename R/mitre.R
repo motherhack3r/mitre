@@ -84,5 +84,10 @@ updateRawData <- function(verbose = FALSE) {
   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
                exdir = paste0("data-raw"),
                overwrite = T)
+
+  # CPE
+  cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
+  utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = !verbose)
+  utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw")
 }
 
