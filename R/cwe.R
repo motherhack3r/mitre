@@ -81,7 +81,7 @@ getCWENetwork <- function(cwes, verbose) {
 
   if (verbose) print("Building CWE network ...")
   cwenet <- list(nodes = cwenodes,
-                 edges = cwe2cve)
+                 edges = cweedges)
 
 
   return(cwenet)
