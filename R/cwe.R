@@ -77,12 +77,27 @@ getCWENetwork <- function(cwes, verbose) {
   cwe2cwe$chain_id <- NULL
   cwe2cwe$title <- cwe2cwe$label
 
-  cweedges <- dplyr::bind_rows(cwe2cve, cwe2cwe)
+  if (verbose) print("Finding relations from CWE to CAPEC ...")
+  cwe2capec <- cwes[, c("Code_Standard", "Related_Attack_Patterns")]
+  cwe2capec <- cwe2capec[complete.cases(cwe2capec), ]
+
+  kk <- lapply(cwe2capec$Related_Attack_Patterns,
+               function(x)
+                 data.frame(to = paste0("CAPEC-", RJSONIO::fromJSON(x)),
+                            stringsAsFactors = FALSE))
+  names(kk) <- cwe2capec$Code_Standard
+  cwe2capec <- dplyr::bind_rows(kk, .id = "from")
+  cwe2capec <- cwe2capec[complete.cases(cwe2capec), ]
+  cwe2capec$team <- rep("BLUE", nrow(cwe2capec))
+  cwe2capec$label <- rep("leverage", nrow(cwe2capec))
+  cwe2capec$dashes <- rep(FALSE, nrow(cwe2capec))
+  cwe2capec$arrows <- rep("to", nrow(cwe2capec))
+  cwe2capec$title <- rep("leverage attack", nrow(cwe2capec))
 
   if (verbose) print("Building CWE network ...")
+  cweedges <- dplyr::bind_rows(cwe2cve, cwe2cwe, cwe2capec)
   cwenet <- list(nodes = cwenodes,
                  edges = cweedges)
-
 
   return(cwenet)
 }
