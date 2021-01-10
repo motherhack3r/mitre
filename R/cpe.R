@@ -17,8 +17,8 @@ getCPEData <- function(cpe.file = "data-raw/official-cpe-dictionary_v2.3.xml", v
 
   if (verbose) print("Parsing product title and cpe codes 2.x...")
   cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*[@xml:lang='en-US'][1]")),
-                     cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
-                     cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*/@name")),
+                     cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/@name")),
+                     cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
                      stringsAsFactors = F)
   nodes <- xml2::xml_find_all(doc, ".//cpe-23:cpe23-item")
 
@@ -48,6 +48,29 @@ getCPEData <- function(cpe.file = "data-raw/official-cpe-dictionary_v2.3.xml", v
   cpes$sw_edition <- as.factor(cpes$sw_edition)
   cpes$target_sw <- as.factor(cpes$target_sw)
   cpes$target_hw <- as.factor(cpes$target_hw)
+
+  if (verbose) print("Extracting CVE references...")
+  cpe2cve <- lapply(cpes$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
+  cpe2cve <- sapply(cpe2cve, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
+  cpe2cve <- data.frame(from = cpes$cpe.23, to = cpe2cve, stringsAsFactors = FALSE)
+  cpe2cve <- cpe2cve[complete.cases(cpe2cve), ]
+
+  if (verbose) print("Building CPE network ...")
+  cpe2cve$team <- rep("SYSADMIN", nrow(cpe2cve))
+  cpe2cve$label <- rep("is vulnerable", nrow(cpe2cve))
+  cpe2cve$arrows <- rep("to", nrow(cpe2cve))
+  cpe2cve$title <- rep("vulnerable", nrow(cpe2cve))
+
+  cpenodes <- cpes[, c("cpe.23", "title","cpe.22", "deprecated")]
+  names(cpenodes) <- c("id", "label", "title", "shadow")
+  cpenodes$group <- rep("cpe", nrow(cpenodes))
+  cpenodes$value <- rep(3, nrow(cpenodes))
+  cpenodes$shape <- rep("box", nrow(cpenodes))
+  cpenodes$color <- rep("honeydew", nrow(cpenodes))
+
+  cpes <- list(cpes = cpes,
+               cpenet = list(nodes = cpenodes,
+                             edges = cpe2cve))
 
   return(cpes)
 }
