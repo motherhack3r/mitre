@@ -27,10 +27,64 @@ getCWEData <- function(cwes.file = "data-raw/cwec_v4.3.xml", verbose = FALSE) {
 }
 
 getCWENetwork <- function(cwes, verbose) {
-  cwes <- list(nodes = data.frame(),
-               edges = data.frame())
+  if (verbose) print("Collecting CWE nodes ...")
+  cwenodes <- cwes[, c("Code_Standard", "Name", "Description", "Status", "Abstraction")]
+  names(cwenodes) <- c("id", "label", "title", "shadow", "group")
+  cwenodes$shadow <- cwenodes$shadow %in% c("Deprecated", "Obsolete", "Incomplete")
+  cwenodes$value <- rep(4, nrow(cwenodes))
+  cwenodes$shape <- rep("database", nrow(cwenodes))
+  cwenodes$color <- rep("papayawhip", nrow(cwenodes))
+  cwenodes$group <- as.character.factor(cwenodes$group)
 
-  return(cwes)
+  if (verbose) print("Looking for CWE to CVE edges ...")
+  cwe2cve <- lapply(cwes$Observed_Examples,
+                    function(x) {
+                      cves <- stringr::str_extract_all(x, "CVE-\\d+-\\d+")[[1]]
+                      data.frame(to = cves, stringsAsFactors = FALSE)
+                    })
+  names(cwe2cve) <- cwes$Code_Standard
+  cwe2cve <- plyr::ldply(cwe2cve, rbind)
+  names(cwe2cve) <- c("from", "to")
+  cwe2cve <- cwe2cve[complete.cases(cwe2cve), ]
+  cwe2cve$team <- rep("SYSADMIN", nrow(cwe2cve))
+  cwe2cve$label <- rep("example", nrow(cwe2cve))
+  cwe2cve$dashes <- rep(FALSE, nrow(cwe2cve))
+  cwe2cve$arrows <- rep("to", nrow(cwe2cve))
+  cwe2cve$title <- rep("vulnerability example", nrow(cwe2cve))
+
+  if (verbose) print("Looking for CWE to CWE edges ...")
+  cwe2cwe <- cwes[, c("Code_Standard","Related_Weakness")]
+  cwe2cwe <- cwe2cwe[complete.cases(cwe2cwe), ]
+
+  kk <- lapply(cwe2cwe$Related_Weakness,
+               function(x) {
+                 k <- RJSONIO::fromJSON(x)
+                 if (length(k) == 1) {
+                   k <- as.data.frame.array(t(k[[1]]))
+                 } else {
+                   k <- dplyr::bind_rows(lapply(k, function(x) as.data.frame(t(x))))
+                   # names(k) <- c("nature", "cwe_id", "view_id", "ordinal")
+                 }
+                 k
+               })
+  names(kk) <- cwe2cwe$Code_Standard
+  cwe2cwe <- dplyr::bind_rows(kk, .id = "from")
+  names(cwe2cwe) <- c("from", "label", "to", "view_id", "dashes", "chain_id")
+  cwe2cwe$to <- paste0("CWE-", cwe2cwe$to)
+  cwe2cwe$dashes <- is.na(cwe2cwe$dashes)
+  cwe2cwe$arrows <- rep("to", nrow(cwe2cwe))
+  cwe2cwe$team <- rep("BLUE", nrow(cwe2cwe))
+  cwe2cwe$chain_id <- NULL
+  cwe2cwe$title <- cwe2cwe$label
+
+  cweedges <- dplyr::bind_rows(cwe2cve, cwe2cwe)
+
+  if (verbose) print("Building CWE network ...")
+  cwenet <- list(nodes = cwenodes,
+                 edges = cwe2cve)
+
+
+  return(cwenet)
 }
 
 ParseCWEViews <- function(doc, cwes.file, verbose) {
