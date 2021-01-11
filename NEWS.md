@@ -1,5 +1,6 @@
 # mitre 0.2.0
-* Added PoC for ATT&CK Tactics
+
+* Added ATT&CK, CVE, CPE, CWE and CAPEC
 
 # mitre 0.1.1
 
