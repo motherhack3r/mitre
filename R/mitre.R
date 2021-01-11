@@ -25,8 +25,23 @@ getMitreNetwork <- function(verbose = FALSE) {
   cve_nodes <- mitre.cves$cvenet$nodes
   cve_edges <- mitre.cves$cvenet$edges
 
-  nodes <- rbind(shield_nodes, attck_nodes, cve_nodes)
-  edges <- rbind(shield_edges, attck_edges, cve_edges)
+  if (verbose) print(paste("[#][CWE] Start ETL process."))
+  mitre.cwes <- getCWEData(verbose)
+  cwe_nodes <- mitre.cwes$cwenet$nodes
+  cwe_edges <- mitre.cwes$cwenet$edges
+
+  if (verbose) print(paste("[#][CPE] Start ETL process."))
+  mitre.cpes <- getCPEData(verbose)
+  cpe_nodes <- mitre.cpes$cpenet$nodes
+  cpe_edges <- mitre.cpes$cpenet$edges
+
+  if (verbose) print(paste("[#][CAPEC] Start ETL process."))
+  mitre.capec <- getCAPECData(verbose)
+  capec_nodes <- mitre.capec$capecnet$nodes
+  capec_edges <- mitre.capec$capecnet$edges
+
+  nodes <- rbind(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes)
+  edges <- rbind(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges)
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)
@@ -80,7 +95,7 @@ updateRawData <- function(verbose = FALSE) {
 
   # CWE
   cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
-  utils::download.file(url = cwe.url, destfile = paste0("data-raw/cwe-mitre.xml.zip"), quiet = !verbose)
+  utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = !verbose)
   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
                exdir = paste0("data-raw"),
                overwrite = T)
@@ -89,5 +104,9 @@ updateRawData <- function(verbose = FALSE) {
   cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = !verbose)
   utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw")
+
+  # CAPEC
+  capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
+  utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = !verbose)
 }
 
