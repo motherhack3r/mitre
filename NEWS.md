@@ -1,4 +1,4 @@
-# mitre (development version)
+# mitre 0.2.0
 * Added PoC for ATT&CK Tactics
 
 # mitre 0.1.1
