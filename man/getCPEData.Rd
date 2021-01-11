@@ -6,10 +6,7 @@
 data frame for CPE objects. The list also contains a visNetwork object with
 CPE objects as nodes and all relations as edges.}
 \usage{
-getCPEData(
-  cpe.file = "data-raw/official-cpe-dictionary_v2.3.xml",
-  verbose = FALSE
-)
+getCPEData(verbose = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}

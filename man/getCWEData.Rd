@@ -6,12 +6,12 @@
 data frame for CVE objects. The list also contains a visNetwork object with
 CVE objects as nodes and all relations as edges.}
 \usage{
-getCWEData(cwes.file = "data-raw/cwec_v4.3.xml", verbose = FALSE)
+getCWEData(verbose = FALSE)
 }
 \arguments{
-\item{cwes.file}{raw xml file}
-
 \item{verbose}{Default set as FALSE}
+
+\item{cwes.file}{raw xml file}
 }
 \value{
 data frame

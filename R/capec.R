@@ -1,6 +1,16 @@
 #### References: https://capec.mitre.org/data/index.html
 
-getCAPECData <- function(capec.file = "data-raw/capec_latest.xml", verbose = FALSE) {
+#' Title
+#'
+#' @param capec.file
+#' @param verbose
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getCAPECData <- function(verbose = FALSE) {
+  capec.file <- "data-raw/capec_latest.xml"
   if (verbose) print("Indexing CAPEC XML raw file ...")
   doc <- xml2::read_xml(capec.file)
 

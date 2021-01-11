@@ -40,13 +40,22 @@ getMitreNetwork <- function(verbose = FALSE) {
   capec_nodes <- mitre.capec$capecnet$nodes
   capec_edges <- mitre.capec$capecnet$edges
 
-  nodes <- rbind(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes)
-  edges <- rbind(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges)
+  nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes)
+  edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges)
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)
 
-  return(mitrenet)
+  standards <- list(shield = shield,
+                    attck = attck,
+                    cpe = mitre.cpes,
+                    cve = mitre.cves,
+                    cwe = mitre.cwes,
+                    capec = mitre.capec)
+  mitre.data <- list(standards = standards,
+                     mitrenet = mitrenet)
+
+  return(mitre.data)
 }
 
 #' Download from official sources raw files saving them in [package_path]/data-raw/
@@ -94,6 +103,7 @@ updateRawData <- function(verbose = FALSE) {
   }
 
   # CWE
+  if (verbose) print(paste("[*][CWE] Download latest XML definitions ..."))
   cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
   utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = !verbose)
   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
@@ -101,11 +111,13 @@ updateRawData <- function(verbose = FALSE) {
                overwrite = T)
 
   # CPE
+  if (verbose) print(paste("[*][CPE] Download latest XML definitions ..."))
   cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = !verbose)
   utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw")
 
   # CAPEC
+  if (verbose) print(paste("[*][CAPEC] Download latest XML definitions ..."))
   capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = !verbose)
 }
