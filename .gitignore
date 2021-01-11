@@ -38,6 +38,12 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 inst/doc
+inst/temp
+
+data-raw/*.json
+data-raw/*.gz
+data-raw/*.xml
+data-raw/*.zip
 
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
