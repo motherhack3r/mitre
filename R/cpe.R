@@ -11,7 +11,8 @@
 #' \donttest{
 #' cpes <- mitre::getCPEData()
 #' }
-getCPEData <- function(cpe.file = "data-raw/official-cpe-dictionary_v2.3.xml", verbose = FALSE) {
+getCPEData <- function(verbose = FALSE) {
+  cpe.file <- "data-raw/official-cpe-dictionary_v2.3.xml"
   if (verbose) print("Indexing CPE XML and namespace schemas...")
   doc <- xml2::read_xml(cpe.file)
 

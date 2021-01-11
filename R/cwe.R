@@ -12,7 +12,8 @@
 #' \donttest{
 #' cwes <- mitre::getCWEData()
 #' }
-getCWEData <- function(cwes.file = "data-raw/cwec_v4.3.xml", verbose = FALSE) {
+getCWEData <- function(verbose = FALSE) {
+  cwes.file = "data-raw/cwec_v4.3.xml"
   if (verbose) print("Indexing CWE XML raw file ...")
   doc <- suppressWarnings(rvest::html(cwes.file))
   cwes.weaknesses <- ParseCWEWeaknesses(doc, cwes.file, verbose)
