@@ -2,6 +2,7 @@
 
 export(getAttckData)
 export(getCAPECData)
+export(getCARData)
 export(getCPEData)
 export(getCVEData)
 export(getCWEData)
