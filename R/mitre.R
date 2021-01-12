@@ -6,6 +6,9 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' mitre.data <- mitre::getLatestDataSet(T)
+#' }
 getLatestDataSet <- function(verbose = FALSE) {
   t <- tempfile()
   download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/beta/mitre_v0.3.0.9002.rds",
@@ -25,9 +28,9 @@ getLatestDataSet <- function(verbose = FALSE) {
 #'
 #' @examples
 #' \donttest{
-#' mitrenet <- mitre::getMitreNetwork(T)
+#' mitrenet <- mitre::getMitreData(T)
 #' }
-getMitreNetwork <- function(verbose = FALSE) {
+getMitreData <- function(verbose = FALSE) {
   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
   shield <- getShieldData(verbose)
   shield_nodes <- shield$shieldnet$nodes
