@@ -2,16 +2,25 @@
 % Please edit documentation in R/car.R
 \name{getCARData}
 \alias{getCARData}
-\title{Title}
+\title{ETL process that download current CAR definitions and return a list with a
+data frame for CAR objects. The list also contains a visNetwork object with
+CAR objects as nodes and all relations as edges.}
 \usage{
 getCARData(verbose = FALSE)
 }
 \arguments{
-\item{verbose}{}
+\item{verbose}{Default set as FALSE}
 }
 \value{
-
+list of data frames
 }
 \description{
-Title
+ETL process that download current CAR definitions and return a list with a
+data frame for CAR objects. The list also contains a visNetwork object with
+CAR objects as nodes and all relations as edges.
+}
+\examples{
+\donttest{
+car <- mitre::getCARData()
+}
 }

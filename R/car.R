@@ -1,11 +1,16 @@
-#' Title
+#' ETL process that download current CAR definitions and return a list with a
+#' data frame for CAR objects. The list also contains a visNetwork object with
+#' CAR objects as nodes and all relations as edges.
 #'
-#' @param verbose
+#' @param verbose Default set as FALSE
 #'
-#' @return
+#' @return list of data frames
 #' @export
 #'
 #' @examples
+#' \donttest{
+#' car <- mitre::getCARData()
+#' }
 getCARData <- function(verbose = FALSE) {
 
   # https://github.com/mitre-attack/car/tree/master/analytics
