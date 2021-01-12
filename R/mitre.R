@@ -1,3 +1,21 @@
+#' Download latest R data sets from Github
+#'
+#' @param verbose default is FALSE
+#'
+#' @return list of standards and network
+#' @export
+#'
+#' @examples
+getLatestDataSet <- function(verbose = FALSE) {
+  t <- tempfile()
+  download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/beta/mitre_v0.3.0.9002.rds",
+                destfile = t, quiet = !verbose)
+  mitre.data <- readRDS(t)
+  file.remove(t)
+  return(mitre.data)
+}
+
+
 #' Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.
 #'
 #' @param verbose default is FALSE
