@@ -36,7 +36,8 @@ getCWENetwork <- function(cwes, verbose) {
   cwenodes$value <- rep(4, nrow(cwenodes))
   cwenodes$shape <- rep("database", nrow(cwenodes))
   cwenodes$color <- rep("papayawhip", nrow(cwenodes))
-  cwenodes$group <- as.character.factor(cwenodes$group)
+  cwenodes$group <- rep("cwe", nrow(cwenodes))
+  cwenodes$team <- rep("BLUE", nrow(cwenodes))
 
   if (verbose) print("Looking for CWE to CVE edges ...")
   cwe2cve <- lapply(cwes$Observed_Examples,
@@ -98,6 +99,8 @@ getCWENetwork <- function(cwes, verbose) {
 
   if (verbose) print("Building CWE network ...")
   cweedges <- dplyr::bind_rows(cwe2cve, cwe2cwe, cwe2capec)
+  cweedges$view_id <- NULL
+
   cwenet <- list(nodes = cwenodes,
                  edges = cweedges)
 

@@ -130,6 +130,7 @@ getCARData <- function(verbose = FALSE) {
   nodes.a$shape <- rep("circle", nrow(nodes.a))
   nodes.a$color <- rep("aliceblue", nrow(nodes.a))
   nodes.a$shadow <- rep(FALSE, nrow(nodes.a))
+  nodes.a$team <- rep("BLUE", nrow(nodes.a))
 
   carnodes <- dplyr::bind_rows(carnodes, nodes.a)
 
@@ -137,6 +138,7 @@ getCARData <- function(verbose = FALSE) {
   caredges$label <- rep("detects", nrow(caredges))
   caredges$arrows <- rep("to", nrow(caredges))
   caredges$title <- rep("detects", nrow(caredges))
+  caredges$dashes <- rep(FALSE, nrow(caredges))
 
   car <- list(analytics = analytics,
               model = model,

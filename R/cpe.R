@@ -61,6 +61,7 @@ getCPEData <- function(verbose = FALSE) {
   cpe2cve$label <- rep("is vulnerable", nrow(cpe2cve))
   cpe2cve$arrows <- rep("to", nrow(cpe2cve))
   cpe2cve$title <- rep("vulnerable", nrow(cpe2cve))
+  cpe2cve$dashes <- rep(FALSE, nrow(cpe2cve))
 
   cpenodes <- cpes[, c("cpe.23", "title","cpe.22", "deprecated")]
   names(cpenodes) <- c("id", "label", "title", "shadow")
@@ -68,6 +69,9 @@ getCPEData <- function(verbose = FALSE) {
   cpenodes$value <- rep(3, nrow(cpenodes))
   cpenodes$shape <- rep("box", nrow(cpenodes))
   cpenodes$color <- rep("honeydew", nrow(cpenodes))
+  cpenodes$team <- rep("SYSADMIN", nrow(cpenodes))
+
+
 
   cpes <- list(cpes = cpes,
                cpenet = list(nodes = cpenodes,

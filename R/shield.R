@@ -170,6 +170,7 @@ getShieldRelations <- function() {
   relations$label <- rep("uses", nrow(relations))
   relations$arrows <- rep("to", nrow(relations))
   relations$title <- rep("uses", nrow(relations))
+  relations$dashes <- rep(FALSE, nrow(relations))
 
   return(relations)
 }
@@ -189,7 +190,8 @@ getShieldNodes <- function() {
     shape = character(0),
     title = character(0),
     color = character(0),
-    shadow = logical(0)
+    shadow = logical(0),
+    team = character(0)
   )
   shield_nodes <- nodes
 
@@ -204,6 +206,7 @@ getShieldNodes <- function() {
   df$description <- NULL
   df$name <- NULL
   df$long_description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
@@ -218,6 +221,7 @@ getShieldNodes <- function() {
   df$description <- NULL
   df$name <- NULL
   df$long_description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
@@ -230,6 +234,7 @@ getShieldNodes <- function() {
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("grey", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
@@ -242,6 +247,7 @@ getShieldNodes <- function() {
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("purple", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
@@ -254,6 +260,7 @@ getShieldNodes <- function() {
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("yellow", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
   shield_nodes$shadow <- rep(FALSE, nrow(shield_nodes))

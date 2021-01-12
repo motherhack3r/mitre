@@ -80,6 +80,10 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
 
   edges <- rbind(edges, edges2)
 
+  # Tidy
+  edges$dashes <- rep(FALSE, nrow(edges))
+  nodes$team <- rep("SYSADMIN", nrow(nodes))
+
   cvenet <- list(nodes = nodes,
                  edges = as.data.frame(edges))
 

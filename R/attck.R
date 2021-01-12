@@ -238,6 +238,8 @@ getAttckData <- function(verbose = FALSE) {
   attck_nodes <- attck_nodes[which((attck_nodes$id %in% as.character(n_occur[n_occur$Freq == 1, "Var1"]))), ]
 
   if (verbose) print(paste("[*][ATT&CK][graph] Building visNetwork ..."))
+  attck_nodes$team <- rep("RED", nrow(attck_nodes))
+  attck_edges$dashes <- rep(FALSE, nrow(attck_edges))
   attck_edges$team <- rep("RED", nrow(attck_edges))
   attcknet <- list(nodes = attck_nodes,
                    edges = attck_edges)

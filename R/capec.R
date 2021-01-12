@@ -256,12 +256,17 @@ getCAPECData <- function(verbose = FALSE) {
   capecnodes <- tidyr::unite(capecnodes, col = "title", title, descr, sep = "")
   capecnodes$color <- rep("aquamarine", nrow(capecnodes))
   capecnodes$shape <- rep("diamond", nrow(capecnodes))
-  capecnodes$group <- rep("capec", nrow(capecnodes))
+  capecnodes$shape <- rep("diamond", nrow(capecnodes))
+  capecnodes$value <- rep(5, nrow(capecnodes))
   capecnodes$team <- rep("RED", nrow(capecnodes))
   capecnodes$shadow <- capecnodes$shadow == "Deprecated"
+  capecnodes$id <- capecnodes$title
 
   capecedges <- capecnet
   capecedges$arrows <- rep("to", rep(nrow(capecedges)))
+  capecedges$team <- rep("RED", rep(nrow(capecedges)))
+  capecedges$dashes <- rep(FALSE, rep(nrow(capecedges)))
+
 
   mitre.capec <- list(views = views,
                       categories = categories,
