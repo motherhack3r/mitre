@@ -1,4 +1,4 @@
-# mitre (development version)
+# mitre 0.3.0
 
 # mitre 0.2.0
 
