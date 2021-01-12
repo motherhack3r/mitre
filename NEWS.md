@@ -1,3 +1,5 @@
+# mitre (development version)
+
 # mitre 0.2.0
 
 * Added ATT&CK, CVE, CPE, CWE and CAPEC

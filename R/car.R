@@ -17,7 +17,7 @@ getCARData <- function(verbose = FALSE) {
   # https://github.com/mitre-attack/car/blob/master/docs/data/sensors.json
 
   if (verbose) print(paste("[#][CAR] ETL process started."))
-  if (verbose) print(paste("[-][CAR] Reading YAML source files from mitre github repo ..."))
+  if (verbose) print(paste("[-][CAR] List YAML source files from mitre github repo ..."))
   req <- httr::GET("https://api.github.com/repos/mitre-attack/car/git/trees/master?recursive=1")
   httr::stop_for_status(req)
   filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
