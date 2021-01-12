@@ -134,6 +134,11 @@ getCARData <- function(verbose = FALSE) {
 
   carnodes <- dplyr::bind_rows(carnodes, nodes.a)
 
+  caredges$team <- rep("BLUE", nrow(caredges))
+  caredges$label <- rep("detects", nrow(caredges))
+  caredges$arrows <- rep("to", nrow(caredges))
+  caredges$title <- rep("detects", nrow(caredges))
+
   car <- list(analytics = analytics,
               model = model,
               carnet = list(nodes = carnodes,
