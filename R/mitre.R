@@ -40,8 +40,13 @@ getMitreNetwork <- function(verbose = FALSE) {
   capec_nodes <- mitre.capec$capecnet$nodes
   capec_edges <- mitre.capec$capecnet$edges
 
-  nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes)
-  edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges)
+  if (verbose) print(paste("[#][CAR] Start ETL process."))
+  mitre.car <- getCARData(verbose)
+  car_nodes <- mitre.capec$carnet$nodes
+  car_edges <- mitre.capec$carnet$edges
+
+  nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes, car_nodes)
+  edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges, car_edges)
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)
@@ -51,7 +56,8 @@ getMitreNetwork <- function(verbose = FALSE) {
                     cpe = mitre.cpes,
                     cve = mitre.cves,
                     cwe = mitre.cwes,
-                    capec = mitre.capec)
+                    capec = mitre.capec,
+                    car = mitre.car)
   mitre.data <- list(standards = standards,
                      mitrenet = mitrenet)
 
