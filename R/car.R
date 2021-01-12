@@ -16,25 +16,31 @@ getCARData <- function(verbose = FALSE) {
   # https://github.com/mitre-attack/car/blob/master/docs/data/data_model.json
   # https://github.com/mitre-attack/car/blob/master/docs/data/sensors.json
 
-
+  if (verbose) print(paste("[#][CAR] ETL process started."))
+  if (verbose) print(paste("[-][CAR] Reading YAML source files from mitre github repo ..."))
   req <- httr::GET("https://api.github.com/repos/mitre-attack/car/git/trees/master?recursive=1")
   httr::stop_for_status(req)
   filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
 
+  if (verbose) print(paste("[-][CAR] Reading analytics YAML files ..."))
   files.analytics <- grep("analytics/CAR.*yaml", filelist, value = TRUE, perl = TRUE)
-  files.model <- grep("data_model/.*yaml", filelist, value = TRUE, perl = TRUE)
-  files.sensors <- grep("^sensors/.*yaml$", filelist, value = TRUE, perl = TRUE)
-
-
   raw.analytics <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
                                                   files.analytics), yaml::read_yaml))
+
+  if (verbose) print(paste("[-][CAR] Reading model YAML files ..."))
+  files.model <- grep("data_model/.*yaml", filelist, value = TRUE, perl = TRUE)
   raw.model <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
                                               files.model), yaml::read_yaml))
+
+  if (verbose) print(paste("[-][CAR] Reading sensors YAML files ..."))
+  files.sensors <- grep("^sensors/.*yaml$", filelist, value = TRUE, perl = TRUE)
   raw.sensors <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
                                                 files.sensors), yaml::read_yaml))
 
   # Analytics
+  if (verbose) print(paste("[-][CAR] Extracting Analytics coverage relationships ..."))
   coverage.a <- lapply(raw.analytics, function(x) x[["coverage"]])
+  if (verbose) print(paste("[-][CAR] Parsing Analytics data ..."))
   analytics <- lapply(raw.analytics,
                       function(x) {
                         x[["implementations"]] <- jsonlite::toJSON(x[["implementations"]])
@@ -52,11 +58,13 @@ getCARData <- function(verbose = FALSE) {
   analytics <- dplyr::bind_rows(analytics)
   analytics$Coverage <- NULL
 
+  if (verbose) print(paste("[-][CAR] Analytics platform expanse ..."))
   analytics$platform_windows <- grepl("Windows", analytics$platforms)
   analytics$platform_linux <- grepl("Linux", analytics$platforms)
   analytics$platform_macos <- grepl("macOS", analytics$platforms)
   analytics$platforms <- NULL
 
+  if (verbose) print(paste("[-][CAR] Analytics type expanse ..."))
   analytics$type_ttp <- grepl("TTP", analytics$analytic_types)
   analytics$type_detection <- grepl("Detection", analytics$analytic_types)
   analytics$type_anomaly <- grepl("Anomaly", analytics$analytic_types)
@@ -65,6 +73,7 @@ getCARData <- function(verbose = FALSE) {
   names(coverage.a) <- analytics$id
 
   # CAR -> ATTCK Techniques
+  if (verbose) print(paste("[-][CAR] Looking for relations between CAR and ATT&CK Techniques..."))
   tech <- lapply(coverage.a,
                  function(x) {
                    data.frame(to = unlist(sapply(x, function(k) k[["technique"]])), stringsAsFactors = F)
@@ -72,6 +81,7 @@ getCARData <- function(verbose = FALSE) {
   car2tech <- dplyr::bind_rows(tech, .id = "from")
 
   # CAR -> ATTCK SubTechniques
+  if (verbose) print(paste("[-][CAR] Parsing CAR and ATT&CK Sub-Techniques relatinship ..."))
   stech <- lapply(coverage.a,
                   function(x) {
                     data.frame(to = unlist(sapply(x, function(k) k[["subtechniques"]])), stringsAsFactors = F)
@@ -80,6 +90,7 @@ getCARData <- function(verbose = FALSE) {
 
 
   # CAR -> ATTCK Tactics
+  if (verbose) print(paste("[-][CAR] Correlating relations from CAR to ATT&CK Tactics ..."))
   tact <- lapply(coverage.a,
                  function(x) {
                    data.frame(to = unlist(sapply(x, function(k) k[["tactics"]])), stringsAsFactors = F)
@@ -90,6 +101,7 @@ getCARData <- function(verbose = FALSE) {
   caredges <- unique(caredges)
 
   # Model
+  if (verbose) print(paste("[-][CAR] Parsing Data Model objects ..."))
   model <- plyr::ldply(raw.model,
                        function(x) {
                          actions <- plyr::ldply(x$actions, as.data.frame)
@@ -107,7 +119,20 @@ getCARData <- function(verbose = FALSE) {
   # Sensor
 
   # Network
-  carnodes <- data.frame(stringsAsFactors = FALSE)
+  if (verbose) print(paste("[-][CAR] Building network graph from relationships ..."))
+  carnodes <- data.frame(id = character(), label = character(), group = character(),
+                         value = numeric(), shape = character(), title = character(),
+                         color = character(), shadow = logical(), stringsAsFactors = FALSE)
+
+  nodes.a <- analytics[,c("id", "title")]
+  nodes.a$label <- nodes.a$title
+  nodes.a$group <- rep("car", nrow(nodes.a))
+  nodes.a$value <- rep(4, nrow(nodes.a))
+  nodes.a$shape <- rep("circle", nrow(nodes.a))
+  nodes.a$color <- rep("aliceblue", nrow(nodes.a))
+  nodes.a$shadow <- rep(FALSE, nrow(nodes.a))
+
+  carnodes <- dplyr::bind_rows(carnodes, nodes.a)
 
   car <- list(analytics = analytics,
               model = model,
