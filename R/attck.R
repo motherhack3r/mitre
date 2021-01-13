@@ -18,6 +18,29 @@
 #' attcknet <- attck[["attcknet"]]
 #' }
 getAttckData <- function(verbose = FALSE) {
+  if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
+  attck <- parseAttckData(verbose)
+  if (verbose) print(paste("[*][ATT&CK] Tactics enrichment with latest CTI definitions ..."))
+  cti.tact <- buildAttckTactics(verbose)
+  if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
+  cti.tech <- buildAttckTechniques(verbose)
+
+  return(attck)
+}
+
+#' ETL process that download current attck definitions and return a list of
+#' data frames for each object. The list also contains a visNetwork object with
+#' ATT&CK objects as nodes and all relations as edges.
+#'
+#' @param verbose Default set as FALSE
+#'
+#' @return list of data frames
+#'
+#' @examples
+#' \donttest{
+#' attck <- mitre::parseAttckData()
+#' }
+parseAttckData <- function(verbose = FALSE) {
   # ATT&CK MOBILE
   if (verbose) print(paste("[*][ATT&CK][MOB] Parsing ..."))
   attck.mob.raw <- jsonlite::fromJSON("data-raw/attack-mobile.json")[["objects"]]
