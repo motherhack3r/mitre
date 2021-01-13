@@ -1,7 +1,11 @@
+# mitre (development version)
+ 
+* Developing functions to explore MITRE network
+
 # mitre 0.3.1
 
 * Normalized network nodes and edges.
-* Added funtion to download latest tidy data sets.
+* Added function to download latest tidy data sets.
 
 # mitre 0.3.0
  
