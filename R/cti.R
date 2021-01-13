@@ -321,7 +321,9 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
                                                              Mitigation = NA,
                                                              Detection = ifelse(test = "x_mitre_detectable_by_common_defenses_explanation" %in% names(ap.obj),
                                                                                 yes = ap.obj$x_mitre_detectable_by_common_defenses_explanation,
-                                                                                no = NA),
+                                                                                no = ifelse(test = "x_mitre_detection" %in% names(ap.obj),
+                                                                                            yes = ap.obj$x_mitre_detection,
+                                                                                            no = NA)),
                                                              Detection.defenses = ifelse(test = "x_mitre_detectable_by_common_defenses" %in% names(ap.obj),
                                                                                          yes = ap.obj$x_mitre_detectable_by_common_defenses,
                                                                                          no = NA),
@@ -879,5 +881,10 @@ buildAttckTechniques <- function(verbose = TRUE) {
   return(attck.tech)
 }
 
+buildAttckMitigations <- function(verbose = TRUE) {
+  attck.miti <- parseAttck.Mitigation(verbose)
+
+  return(attck.miti)
+}
 
 

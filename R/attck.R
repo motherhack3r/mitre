@@ -21,9 +21,57 @@ getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
   attck <- parseAttckData(verbose)
   if (verbose) print(paste("[*][ATT&CK] Tactics enrichment with latest CTI definitions ..."))
+  tactics <- attck$tactics
+  tactics$modified <- as.POSIXct.POSIXlt(strptime(tactics$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  tactics$created <- as.POSIXct.POSIXlt(strptime(tactics$created, format = "%Y-%m-%dT%H:%M:%S"))
+
+  # Enrich nodes in both data sets
   cti.tact <- buildAttckTactics(verbose)
+  names(cti.tact) <- c("domain", "mitreid", "name", "description", "x_mitre_shortname",
+                       "created", "modified", "id", "url", "x_mitre_deprecated")
+  tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "domain", "url")],
+                              by = "mitreid")
+  # Add tactics only in CTI
+  cti.tact <- cti.tact[!(cti.tact$mitreid %in% tactics$mitreid), ]
+  cti.tact$type <- rep("x-mitre-tactic", nrow(cti.tact))
+  cti.tact$revoked <- rep(NA, nrow(cti.tact))
+  cti.tact$created_by_ref <- rep(NA, nrow(cti.tact))
+  tactics <- dplyr::bind_rows(tactics, cti.tact)
+
   if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
+  techniques <- attck$techniques
+  techniques$modified <- as.POSIXct.POSIXlt(strptime(techniques$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  techniques$created <- as.POSIXct.POSIXlt(strptime(techniques$created, format = "%Y-%m-%dT%H:%M:%S"))
+
+  # Adapt CTI column names
   cti.tech <- buildAttckTechniques(verbose)
+  techmap <- c("id"="id.cti",
+               "mitreid" = "entry.id",
+               "name" = "entry.title",
+               "description" = "entry.text",
+               "summary" = "description",
+               "x_mitre_deprecated" = "deprecated",
+               "x_mitre_detection" = "detection")
+  cti.tech <- dplyr::rename(cti.tech, dplyr::all_of(techmap))
+  cti.tech <- cti.tech[, c(names(techniques)[which(names(techniques)
+                                                   %in% names(cti.tech))],
+                           names(cti.tech)[which(!(names(cti.tech)
+                                                   %in% names(techniques)))])]
+  # Enrich nodes in both data sets
+  selectedCols <- c("mitreid", names(cti.tech)[which(!(names(cti.tech) %in% names(techniques)))])
+  techniques <- dplyr::left_join(techniques, cti.tech[, selectedCols],
+                              by = "mitreid")
+  # Add techniques only in CTI
+  cti.tech <- cti.tech[!(cti.tech$mitreid %in% techniques$mitreid), ]
+  cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
+  cti.tech$revoked <- as.logical(cti.tech$revoked)
+  techniques <- dplyr::bind_rows(techniques, cti.tech)
+  selectedRows <- which(is.na(techniques$x_mitre_platforms))
+  techniques$x_mitre_platforms[selectedRows] <- techniques$platform[selectedRows]
+  techniques$platform <- NULL
+
+  attck$tactics <- tactics
+  attck$techniques <- techniques
 
   return(attck)
 }
