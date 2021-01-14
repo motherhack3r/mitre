@@ -812,8 +812,7 @@ parseAttck.Relationships <- function(verbose = TRUE) {
 #' Parse ATT&CK source files from MITRE CTI Repository and build raw data sets
 #'
 #' @return list of data.frame objects (tactics, techniques, groups, software and relationships)
-#' @export
-parseAttckdata <- function(verbose = TRUE) {
+parseCTIdata <- function(verbose = TRUE) {
   if (verbose) print(paste("[*][parseAttckdata] init ..."))
   df.tactics <- parseAttck.Tactics()
   df.techniques <- parseAttck.Techniques()
