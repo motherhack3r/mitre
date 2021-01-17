@@ -1,4 +1,4 @@
-#' Download latest R data sets from Github
+#' Download latest R data sets from Github previously parsed with this package.
 #'
 #' @param verbose default is FALSE
 #'
@@ -18,9 +18,13 @@ getLatestDataSet <- function(verbose = FALSE) {
   return(mitre.data)
 }
 
-#' Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.
+#' ETL process for all standards, it also create a list of nodes and edges
+#' representing the relationships between standard objects. It needs raw files
+#' downloaded from official MITRE repositories stored in a folder named "data-raw";
+#' set downloadLatest parameter to TRUE and the function will create it for you.
 #'
 #' @param verbose default is FALSE
+#' @param downloadLatest default as FALSE, set to TRUE to download latest raw source files from official MITRE repositories
 #'
 #' @return list of two data frames: nodes and edges
 #' @export
@@ -29,8 +33,9 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' \donttest{
 #' mitredata <- mitre::parseRawData(T)
 #' }
-parseRawData <- function(verbose = FALSE) {
-  if (!dir.exists("data-raw")) stop("[ERROR] Please, use downloadRawData function to provide MITRE Raw Data.")
+parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
+  if (downloadLatest) downloadRawData(verbose)
+  if (!dir.exists("data-raw")) stop('[ERROR] Please, set downloadLatest to TRUE or ensure that your working directory contains a folder named "data-raw" with MITRE raw files.')
 
   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
   shield <- getShieldData(verbose)
@@ -89,8 +94,9 @@ parseRawData <- function(verbose = FALSE) {
 #' Download from official sources raw files saving them in [working_directory]/data-raw/
 #'
 #' @param verbose default is FALSE
-#'
 #' @export
+#'
+#' @examples
 #' \donttest{
 #' mitre::downloadRawData(T)
 #' }

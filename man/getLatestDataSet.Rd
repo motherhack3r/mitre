@@ -2,7 +2,7 @@
 % Please edit documentation in R/mitre.R
 \name{getLatestDataSet}
 \alias{getLatestDataSet}
-\title{Download latest R data sets from Github}
+\title{Download latest R data sets from Github previously parsed with this package.}
 \usage{
 getLatestDataSet(verbose = FALSE)
 }
@@ -13,7 +13,7 @@ getLatestDataSet(verbose = FALSE)
 list of standards and network
 }
 \description{
-Download latest R data sets from Github
+Download latest R data sets from Github previously parsed with this package.
 }
 \examples{
 \donttest{
