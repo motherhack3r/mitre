@@ -35,7 +35,7 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' }
 parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   if (downloadLatest) downloadRawData(verbose)
-  if (!dir.exists("data-raw")) stop('[ERROR] Please, set downloadLatest to TRUE or ensure that your working directory contains a folder named "data-raw" with MITRE raw files.')
+  if (!dir.exists("data-raw")) stop('Please, set downloadLatest to TRUE or ensure that your working directory contains a folder named "data-raw" with MITRE raw files.', call. = FALSE)
 
   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
   shield <- getShieldData(verbose)
