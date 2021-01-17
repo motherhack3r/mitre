@@ -291,7 +291,6 @@ getShieldNetwork <- function() {
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#' @export
 #'
 #' @examples
 #' \donttest{

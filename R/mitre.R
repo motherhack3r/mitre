@@ -18,7 +18,6 @@ getLatestDataSet <- function(verbose = FALSE) {
   return(mitre.data)
 }
 
-
 #' Nodes and Edges ready for digraphs. Include CVE, shield and ATT&CK objects.
 #'
 #' @param verbose default is FALSE
@@ -28,9 +27,11 @@ getLatestDataSet <- function(verbose = FALSE) {
 #'
 #' @examples
 #' \donttest{
-#' mitrenet <- mitre::getMitreData(T)
+#' mitredata <- mitre::parseRawData(T)
 #' }
-getMitreData <- function(verbose = FALSE) {
+parseRawData <- function(verbose = FALSE) {
+  if (!dir.exists("data-raw")) stop("[ERROR] Please, use downloadRawData function to provide MITRE Raw Data.")
+
   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
   shield <- getShieldData(verbose)
   shield_nodes <- shield$shieldnet$nodes
@@ -85,12 +86,18 @@ getMitreData <- function(verbose = FALSE) {
   return(mitre.data)
 }
 
-#' Download from official sources raw files saving them in [package_path]/data-raw/
+#' Download from official sources raw files saving them in [working_directory]/data-raw/
 #'
 #' @param verbose default is FALSE
 #'
 #' @export
-updateRawData <- function(verbose = FALSE) {
+#' \donttest{
+#' mitre::downloadRawData(T)
+#' }
+downloadRawData <- function(verbose = FALSE) {
+  # Create "data-raw" folder
+  if (!dir.exists("data-raw")) dir.create("data-raw")
+
   # ATT&CK
   if (verbose) print(paste("[*][ATT&CK] Download ATT&CK MOBILE ..."))
   attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"

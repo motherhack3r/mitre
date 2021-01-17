@@ -6,7 +6,6 @@
 #' @param cwes.file raw xml file
 #'
 #' @return data frame
-#' @export
 #'
 #' @examples
 #' \donttest{
