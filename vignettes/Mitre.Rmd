@@ -25,8 +25,11 @@ MITRE data sets.
 
 Try to build your own MITRExplorer app using the following code for ui and server.
 
-## ui.R
-```{r ui_file}
+## Shinyapp demo
+```{r shiny_demo}
+
+mitredata <- mitre::getLatestDataSet()
+shieldnet <- mitredata$standards$shield$shieldnet
 
 # Define UI for application that draws a histogram
 ui <- shinyUI(fluidPage(
@@ -41,10 +44,9 @@ ui <- shinyUI(fluidPage(
 ## server.R
 server <- shinyServer(function(input, output) {
    output$shieldnetwork <- renderVisNetwork({
-      mitrenet <- getMitreNetwork()
-      mitrenet <- visNetwork(nodes = mitrenet$nodes,
-                             edges = mitrenet$edges)
-      mitrenet %>%
+      ggnet <- visNetwork(nodes = shieldnet$nodes,
+                          edges = shieldnet$edges)
+      ggnet %>%
          visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
          visLayout(randomSeed = 123)
    })
