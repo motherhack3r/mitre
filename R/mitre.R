@@ -160,5 +160,32 @@ downloadRawData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][CAPEC] Download latest XML definitions ..."))
   capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = !verbose)
+
+  # CTI
+  if (verbose) print(paste("[*][CTI] Download latest YAML definitions ..."))
+  download.file(url = "https://github.com/mitre/cti/archive/master.zip",
+                destfile = "data-raw/cti.zip", quiet = !verbose)
+  unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw")
+
+  # domains <- c("pre-attack", "enterprise-attack", "mobile-attack", "ics-attack")
+  # objects <- c("attack-pattern", "intrusion-set", "malware", "tool",
+  #             "course-of-action", "x-mitre-tactic", "x-mitre-matrix")
+  # sapply(domains,
+  #        function(domain) {
+  #          sapply(objects,
+  #                 function(object) {
+  #                   gitfiles <- getGitHubCTIfiles(domain = domain, object = object)
+  #                   if (!dir.exists(paste0("data-raw/", domain))) dir.create(paste0("data-raw/", domain))
+  #                   if (nrow(gitfiles) > 0) {
+  #                     apply(gitfiles, 1, function(x) {
+  #                       download.file(url = x["src.file"],
+  #                                     destfile = paste0("data-raw/", domain, "/", x["filename"]),
+  #                                     quiet = T)
+  #                     })
+  #                     if (verbose) print(paste("[*][CTI][", domain, "] Downloaded",
+  #                                              nrow(gitfiles), object, "definitions"))
+  #                   }
+  #                 })
+  #        })
 }
 

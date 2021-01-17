@@ -14,6 +14,12 @@ attck2stix <- function() {
   return(attck2stix)
 }
 
+stixDomains <- function() {
+  k <- attck2stix()
+  k <- k[[which(sapply(k, function(x) "domain" %in% names(x)))]][["domain"]]
+  return(k)
+}
+
 # ATT&CK DATA MODEL
 
 ## RAW data frames adapted to store all CTI/STIX variables
@@ -145,7 +151,7 @@ newAttckRelation <- function(relationship_type = NA,
 #' pre.attck.pattern <- getGitHubCTIfiles(domain = "pre-attack", object = "attack-pattern")
 #' mob.malware <- getGitHubCTIfiles(domain = "mob-attack", object = "malware")
 #' }
-getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack"), 1),
+getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack", "ics-attack"), 1),
                               object = sample(c("attack-pattern", "intrusion-set",
                                                 "malware", "tool", "course-of-action",
                                                 "x-mitre-tactic", "x-mitre-matrix"), 1)) {
@@ -184,17 +190,15 @@ getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack
 #' df.common <- MapCommonproperties(attack.pattern)
 #' }
 MapCommonproperties <- function(attack.obj = NA, domain = NA) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
   df.common <- plyr::ldply(attack.obj[["objects"]],
                            function(ap.obj){
                              if (ap.obj$type %in% c("x-mitre-tactic", "intrusion-set")) {
-                               domain <- "mitre-attack"
+                               if (!(domain == "mitre-ics-attack")) domain <- "mitre-attack"
                              }
                              ap.obj.ref <- which(sapply(ap.obj[["external_references"]],
                                                         function(x) {
@@ -250,12 +254,10 @@ MapCommonproperties <- function(attack.obj = NA, domain = NA) {
 #' df.ent.tact <- MapTactics(x.mitre.tactic, "enerprise-attack")
 #' }
 MapTactics <- function(x.mitre.tactic = NA, domain = NA) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
   df.tactic <- plyr::ldply(x.mitre.tactic[["objects"]],
                            function(ap.obj){
@@ -281,12 +283,10 @@ MapTactics <- function(x.mitre.tactic = NA, domain = NA) {
 #' df.ent.tech <- MapTechniques(attack.pattern, "enerprise-attack")
 #' }
 MapTechniques <- function(attack.pattern = NA, domain = NA) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
 
   df.techniques <- plyr::ldply(attack.pattern[["objects"]],
@@ -377,12 +377,10 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
 #'
 #' @return data.frame
 MapGroups <- function(intrusion.set = NA, domain = NA) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
   df.group <- plyr::ldply(intrusion.set[["objects"]],
                           function(ap.obj){
@@ -404,12 +402,10 @@ MapGroups <- function(intrusion.set = NA, domain = NA) {
 #'
 #' @return data.frame
 MapSoftware <- function(software.obj = NA, domain = domain) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
   df.soft <- plyr::ldply(software.obj[["objects"]],
                          function(ap.obj){
@@ -443,12 +439,10 @@ MapSoftware <- function(software.obj = NA, domain = domain) {
 #'
 #' @return data.frame
 MapMitigation <- function(course.action = NA, domain = domain) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
   df.mitigation <- plyr::ldply(course.action[["objects"]],
                                function(ap.obj){
@@ -467,12 +461,10 @@ MapMitigation <- function(course.action = NA, domain = domain) {
 #'
 #' @return data.frame
 MapRelations <- function(relationship = NA, domain = NA) {
-  if (domain == "pre-attack") {
-    domain <- "mitre-pre-attack"
-  } else if (domain == "enterprise-attack") {
+  if (domain == "enterprise-attack") {
     domain <- "mitre-attack"
   } else {
-    domain <- "mitre-mobile-attack"
+    domain <- paste0("mitre-", domain)
   }
 
   df.relations <- plyr::ldply(relationship[["objects"]],
@@ -497,11 +489,13 @@ parseAttckmodel.tact <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.tact] init ..."))
-  sf.x.mitre.tactic <- getGitHubCTIfiles(domain, "x-mitre-tactic")
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.tact]", domain,  "..."))
+  # sf.x.mitre.tactic <- getGitHubCTIfiles(domain, "x-mitre-tactic")
+  sf.x.mitre.tactic <- list.files(path = paste0("data-raw/cti-master/", domain, "/x-mitre-tactic"),
+                                  full.names = T)
 
   # parse each file
-  df.tact <- plyr::ldply(sf.x.mitre.tactic$src.file,
+  df.tact <- plyr::ldply(sf.x.mitre.tactic,
                          function(sf) {
                            # read source JSON file
                            x.mitre.tactic <- RJSONIO::fromJSON(sf)
@@ -528,11 +522,13 @@ parseAttckmodel.tech <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.tech] init ..."))
-  sf.attack.pattern <- getGitHubCTIfiles(domain, "attack-pattern")
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.tech]", domain,  "..."))
+  # sf.attack.pattern <- getGitHubCTIfiles(domain, "attack-pattern")
+  sf.attack.pattern <- list.files(path = paste0("data-raw/cti-master/", domain, "/attack-pattern"),
+                                  full.names = T)
 
   # parse each file
-  df.tech <- plyr::ldply(sf.attack.pattern$src.file,
+  df.tech <- plyr::ldply(sf.attack.pattern,
                          function(sf) {
                            # read source JSON file
                            attack.pattern <- RJSONIO::fromJSON(sf)
@@ -560,11 +556,13 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
                                                     "enterprise-attack",
                                                     "mobile-attack"), 1),
                                   verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.group] init ..."))
-  sf.intrusion.set <- getGitHubCTIfiles(domain, "intrusion-set")
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.group]", domain,  "..."))
+  # sf.intrusion.set <- getGitHubCTIfiles(domain, "intrusion-set")
+  sf.intrusion.set <- list.files(path = paste0("data-raw/cti-master/", domain, "/intrusion-set"),
+                                  full.names = T)
 
   # parse each file
-  df.group <- plyr::ldply(sf.intrusion.set$src.file,
+  df.group <- plyr::ldply(sf.intrusion.set,
                           function(sf) {
                             # read source JSON file
                             intrusion.set <- RJSONIO::fromJSON(sf)
@@ -591,13 +589,17 @@ parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.soft] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.soft]", domain,  "..."))
   # MALWARE
-  sf.maltool <- getGitHubCTIfiles(domain, "malware")
-  sf.maltool <- dplyr::bind_rows(sf.maltool, getGitHubCTIfiles(domain, "tool"))
+  # sf.maltool <- getGitHubCTIfiles(domain, "malware")
+  sf.maltool <- list.files(path = paste0("data-raw/cti-master/", domain, "/malware"),
+                           full.names = T)
+  sf.maltool <- c(sf.maltool,
+                  list.files(path = paste0("data-raw/cti-master/", domain, "/tool"),
+                             full.names = T))
 
   # parse each file
-  df.software <- plyr::ldply(sf.maltool$src.file,
+  df.software <- plyr::ldply(sf.maltool,
                              function(sf) {
                                # read source JSON file
                                maltool <- RJSONIO::fromJSON(sf)
@@ -625,11 +627,13 @@ parseAttckmodel.miti <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.miti] init ..."))
-  sf.course.action <- getGitHubCTIfiles(domain, "course-of-action")
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.miti]", domain,  "..."))
+  # sf.course.action <- getGitHubCTIfiles(domain, "course-of-action")
+  sf.course.action <- list.files(path = paste0("data-raw/cti-master/", domain, "/course-of-action"),
+                           full.names = T)
 
   # parse each file
-  df.miti <- plyr::ldply(sf.course.action$src.file,
+  df.miti <- plyr::ldply(sf.course.action,
                          function(sf) {
                            # read source JSON file
                            courseact <- RJSONIO::fromJSON(sf)
@@ -657,11 +661,13 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckmodel.rels] init ..."))
-  sf.relationship <- getGitHubCTIfiles(domain, "relationship")
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.rels]", domain,  "..."))
+  # sf.relationship <- getGitHubCTIfiles(domain, "relationship")
+  sf.relationship <- list.files(path = paste0("data-raw/cti-master/", domain, "/relationship"),
+                                 full.names = T)
 
   # parse each file
-  df.rel <- plyr::ldply(sf.relationship$src.file,
+  df.rel <- plyr::ldply(sf.relationship,
                         function(sf) {
                           # read source JSON file
                           relationship <- RJSONIO::fromJSON(sf)
@@ -689,14 +695,15 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
 #' df.tactics <- parseAttck.Tactics()
 #' }
 parseAttck.Tactics <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Tactics] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Tactics] init ..."))
   df.pre <- parseAttckmodel.tact(domain = "pre-attack")
   df.ent <- parseAttckmodel.tact(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.tact(domain = "mobile-attack")
+  df.ics <- parseAttckmodel.tact(domain = "ics-attack")
 
-  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
-  if (verbose) print(paste("[*][parseAttck.Tactics] done!"))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Tactics] done!"))
   return(df)
 }
 
@@ -710,12 +717,13 @@ parseAttck.Tactics <- function(verbose = TRUE) {
 #' df.techniques <- parseAttck.Techniques()
 #' }
 parseAttck.Techniques <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Techniques] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Techniques] init ..."))
   df.pre <- parseAttckmodel.tech(domain = "pre-attack")
   df.ent <- parseAttckmodel.tech(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.tech(domain = "mobile-attack")
+  df.ics <- parseAttckmodel.tech(domain = "ics-attack")
 
-  df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
+  df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
   return(df)
 }
@@ -734,7 +742,7 @@ parseAttck.Techniques <- function(verbose = TRUE) {
 #' df.groups <- parseAttck.Groups()
 #' }
 parseAttck.Groups <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Groups] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Groups] init ..."))
   df.pre <- parseAttckmodel.group(domain = "pre-attack")
   df.ent <- parseAttckmodel.group(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.group(domain = "mobile-attack")
@@ -754,7 +762,7 @@ parseAttck.Groups <- function(verbose = TRUE) {
 #' df.software <- parseAttck.Software()
 #' }
 parseAttck.Software <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Software] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Software] init ..."))
   df.pre <- parseAttckmodel.soft(domain = "pre-attack")
   df.ent <- parseAttckmodel.soft(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.soft(domain = "mobile-attack")
@@ -774,7 +782,7 @@ parseAttck.Software <- function(verbose = TRUE) {
 #' df.mitigations <- parseAttck.Mitigation()
 #' }
 parseAttck.Mitigation <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Mitigation] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Mitigation] init ..."))
   df.pre <- parseAttckmodel.miti(domain = "pre-attack")
   df.ent <- parseAttckmodel.miti(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.miti(domain = "mobile-attack")
@@ -795,7 +803,7 @@ parseAttck.Mitigation <- function(verbose = TRUE) {
 #' df.relationships <- parseAttck.Relationships()
 #' }
 parseAttck.Relationships <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttck.Relationships] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Relationships] init ..."))
   df.pre <- parseAttckmodel.rels(domain = "pre-attack")
   df.ent <- parseAttckmodel.rels(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.rels(domain = "mobile-attack")
@@ -813,7 +821,7 @@ parseAttck.Relationships <- function(verbose = TRUE) {
 #'
 #' @return list of data.frame objects (tactics, techniques, groups, software and relationships)
 parseCTIdata <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][parseAttckdata] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckdata] init ..."))
   df.tactics <- parseAttck.Tactics()
   df.techniques <- parseAttck.Techniques()
   df.groups <- parseAttck.Groups()
@@ -832,10 +840,10 @@ parseCTIdata <- function(verbose = TRUE) {
 # BUILD TIDY DATA FRAMES
 
 buildAttckTactics <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][buildAttckTactics] init ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] init ..."))
   attck.tact <- parseAttck.Tactics()
 
-  if (verbose) print(paste("[*][buildAttckTactics] tidy data ..."))
+  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] tidy data ..."))
   attck.tact <- dplyr::select(attck.tact, domain, entry.id, entry.title,
                               entry.text, x.mitre.tactic, created, modified,
                               id.cti, entry.url, deprecated)
@@ -845,7 +853,7 @@ buildAttckTactics <- function(verbose = TRUE) {
   attck.tact$modified <- as.POSIXct.POSIXlt(strptime(attck.tact$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.tact$created <- as.POSIXct.POSIXlt(strptime(attck.tact$created, format = "%Y-%m-%dT%H:%M:%S"))
 
-  if (verbose) print(paste("[*][buildAttckTactics] done!"))
+  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] done!"))
 
   return(attck.tact)
 }
