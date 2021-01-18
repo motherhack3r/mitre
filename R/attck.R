@@ -72,6 +72,37 @@ getAttckData <- function(verbose = FALSE) {
   attck$tactics <- tactics
   attck$techniques <- techniques
 
+  # Include CTI data to network
+
+  attck.df <- attck$tactics[!(attck$tactics$mitreid %in% attck$attcknet$nodes$id), ]
+
+  ctinodes <- data.frame(
+    id = attck.df$mitreid,
+    label = attck.df$mitreid,
+    group = rep("x-mitre-tactic", nrow(attck.df)),
+    value = rep(5, nrow(attck.df)),
+    shape = rep("triangle", nrow(attck.df)),
+    title = paste0("<p><b>", attck.df$name, "</b><br>", attck.df$description, "</p>"),
+    color = rep("gold", nrow(attck.df)),
+    shadow = rep(TRUE, nrow(attck.df)),
+    team = rep("RED", nrow(attck.df))
+  )
+  attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
+
+  attck.df <- attck$techniques[!(attck$techniques$mitreid %in% attck$attcknet$nodes$id), ]
+  ctinodes <- data.frame(
+    id = attck.df$mitreid,
+    label = attck.df$mitreid,
+    group = rep("attack-pattern", nrow(attck.df)),
+    value = rep(4, nrow(attck.df)),
+    shape = rep("square", nrow(attck.df)),
+    title = paste0("<p><b>", attck.df$name, "</b><br>", attck.df$description, "</p>"),
+    color = rep("lightblue", nrow(attck.df)),
+    shadow = rep(TRUE, nrow(attck.df)),
+    team = rep("RED", nrow(attck.df))
+  )
+  attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
+
   return(attck)
 }
 
