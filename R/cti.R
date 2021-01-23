@@ -289,83 +289,82 @@ MapTechniques <- function(attack.pattern = NA, domain = NA) {
     domain <- paste0("mitre-", domain)
   }
 
-  df.techniques <- plyr::ldply(attack.pattern[["objects"]],
-                               function(ap.obj){
-                                 ap.obj.capec <- which(sapply(ap.obj[["external_references"]],
-                                                              function(x) {
-                                                                x[["source_name"]]
-                                                              }) == "capec")
+  df.techniques <- plyr::ldply(attack.pattern[["objects"]], function(ap.obj){
+    ap.obj.capec <- which(sapply(ap.obj[["external_references"]],
+                                 function(x) {
+                                   x[["source_name"]]
+                                 }) == "capec")
 
-                                 if (length(ap.obj.capec) > 0) {
-                                   ap.obj.capec <- paste(unique(sapply(ap.obj[["external_references"]][ap.obj.capec],
-                                                                       "[[", "external_id")), collapse = ", ")
-                                 } else {
-                                   ap.obj.capec <- NA
-                                 }
+    if (length(ap.obj.capec) > 0) {
+      ap.obj.capec <- paste(unique(sapply(ap.obj[["external_references"]][ap.obj.capec],
+                                          "[[", "external_id")), collapse = ", ")
+    } else {
+      ap.obj.capec <- NA
+    }
 
-                                 ap.obj.kch <- which(sapply(ap.obj[["kill_chain_phases"]],
-                                                            function(x) {
-                                                              x[["kill_chain_name"]]
-                                                            }) == domain)
-                                 if (length(ap.obj.kch) > 0) {
-                                   ap.obj.kch <- paste(unique(sapply(ap.obj[["kill_chain_phases"]][ap.obj.kch], "[[", "phase_name")),
-                                                       collapse = ", ")
-                                 } else {
-                                   ap.obj.kch <- NA
-                                 }
+    ap.obj.kch <- which(sapply(ap.obj[["kill_chain_phases"]],
+                               function(x) {
+                                 x[["kill_chain_name"]]
+                               }) == domain)
+    if (length(ap.obj.kch) > 0) {
+      ap.obj.kch <- paste(unique(sapply(ap.obj[["kill_chain_phases"]][ap.obj.kch], "[[", "phase_name")),
+                          collapse = ", ")
+    } else {
+      ap.obj.kch <- NA
+    }
 
-                                 df.pre <- newAttckTechnique(Entry_Title = ap.obj$name,
-                                                             Tactic = ap.obj.kch,
-                                                             Description = ifelse(test = is.null(ap.obj$description),
-                                                                                  yes = "-", no = ap.obj$description),
-                                                             Mitigation = NA,
-                                                             Detection = ifelse(test = "x_mitre_detectable_by_common_defenses_explanation" %in% names(ap.obj),
-                                                                                yes = ap.obj$x_mitre_detectable_by_common_defenses_explanation,
-                                                                                no = ifelse(test = "x_mitre_detection" %in% names(ap.obj),
-                                                                                            yes = ap.obj$x_mitre_detection,
-                                                                                            no = NA)),
-                                                             Detection.defenses = ifelse(test = "x_mitre_detectable_by_common_defenses" %in% names(ap.obj),
-                                                                                         yes = ap.obj$x_mitre_detectable_by_common_defenses,
-                                                                                         no = NA),
-                                                             Adversary = ifelse(test = "x_mitre_difficulty_for_adversary_explanation" %in% names(ap.obj),
-                                                                                yes = ap.obj$x_mitre_difficulty_for_adversary_explanation,
-                                                                                no = NA),
-                                                             Adversary.easy = ifelse(test = "x_mitre_difficulty_for_adversary" %in% names(ap.obj),
-                                                                                     yes = ap.obj$x_mitre_difficulty_for_adversary,
-                                                                                     no = NA),
-                                                             Examples = NA,
-                                                             CAPEC = ap.obj.capec,
-                                                             Platform = ifelse(test = "x_mitre_platforms" %in% names(ap.obj),
-                                                                               yes = ap.obj$x_mitre_platforms,
-                                                                               no = NA),
-                                                             Data_Sources = ifelse(test = "x_mitre_data_sources" %in% names(ap.obj),
-                                                                                   yes = ap.obj$x_mitre_data_sources,
-                                                                                   no = NA),
-                                                             Permissions_Required = ifelse(test = "x_mitre_permissions_required" %in% names(ap.obj),
-                                                                                           yes = ap.obj$x_mitre_permissions_required,
-                                                                                           no = NA),
-                                                             Effective_Permissions = ifelse(test = "x_mitre_effective_permissions" %in% names(ap.obj),
-                                                                                            yes = ap.obj$x_mitre_effective_permissions,
-                                                                                            no = NA),
-                                                             Defense_Bypassed = ifelse(test = "x_mitre_defense_bypassed" %in% names(ap.obj),
-                                                                                       yes = ap.obj$x_mitre_defense_bypassed,
-                                                                                       no = NA),
-                                                             System_Requirements = ifelse(test = "x_mitre_system_requirements" %in% names(ap.obj),
-                                                                                          yes = ap.obj$x_mitre_system_requirements,
-                                                                                          no = NA),
-                                                             Network_Requirements = ifelse(test = "x_mitre_network_requirements" %in% names(ap.obj),
-                                                                                           yes = ap.obj$x_mitre_network_requirements,
-                                                                                           no = NA),
-                                                             Remote_Support = ifelse(test = "x_mitre_remote_support" %in% names(ap.obj),
-                                                                                     yes = ap.obj$x_mitre_remote_support,
-                                                                                     no = NA),
-                                                             Contributors = ifelse(test = "x_mitre_contributors" %in% names(ap.obj),
-                                                                                   yes = ap.obj$x_mitre_contributors,
-                                                                                   no = NA),
-                                                             Impact_Type = ifelse(test = "x_mitre_impact_type" %in% names(ap.obj),
-                                                                                  yes = ap.obj$x_mitre_impact_type,
-                                                                                  no = NA))
-                               })
+    df.pre <- newAttckTechnique(Entry_Title = ap.obj$name,
+                                Tactic = ap.obj.kch,
+                                Description = ifelse(test = is.null(ap.obj$description),
+                                                     yes = "-", no = ap.obj$description),
+                                Mitigation = NA,
+                                Detection = ifelse(test = "x_mitre_detectable_by_common_defenses_explanation" %in% names(ap.obj),
+                                                   yes = ap.obj$x_mitre_detectable_by_common_defenses_explanation,
+                                                   no = ifelse(test = "x_mitre_detection" %in% names(ap.obj),
+                                                               yes = jsonlite::toJSON(ap.obj$x_mitre_detection),
+                                                               no = NA)),
+                                Detection.defenses = ifelse(test = "x_mitre_detectable_by_common_defenses" %in% names(ap.obj),
+                                                            yes = ap.obj$x_mitre_detectable_by_common_defenses,
+                                                            no = NA),
+                                Adversary = ifelse(test = "x_mitre_difficulty_for_adversary_explanation" %in% names(ap.obj),
+                                                   yes = ap.obj$x_mitre_difficulty_for_adversary_explanation,
+                                                   no = NA),
+                                Adversary.easy = ifelse(test = "x_mitre_difficulty_for_adversary" %in% names(ap.obj),
+                                                        yes = ap.obj$x_mitre_difficulty_for_adversary,
+                                                        no = NA),
+                                Examples = NA,
+                                CAPEC = ap.obj.capec,
+                                Platform = ifelse(test = "x_mitre_platforms" %in% names(ap.obj),
+                                                  yes = jsonlite::toJSON(ap.obj$x_mitre_platforms),
+                                                  no = NA),
+                                Data_Sources = ifelse(test = "x_mitre_data_sources" %in% names(ap.obj),
+                                                      yes = jsonlite::toJSON(ap.obj$x_mitre_data_sources),
+                                                      no = NA),
+                                Permissions_Required = ifelse(test = "x_mitre_permissions_required" %in% names(ap.obj),
+                                                              yes = jsonlite::toJSON(ap.obj$x_mitre_permissions_required),
+                                                              no = NA),
+                                Effective_Permissions = ifelse(test = "x_mitre_effective_permissions" %in% names(ap.obj),
+                                                               yes = jsonlite::toJSON(ap.obj$x_mitre_effective_permissions),
+                                                               no = NA),
+                                Defense_Bypassed = ifelse(test = "x_mitre_defense_bypassed" %in% names(ap.obj),
+                                                          yes = jsonlite::toJSON(ap.obj$x_mitre_defense_bypassed),
+                                                          no = NA),
+                                System_Requirements = ifelse(test = "x_mitre_system_requirements" %in% names(ap.obj),
+                                                             yes = ap.obj$x_mitre_system_requirements,
+                                                             no = NA),
+                                Network_Requirements = ifelse(test = "x_mitre_network_requirements" %in% names(ap.obj),
+                                                              yes = ap.obj$x_mitre_network_requirements,
+                                                              no = NA),
+                                Remote_Support = ifelse(test = "x_mitre_remote_support" %in% names(ap.obj),
+                                                        yes = ap.obj$x_mitre_remote_support,
+                                                        no = NA),
+                                Contributors = ifelse(test = "x_mitre_contributors" %in% names(ap.obj),
+                                                      yes = jsonlite::toJSON(ap.obj$x_mitre_contributors),
+                                                      no = NA),
+                                Impact_Type = ifelse(test = "x_mitre_impact_type" %in% names(ap.obj),
+                                                     yes = ap.obj$x_mitre_impact_type,
+                                                     no = NA))
+  })
 
   return(df.techniques)
 }
@@ -485,7 +484,7 @@ MapRelations <- function(relationship = NA, domain = NA) {
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.tact <- function(domain = sample(c("pre-attack",
+parseAttckmodel.tact <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
@@ -518,7 +517,7 @@ parseAttckmodel.tact <- function(domain = sample(c("pre-attack",
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.tech <- function(domain = sample(c("pre-attack",
+parseAttckmodel.tech <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
@@ -552,7 +551,7 @@ parseAttckmodel.tech <- function(domain = sample(c("pre-attack",
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.group <- function(domain = sample(c("pre-attack",
+parseAttckmodel.group <- function(domain = sample(c("pre-attack", "ics-attack",
                                                     "enterprise-attack",
                                                     "mobile-attack"), 1),
                                   verbose = TRUE) {
@@ -585,7 +584,7 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack",
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
+parseAttckmodel.soft <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
@@ -623,7 +622,7 @@ parseAttckmodel.soft <- function(domain = sample(c("pre-attack",
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.miti <- function(domain = sample(c("pre-attack",
+parseAttckmodel.miti <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
@@ -657,7 +656,7 @@ parseAttckmodel.miti <- function(domain = sample(c("pre-attack",
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame
-parseAttckmodel.rels <- function(domain = sample(c("pre-attack",
+parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
@@ -868,20 +867,20 @@ buildAttckTechniques <- function(verbose = TRUE) {
                               detection.defenses, detection, adversary.easy, adversary,
                               revoked, tactic, capec, cve, created, modified,
                               id.cti, entry.url, deprecated)
-  attck.tech$domain <- as.factor(attck.tech$domain)
-  attck.tech$platform <- as.factor(attck.tech$platform)
-  attck.tech$data.sources <- as.factor(attck.tech$data.sources)
-  attck.tech$permissions.required <- as.factor(attck.tech$permissions.required)
-  attck.tech$effective.permissions <- as.factor(attck.tech$effective.permissions)
-  attck.tech$defense.bypassed <- as.factor(attck.tech$defense.bypassed)
-  attck.tech$system.requirements <- as.factor(attck.tech$system.requirements)
-  attck.tech$network.requirements <- as.factor(attck.tech$network.requirements)
-  attck.tech$remote.support <- as.factor(attck.tech$remote.support)
-  attck.tech$impact.type <- as.factor(attck.tech$impact.type)
-  attck.tech$detection.defenses <- as.factor(attck.tech$detection.defenses)
-  attck.tech$adversary.easy <- as.factor(attck.tech$adversary.easy)
-  attck.tech$revoked <- as.factor(attck.tech$revoked)
-  attck.tech$deprecated <- as.factor(attck.tech$deprecated)
+  # attck.tech$domain <- as.factor(attck.tech$domain)
+  # attck.tech$platform <- as.factor(attck.tech$platform)
+  # attck.tech$data.sources <- as.factor(attck.tech$data.sources)
+  # attck.tech$permissions.required <- as.factor(attck.tech$permissions.required)
+  # attck.tech$effective.permissions <- as.factor(attck.tech$effective.permissions)
+  # attck.tech$defense.bypassed <- as.factor(attck.tech$defense.bypassed)
+  # attck.tech$system.requirements <- as.factor(attck.tech$system.requirements)
+  # attck.tech$network.requirements <- as.factor(attck.tech$network.requirements)
+  # attck.tech$remote.support <- as.factor(attck.tech$remote.support)
+  # attck.tech$impact.type <- as.factor(attck.tech$impact.type)
+  # attck.tech$detection.defenses <- as.factor(attck.tech$detection.defenses)
+  # attck.tech$adversary.easy <- as.factor(attck.tech$adversary.easy)
+  # attck.tech$revoked <- as.factor(attck.tech$revoked)
+  # attck.tech$deprecated <- as.factor(attck.tech$deprecated)
   attck.tech$modified <- as.POSIXct.POSIXlt(strptime(attck.tech$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.tech$created <- as.POSIXct.POSIXlt(strptime(attck.tech$created, format = "%Y-%m-%dT%H:%M:%S"))
 

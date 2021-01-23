@@ -28,13 +28,14 @@ getAttckData <- function(verbose = FALSE) {
   cti.tact <- buildAttckTactics(verbose)
   names(cti.tact) <- c("domain", "mitreid", "name", "description", "x_mitre_shortname",
                        "created", "modified", "id", "url", "x_mitre_deprecated")
-  tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "domain", "url")],
+  tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "url")],
                               by = "mitreid")
   # Add tactics only in CTI
   cti.tact <- cti.tact[!(cti.tact$mitreid %in% tactics$mitreid), ]
   cti.tact$type <- rep("x-mitre-tactic", nrow(cti.tact))
   cti.tact$revoked <- rep(NA, nrow(cti.tact))
   cti.tact$created_by_ref <- rep(NA, nrow(cti.tact))
+  cti.tact$domain <- as.character.factor(cti.tact$domain)
   tactics <- dplyr::bind_rows(tactics, cti.tact)
 
   if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
@@ -52,6 +53,9 @@ getAttckData <- function(verbose = FALSE) {
                "x_mitre_deprecated" = "deprecated",
                "x_mitre_detection" = "detection")
   cti.tech <- dplyr::rename(cti.tech, dplyr::all_of(techmap))
+  cti.tech$type <- rep("attack-pattern", nrow(cti.tech))
+  cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
+  cti.tech$revoked <- as.logical(cti.tech$revoked)
   cti.tech <- cti.tech[, c(names(techniques)[which(names(techniques)
                                                    %in% names(cti.tech))],
                            names(cti.tech)[which(!(names(cti.tech)
@@ -62,46 +66,92 @@ getAttckData <- function(verbose = FALSE) {
                               by = "mitreid")
   # Add techniques only in CTI
   cti.tech <- cti.tech[!(cti.tech$mitreid %in% techniques$mitreid), ]
-  cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
-  cti.tech$revoked <- as.logical(cti.tech$revoked)
   techniques <- dplyr::bind_rows(techniques, cti.tech)
-  selectedRows <- which(is.na(techniques$x_mitre_platforms))
-  techniques$x_mitre_platforms[selectedRows] <- techniques$platform[selectedRows]
-  techniques$platform <- NULL
+  techniques$x_mitre_platforms <- NULL
 
   attck$tactics <- tactics
   attck$techniques <- techniques
 
   # Include CTI data to network
-
   attck.df <- attck$tactics[!(attck$tactics$mitreid %in% attck$attcknet$nodes$id), ]
-
   ctinodes <- data.frame(
     id = attck.df$mitreid,
     label = attck.df$mitreid,
-    group = rep("x-mitre-tactic", nrow(attck.df)),
+    group = attck.df$type,
     value = rep(5, nrow(attck.df)),
     shape = rep("triangle", nrow(attck.df)),
     title = paste0("<p><b>", attck.df$name, "</b><br>", attck.df$description, "</p>"),
     color = rep("gold", nrow(attck.df)),
-    shadow = rep(TRUE, nrow(attck.df)),
+    shadow = attck.df$x_mitre_deprecated,
     team = rep("RED", nrow(attck.df))
   )
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "new tactics ..."))
   attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
 
   attck.df <- attck$techniques[!(attck$techniques$mitreid %in% attck$attcknet$nodes$id), ]
   ctinodes <- data.frame(
     id = attck.df$mitreid,
     label = attck.df$mitreid,
-    group = rep("attack-pattern", nrow(attck.df)),
+    group = attck.df$type,
     value = rep(4, nrow(attck.df)),
     shape = rep("square", nrow(attck.df)),
     title = paste0("<p><b>", attck.df$name, "</b><br>", attck.df$description, "</p>"),
     color = rep("lightblue", nrow(attck.df)),
-    shadow = rep(TRUE, nrow(attck.df)),
+    shadow = attck.df$x_mitre_deprecated,
     team = rep("RED", nrow(attck.df))
   )
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "new techniques ..."))
   attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
+
+  # Include CTI relationships
+
+  edges <- data.frame(
+    from = character(0),
+    to = character(0),
+    label = character(0),
+    arrows = numeric(0),
+    title = character(0),
+    dashes = logical(0),
+    team = character(0)
+  )
+
+  # Technique -> CAPEC
+  tech2capec <- techniques[!is.na(techniques$capec), c("mitreid", "capec")]
+  tech2capec <-
+    tidyr::unnest(
+      dplyr::mutate(tech2capec,
+                    capec = strsplit(as.character(capec), ",")),
+      capec)
+  names(tech2capec) <- c("from", "to")
+  tech2capec$from <- stringr::str_trim(tech2capec$from)
+  tech2capec$to <- stringr::str_trim(tech2capec$to)
+  tech2capec$label <- rep("include", nrow(tech2capec))
+  tech2capec$arrows <- rep("to", nrow(tech2capec))
+  tech2capec$title <- rep("include", nrow(tech2capec))
+  tech2capec$dashes <- rep(TRUE, nrow(tech2capec))
+  tech2capec$team <- rep("RED", nrow(tech2capec))
+
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2capec), "CAPEC relationships ..."))
+  attck[["attcknet"]][["edges"]] <- rbind(attck[["attcknet"]][["edges"]], tech2capec)
+
+  # Technique -> CVE
+  tech2cve <- techniques[!is.na(techniques$cve), c("mitreid", "cve")]
+  tech2cve <-
+    tidyr::unnest(
+      dplyr::mutate(tech2cve,
+                    cve = strsplit(as.character(cve), ",")),
+      cve)
+  names(tech2cve) <- c("from", "to")
+  tech2cve$from <- stringr::str_trim(tech2cve$from)
+  tech2cve$to <- stringr::str_trim(tech2cve$to)
+  tech2cve$label <- rep("exploit", nrow(tech2cve))
+  tech2cve$arrows <- rep("to", nrow(tech2cve))
+  tech2cve$title <- rep("exploit", nrow(tech2cve))
+  tech2cve$dashes <- rep(TRUE, nrow(tech2cve))
+  tech2cve$team <- rep("RED", nrow(tech2cve))
+
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2cve), "CVE relationships ..."))
+  attck[["attcknet"]][["edges"]] <- rbind(attck[["attcknet"]][["edges"]], tech2cve)
 
   return(attck)
 }
@@ -185,6 +235,7 @@ parseAttckData <- function(verbose = FALSE) {
                              "course-of-action"),]
   mob$mitreid <- unlist(mob$mitreid)
   mob <- mob[, colSums(is.na(mob)) < nrow(mob)]
+  mob$domain <- rep("mobile-attack", nrow(mob))
 
   tactics.raw <- mob[mob$type == "x-mitre-tactic", ]
   techniques.raw <- mob[mob$type == "attack-pattern", ]
@@ -251,6 +302,7 @@ parseAttckData <- function(verbose = FALSE) {
                              "course-of-action"),]
   ent$mitreid <- unlist(ent$mitreid)
   ent <- ent[, colSums(is.na(ent)) < nrow(ent)]
+  ent$domain <- rep("enterprise-attack", nrow(ent))
 
   tactics.raw <- rbind(tactics.raw, ent[ent$type == "x-mitre-tactic", ])
   techniques.raw <- rbind(techniques.raw, ent[ent$type == "attack-pattern", ])
