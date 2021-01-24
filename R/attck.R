@@ -18,25 +18,24 @@
 #' }
 getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
-  attck <- parseAttckData(verbose)
-  if (verbose) print(paste("[*][ATT&CK] Tactics enrichment with latest CTI definitions ..."))
-  tactics <- attck$tactics
-  tactics$modified <- as.POSIXct.POSIXlt(strptime(tactics$modified, format = "%Y-%m-%dT%H:%M:%S"))
-  tactics$created <- as.POSIXct.POSIXlt(strptime(tactics$created, format = "%Y-%m-%dT%H:%M:%S"))
-
+  # attck <- parseAttckData(verbose)
+  # if (verbose) print(paste("[*][ATT&CK] Tactics enrichment with latest CTI definitions ..."))
+  # tactics <- attck$tactics
+  # tactics$modified <- as.POSIXct.POSIXlt(strptime(tactics$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  # tactics$created <- as.POSIXct.POSIXlt(strptime(tactics$created, format = "%Y-%m-%dT%H:%M:%S"))
   # Enrich nodes in both data sets
-  cti.tact <- buildAttckTactics(verbose)
-  names(cti.tact) <- c("domain", "mitreid", "name", "description", "x_mitre_shortname",
-                       "created", "modified", "id", "url", "x_mitre_deprecated")
-  tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "url")],
-                              by = "mitreid")
+  # cti.tact <- buildAttckTactics(verbose)
+  # names(cti.tact) <- c("domain", "type", "mitreid", "name", "description", "x_mitre_shortname",
+  #                      "created", "modified", "id", "url", "x_mitre_deprecated")
+  # tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "url")],
+                              # by = "mitreid")
   # Add tactics only in CTI
-  cti.tact <- cti.tact[!(cti.tact$mitreid %in% tactics$mitreid), ]
-  cti.tact$type <- rep("x-mitre-tactic", nrow(cti.tact))
-  cti.tact$revoked <- rep(NA, nrow(cti.tact))
-  cti.tact$created_by_ref <- rep(NA, nrow(cti.tact))
-  cti.tact$domain <- as.character.factor(cti.tact$domain)
-  tactics <- dplyr::bind_rows(tactics, cti.tact)
+  # cti.tact <- cti.tact[!(cti.tact$mitreid %in% tactics$mitreid), ]
+  # cti.tact$revoked <- rep(NA, nrow(cti.tact))
+  # cti.tact$created_by_ref <- rep(NA, nrow(cti.tact))
+  # cti.tact$domain <- as.character.factor(cti.tact$domain)
+  # tactics <- dplyr::bind_rows(tactics, cti.tact)
+  tactics <- buildAttckTactics(verbose)
 
   if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
   techniques <- attck$techniques
@@ -53,9 +52,9 @@ getAttckData <- function(verbose = FALSE) {
                "x_mitre_deprecated" = "deprecated",
                "x_mitre_detection" = "detection")
   cti.tech <- dplyr::rename(cti.tech, dplyr::all_of(techmap))
-  cti.tech$type <- rep("attack-pattern", nrow(cti.tech))
-  cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
-  cti.tech$revoked <- as.logical(cti.tech$revoked)
+  # cti.tech$type <- rep("attack-pattern", nrow(cti.tech))
+  # cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
+  # cti.tech$revoked <- as.logical(cti.tech$revoked)
   cti.tech <- cti.tech[, c(names(techniques)[which(names(techniques)
                                                    %in% names(cti.tech))],
                            names(cti.tech)[which(!(names(cti.tech)
@@ -405,6 +404,9 @@ parseAttckData <- function(verbose = FALSE) {
 
   if (verbose) print(paste("[*][ATT&CK] Building output ..."))
   tactics.raw$description <- stringr::str_trim(tactics.raw$description)
+  tactics.raw$modified <- as.POSIXct.POSIXlt(strptime(tactics.raw$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  tactics.raw$created <- as.POSIXct.POSIXlt(strptime(tactics.raw$created, format = "%Y-%m-%dT%H:%M:%S"))
+
   tactics.raw$kill_chain_phases <- NULL
   tactics.raw$x_mitre_platforms <- NULL
   groups.raw$kill_chain_phases <- NULL
