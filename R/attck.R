@@ -18,23 +18,6 @@
 #' }
 getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
-  # attck <- parseAttckData(verbose)
-  # if (verbose) print(paste("[*][ATT&CK] Tactics enrichment with latest CTI definitions ..."))
-  # tactics <- attck$tactics
-  # tactics$modified <- as.POSIXct.POSIXlt(strptime(tactics$modified, format = "%Y-%m-%dT%H:%M:%S"))
-  # tactics$created <- as.POSIXct.POSIXlt(strptime(tactics$created, format = "%Y-%m-%dT%H:%M:%S"))
-  # Enrich nodes in both data sets
-  # cti.tact <- buildAttckTactics(verbose)
-  # names(cti.tact) <- c("domain", "type", "mitreid", "name", "description", "x_mitre_shortname",
-  #                      "created", "modified", "id", "url", "x_mitre_deprecated")
-  # tactics <- dplyr::left_join(tactics, cti.tact[, c("mitreid", "url")],
-                              # by = "mitreid")
-  # Add tactics only in CTI
-  # cti.tact <- cti.tact[!(cti.tact$mitreid %in% tactics$mitreid), ]
-  # cti.tact$revoked <- rep(NA, nrow(cti.tact))
-  # cti.tact$created_by_ref <- rep(NA, nrow(cti.tact))
-  # cti.tact$domain <- as.character.factor(cti.tact$domain)
-  # tactics <- dplyr::bind_rows(tactics, cti.tact)
   tactics <- buildAttckTactics(verbose)
 
   if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
