@@ -18,44 +18,23 @@
 #' }
 getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
+  attck <- parseAttckData(verbose)
+
+  if (verbose) print(paste("[*][ATT&CK] Building Tactics ..."))
   tactics <- buildAttckTactics(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Techniques enrichment with latest CTI definitions ..."))
-  techniques <- attck$techniques
-  techniques$modified <- as.POSIXct.POSIXlt(strptime(techniques$modified, format = "%Y-%m-%dT%H:%M:%S"))
-  techniques$created <- as.POSIXct.POSIXlt(strptime(techniques$created, format = "%Y-%m-%dT%H:%M:%S"))
+  if (verbose) print(paste("[*][ATT&CK] Building Techniques ..."))
+  techniques <- buildAttckTechniques(verbose)
 
-  # Adapt CTI column names
-  cti.tech <- buildAttckTechniques(verbose)
-  techmap <- c("id"="id.cti",
-               "mitreid" = "entry.id",
-               "name" = "entry.title",
-               "description" = "entry.text",
-               "summary" = "description",
-               "x_mitre_deprecated" = "deprecated",
-               "x_mitre_detection" = "detection")
-  cti.tech <- dplyr::rename(cti.tech, dplyr::all_of(techmap))
-  # cti.tech$type <- rep("attack-pattern", nrow(cti.tech))
-  # cti.tech$x_mitre_deprecated <- as.logical(cti.tech$x_mitre_deprecated)
-  # cti.tech$revoked <- as.logical(cti.tech$revoked)
-  cti.tech <- cti.tech[, c(names(techniques)[which(names(techniques)
-                                                   %in% names(cti.tech))],
-                           names(cti.tech)[which(!(names(cti.tech)
-                                                   %in% names(techniques)))])]
-  # Enrich nodes in both data sets
-  selectedCols <- c("mitreid", names(cti.tech)[which(!(names(cti.tech) %in% names(techniques)))])
-  techniques <- dplyr::left_join(techniques, cti.tech[, selectedCols],
-                              by = "mitreid")
-  # Add techniques only in CTI
-  cti.tech <- cti.tech[!(cti.tech$mitreid %in% techniques$mitreid), ]
-  techniques <- dplyr::bind_rows(techniques, cti.tech)
-  techniques$x_mitre_platforms <- NULL
+  if (verbose) print(paste("[*][ATT&CK] Building Mitigations ..."))
+  mitigations <- buildAttckMitigations(verbose)
 
   attck$tactics <- tactics
   attck$techniques <- techniques
+  attck$mitigation <- mitigations
 
   # Include CTI data to network
-  attck.df <- attck$tactics[!(attck$tactics$mitreid %in% attck$attcknet$nodes$id), ]
+  attck.df <- attck$tactics
   ctinodes <- data.frame(
     id = attck.df$mitreid,
     label = attck.df$mitreid,
@@ -67,7 +46,7 @@ getAttckData <- function(verbose = FALSE) {
     shadow = attck.df$x_mitre_deprecated,
     team = rep("RED", nrow(attck.df))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "new tactics ..."))
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "tactic nodes ..."))
   attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
 
   attck.df <- attck$techniques[!(attck$techniques$mitreid %in% attck$attcknet$nodes$id), ]

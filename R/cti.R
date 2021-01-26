@@ -1,10 +1,9 @@
 # BUILD TIDY DATA FRAMES
 
 buildAttckTactics <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] init ..."))
   attck.tact <- parseAttck.Tactics()
 
-  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] tidy data ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI] Tidy Tactics data ..."))
   attck.tact <- dplyr::select(attck.tact, domain, type, entry.id, entry.title,
                               entry.text, x.mitre.tactic, created, created.by, modified,
                               id.cti, entry.url, deprecated, revoked)
@@ -16,8 +15,6 @@ buildAttckTactics <- function(verbose = TRUE) {
   names(attck.tact) <- c("domain", "type", "mitreid", "name", "description",
                          "x_mitre_shortname", "created", "created_by_ref", "modified", "id",
                          "url", "x_mitre_deprecated", "revoked")
-
-  if (verbose) print(paste("[*][ATT&CK][CTI][buildAttckTactics] done!"))
 
   return(attck.tact)
 }
@@ -32,20 +29,17 @@ buildAttckTechniques <- function(verbose = TRUE) {
                               detection.defenses, detection, adversary.easy, adversary,
                               revoked, tactic, capec, cve, created, created.by, modified,
                               id.cti, entry.url, deprecated)
-  # attck.tech$domain <- as.factor(attck.tech$domain)
-  # attck.tech$platform <- as.factor(attck.tech$platform)
-  # attck.tech$data.sources <- as.factor(attck.tech$data.sources)
-  # attck.tech$permissions.required <- as.factor(attck.tech$permissions.required)
-  # attck.tech$effective.permissions <- as.factor(attck.tech$effective.permissions)
-  # attck.tech$defense.bypassed <- as.factor(attck.tech$defense.bypassed)
-  # attck.tech$system.requirements <- as.factor(attck.tech$system.requirements)
-  # attck.tech$network.requirements <- as.factor(attck.tech$network.requirements)
-  # attck.tech$remote.support <- as.factor(attck.tech$remote.support)
-  # attck.tech$impact.type <- as.factor(attck.tech$impact.type)
-  # attck.tech$detection.defenses <- as.factor(attck.tech$detection.defenses)
-  # attck.tech$adversary.easy <- as.factor(attck.tech$adversary.easy)
-  attck.tech$revoked <- as.logical(attck.tech$revoked)
-  attck.tech$deprecated <- as.logical(attck.tech$deprecated)
+  names(attck.tech) <- c("domain", "type", "mitreid", "name", "description",
+                         "summary", "platform", "data.sources",
+                         "permissions.required", "effective.permissions",
+                         "defense.bypassed", "system.requirements",
+                         "network.requirements", "remote.support", "impact.type",
+                         "detection.defenses", "x_mitre_detection", "adversary.easy",
+                         "adversary", "revoked", "tactic", "capec", "cve",
+                         "created", "created.by", "modified", "id.cti",
+                         "url", "x_mitre_deprecated")
+  attck.tech$subtechnique <- grepl(pattern = "T\\d\\d\\d\\d\\.\\d\\d\\d", attck.tech$mitreid)
+  attck.tech$revoked[is.na(attck.tech$revoked)] <- FALSE
   attck.tech$modified <- as.POSIXct.POSIXlt(strptime(attck.tech$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.tech$created <- as.POSIXct.POSIXlt(strptime(attck.tech$created, format = "%Y-%m-%dT%H:%M:%S"))
 
@@ -54,7 +48,17 @@ buildAttckTechniques <- function(verbose = TRUE) {
 
 buildAttckMitigations <- function(verbose = TRUE) {
   attck.miti <- parseAttck.Mitigation(verbose)
-  attck.miti <- dplyr::select(attck.miti, )
+  attck.miti <- attck.miti[,colSums(is.na(attck.miti))<nrow(attck.miti)]
+  names(attck.miti) <- c("domain", "id.cti", "type", "modified", "created",
+                         "created.by", "mitreid", "url", "name", "description",
+                         "citation", "x_mitre_deprecated", "old_mitreid",
+                         "summary", "src.file")
+  attck.miti <- dplyr::select(attck.miti, domain, type, mitreid, name, description,
+                              summary, created, created.by, modified, id.cti,
+                              url, x_mitre_deprecated)
+  attck.miti$modified <- as.POSIXct.POSIXlt(strptime(attck.miti$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.miti$created <- as.POSIXct.POSIXlt(strptime(attck.miti$created, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.miti$revoked <- rep(FALSE, nrow(attck.miti))
 
   return(attck.miti)
 }
@@ -107,6 +111,7 @@ MapCommonproperties <- function(attack.obj = NA, domain = NA) {
                              }
                              cves <- unique(unlist(stringr::str_extract_all(RJSONIO::toJSON(ap.obj), "CVE-\\d+-\\d+")))
                              cves <- paste(cves, collapse = ", ")
+                             cves <- ifelse(cves == "", NA, cves)
 
                              df.pre <- newAttckCommon(id.cti = ap.obj$id,
                                                       type = ap.obj$type,
@@ -383,7 +388,7 @@ parseAttckmodel.tact <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.tact]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI] Parsing ", domain, " domain ..."))
   # sf.x.mitre.tactic <- getGitHubCTIfiles(domain, "x-mitre-tactic")
   sf.x.mitre.tactic <- list.files(path = paste0("data-raw/cti-master/", domain, "/x-mitre-tactic"),
                                   full.names = T)
@@ -588,7 +593,7 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
 #' df.tactics <- parseAttck.Tactics()
 #' }
 parseAttck.Tactics <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Tactics] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI] Parsing Tactics init ..."))
   df.pre <- parseAttckmodel.tact(domain = "pre-attack")
   df.ent <- parseAttckmodel.tact(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.tact(domain = "mobile-attack")
@@ -596,7 +601,7 @@ parseAttck.Tactics <- function(verbose = TRUE) {
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Tactics] done!"))
+  if (verbose) print(paste("[.][ATT&CK][CTI] Parsing Tactics done!"))
   return(df)
 }
 
