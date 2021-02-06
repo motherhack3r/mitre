@@ -19,21 +19,36 @@
 getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
   attck <- parseAttckData(verbose)
+  attck2 <- attck
 
-  if (verbose) print(paste("[*][ATT&CK] Building Tactics ..."))
+  if (verbose) print(paste("[*][ATT&CK] Building TACTICS ..."))
   tactics <- buildAttckTactics(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building Techniques ..."))
+  if (verbose) print(paste("[*][ATT&CK] Building TECHNIQUES ..."))
   techniques <- buildAttckTechniques(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building Mitigations ..."))
+  if (verbose) print(paste("[*][ATT&CK] Building MITIGATIONS ..."))
   mitigations <- buildAttckMitigations(verbose)
+
+  if (verbose) print(paste("[*][ATT&CK] Building GROUPS ..."))
+  groups <- buildAttckGroups(verbose)
+
+  if (verbose) print(paste("[*][ATT&CK] Building SOFTWARE ..."))
+  software <- buildAttckSoftware(verbose)
+
+  if (verbose) print(paste("[*][ATT&CK] Building RELATIONS ..."))
+  relations <- buildAttckRelations(verbose)
 
   attck$tactics <- tactics
   attck$techniques <- techniques
   attck$mitigation <- mitigations
+  attck$groups <- groups
+  attck$software <- software
 
   # Include CTI data to network
+  if (verbose) print(paste("[*][ATT&CK] Creating graph NODES ..."))
+
+  # TACTIC NODES
   attck.df <- attck$tactics
   ctinodes <- data.frame(
     id = attck.df$mitreid,
@@ -49,6 +64,7 @@ getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "tactic nodes ..."))
   attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
 
+  # TECHNIQUES NODES
   attck.df <- attck$techniques[!(attck$techniques$mitreid %in% attck$attcknet$nodes$id), ]
   ctinodes <- data.frame(
     id = attck.df$mitreid,
@@ -65,7 +81,7 @@ getAttckData <- function(verbose = FALSE) {
   attck$attcknet$nodes <- rbind(attck$attcknet$nodes, ctinodes)
 
   # Include CTI relationships
-
+  if (verbose) print(paste("[*][ATT&CK] Creating graph EDGES ..."))
   edges <- data.frame(
     from = character(0),
     to = character(0),
@@ -75,6 +91,30 @@ getAttckData <- function(verbose = FALSE) {
     dashes = logical(0),
     team = character(0)
   )
+  rels <- dplyr::select(relations, id.cti, src, srctype, relation, dst, dsttype, x_mitre_deprecated)
+
+  kk <- dplyr::left_join(rels, tactics, by = c("dst"="id"), keep = FALSE)
+
+  # Technique -> Tactic
+  tech2tact <- techniques[, c("mitreid", "tactic", "revoked", "x_mitre_deprecated")]
+  tech2tact$shadow <- tech2tact$revoked | tech2tact$x_mitre_deprecated
+  s <- strsplit(tech2tact$tactic, split = ", ")
+  tech2tact <- data.frame(mitreid = rep(tech2tact$mitreid, sapply(s, length)),
+                   tactic = unlist(s),
+                   shadow = rep(tech2tact$shadow, sapply(s, length)))
+  tech2tact <- tech2tact[which(!is.na(tech2tact$tactic)), ]
+  s <- tactics[, c("mitreid", "x_mitre_shortname")]
+  tech2tact <- dplyr::left_join(tech2tact, s, by = c("tactic" = "x_mitre_shortname"))
+  names(tech2tact) <- c("from", "tactic", "shadow", "to")
+  tech2tact <- tech2tact[which(!is.na(tech2tact$to)), ]
+  tech2tact$label <- rep("kill_chain_phase", nrow(tech2tact))
+  tech2tact$arrows <- rep("to", nrow(tech2tact))
+  tech2tact$title <- rep("kill_chain_phase", nrow(tech2tact))
+  tech2tact$dashes <- tech2tact$shadow
+  tech2tact$team <- rep("RED", nrow(tech2tact))
+  tech2tact$tactic <- NULL
+  tech2tact$shadow <- NULL
+
 
   # Technique -> CAPEC
   tech2capec <- techniques[!is.na(techniques$capec), c("mitreid", "capec")]

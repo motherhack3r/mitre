@@ -116,7 +116,7 @@ downloadRawData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Download Tactics ..."))
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
   utils::download.file(url = tactics_url, destfile = "data-raw/shield-tactics.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Tactics ..."))
+  if (verbose) print(paste("[*][SHIELD] Download Techniques ..."))
   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
   utils::download.file(url = tech_url, destfile = "data-raw/shield-techniques.json", quiet = T)
   if (verbose) print(paste("[*][SHIELD] Download Opportunities ..."))
@@ -154,7 +154,7 @@ downloadRawData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][CPE] Download latest XML definitions ..."))
   cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
-  utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw")
+  utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw", overwrite = T)
 
   # CAPEC
   if (verbose) print(paste("[*][CAPEC] Download latest XML definitions ..."))
@@ -165,7 +165,7 @@ downloadRawData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][CTI] Download latest YAML definitions ..."))
   download.file(url = "https://github.com/mitre/cti/archive/master.zip",
                 destfile = "data-raw/cti.zip", quiet = T)
-  unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw")
+  utils::unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw", overwrite = T)
 
 }
 

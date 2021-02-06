@@ -48,7 +48,7 @@ buildAttckTechniques <- function(verbose = TRUE) {
 
 buildAttckMitigations <- function(verbose = TRUE) {
   attck.miti <- parseAttck.Mitigation(verbose)
-  attck.miti <- attck.miti[,colSums(is.na(attck.miti))<nrow(attck.miti)]
+  attck.miti <- attck.miti[,colSums(is.na(attck.miti)) < nrow(attck.miti)]
   names(attck.miti) <- c("domain", "id.cti", "type", "modified", "created",
                          "created.by", "mitreid", "url", "name", "description",
                          "citation", "x_mitre_deprecated", "old_mitreid",
@@ -63,6 +63,64 @@ buildAttckMitigations <- function(verbose = TRUE) {
   return(attck.miti)
 }
 
+buildAttckGroups <- function(verbose = TRUE) {
+  attck.grup <- parseAttck.Groups(verbose)
+  attck.grup <- attck.grup[,colSums(is.na(attck.grup)) < nrow(attck.grup)]
+  names(attck.grup) <- c("domain", "id.cti", "type", "modified", "created",
+                         "created.by", "mitreid", "url", "name", "description",
+                         "citation", "x_mitre_deprecated", "revoked", "cve",
+                         "summary", "contributors", "src.file")
+  attck.grup <- dplyr::select(attck.grup, domain, type, mitreid, name, description,
+                              summary, cve, created, created.by, modified,
+                              contributors, id.cti, url, x_mitre_deprecated, revoked)
+  attck.grup$modified <- as.POSIXct.POSIXlt(strptime(attck.grup$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.grup$created <- as.POSIXct.POSIXlt(strptime(attck.grup$created, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.grup$revoked <- rep(FALSE, nrow(attck.grup))
+
+  # Clean duplicated and incomplete entries
+  attck.grup <- attck.grup[!is.na(attck.grup$mitreid), ]
+  attck.grup <- dplyr::select(attck.grup, -domain)
+  attck.grup <- unique(attck.grup)
+  attck.grup <- cbind(domain = rep("enterprise-attack", nrow(attck.grup)), attck.grup)
+
+  return(attck.grup)
+}
+
+buildAttckSoftware <- function(verbose = TRUE) {
+  attck.soft <- parseAttck.Software(verbose)
+  attck.soft <- attck.soft[,colSums(is.na(attck.soft)) < nrow(attck.soft)]
+  names(attck.soft) <- c("domain", "id.cti", "type", "modified", "created",
+                         "created.by", "mitreid", "url", "name", "description",
+                         "citation", "x_mitre_deprecated", "revoked", "oldid", "cve",
+                         "summary", "contributors", "subtype", "platform", "src.file")
+  attck.soft <- dplyr::select(attck.soft, domain, type, mitreid, name, description,
+                              summary, cve, platform, created, created.by, modified,
+                              contributors, id.cti, url, x_mitre_deprecated, revoked)
+  attck.soft$modified <- as.POSIXct.POSIXlt(strptime(attck.soft$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.soft$created <- as.POSIXct.POSIXlt(strptime(attck.soft$created, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.soft$revoked <- rep(FALSE, nrow(attck.soft))
+
+  # Clean duplicated and incomplete entries
+  attck.soft <- attck.soft[!grepl(pattern = "collaborate.mitre.org", attck.soft$url), ]
+
+  return(attck.soft)
+}
+
+buildAttckRelations <- function(verbose = TRUE) {
+  attck.rels <- parseAttck.Relationships(verbose)
+  attck.rels <- attck.rels[,colSums(is.na(attck.rels)) < nrow(attck.rels)]
+  names(attck.rels) <- c("domain", "id.cti", "type", "modified", "created",
+                         "created.by", "name", "description",
+                         "citation", "x_mitre_deprecated", "cve",
+                         "relation", "src", "srctype", "dst", "dsttype", "src.file")
+  attck.rels <- dplyr::select(attck.rels, domain, type, description, src, srctype,
+                              relation, dst, dsttype, created, created.by, modified,
+                              id.cti, x_mitre_deprecated)
+  attck.rels$modified <- as.POSIXct.POSIXlt(strptime(attck.rels$modified, format = "%Y-%m-%dT%H:%M:%S"))
+  attck.rels$created <- as.POSIXct.POSIXlt(strptime(attck.rels$created, format = "%Y-%m-%dT%H:%M:%S"))
+
+  return(attck.rels)
+}
 
 
 
@@ -93,9 +151,9 @@ MapCommonproperties <- function(attack.obj = NA, domain = NA) {
                              if (ap.obj$type %in% c("x-mitre-tactic", "intrusion-set")) {
                                if (!(domain == "mitre-ics-attack")) domain <- "mitre-attack"
                              }
-                             if ((ap.obj$type %in% c("course-of-action")) &
-                                 (domain %in% c("mitre-mobile-attack"))) {
-                               domain <- "mitre-attack"
+                             if ((ap.obj$type %in% c("course-of-action", "malware", "tool")) &
+                                 (domain %in% c("mitre-mobile-attack", "mitre-ics-attack"))) {
+                               domain <- c("mitre-attack", "mitre-mobile-attack", "mitre-ics-attack")
                              }
                              ap.obj.ref <- which(sapply(ap.obj[["external_references"]],
                                                         function(x) {
