@@ -26,7 +26,7 @@ attck_tactics <- attck[["tactics"]]
 attck_techniques <- attck[["techniques"]]
 attck_groups <- attck[["groups"]]
 attck_software <- attck[["software"]]
-attck_mitigation <- attck[["mitigation"]]
+attck_mitigation <- attck[["mitigations"]]
 attcknet <- attck[["attcknet"]]
 }
 }
