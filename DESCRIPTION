@@ -9,9 +9,8 @@ Description: Extract, transform and load MITRE standards.
     This package gives you an approach to cybersecurity data sets.
     All data sets are build on runtime downloading raw data from MITRE public services.
     MITRE <https://www.mitre.org/> is a government-funded research organization 
-    based in Bedford and McLean. Current version includes Shield framework from:
-    <https://github.com/MITRECND/mitrecnd.github.io/tree/master/_data>. 
-    Soon to be included other standards.
+    based in Bedford and McLean. Current version includes most used standards as
+    data frames. It also provide a list of nodes and edges with all relationships.
 License: CC0
 URL: https://github.com/motherhack3r/mitre
 BugReports: https://github.com/motherhack3r/mitre/issues

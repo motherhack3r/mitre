@@ -1,4 +1,8 @@
 # mitre 0.3.3
+* New ATT&CK parser from latest definitions from official CTI repositories
+* Normalized network adding all standards
+* Improved nodes and edges details
+* Network include deprecated observations with shadow and dashes
 
 # mitre 0.3.2
  
