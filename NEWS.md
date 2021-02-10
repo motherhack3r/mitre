@@ -1,4 +1,4 @@
-# mitre (development version)
+# mitre 0.3.2
  
 * Developing functions to explore MITRE network
 
