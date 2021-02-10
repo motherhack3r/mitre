@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: Cybersecurity MITRE Standards Data and Digraphs
-Version: 0.3.1.9007
+Version: 0.3.1.9008
 Authors@R: person("Humberto", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
