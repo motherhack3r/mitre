@@ -11,7 +11,7 @@
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
   t <- tempfile()
-  download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/beta/mitre_v0.3.0.9002.rds",
+  download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/mitre_latest.rds",
                 destfile = t, quiet = T)
   mitre.data <- readRDS(t)
   file.remove(t)
@@ -105,12 +105,12 @@ downloadRawData <- function(verbose = FALSE) {
   if (!dir.exists("data-raw")) dir.create("data-raw")
 
   # ATT&CK
-  if (verbose) print(paste("[*][ATT&CK] Download ATT&CK MOBILE ..."))
-  attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
-  utils::download.file(url = attck.mob.raw.url, destfile = "data-raw/attack-mobile.json", quiet = T)
-  if (verbose) print(paste("[*][ATT&CK] Download ATT&CK ENTERPRISE ..."))
-  attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
-  utils::download.file(url = attck.ent.raw.url, destfile = "data-raw/attack-enterprise.json", quiet = T)
+  # if (verbose) print(paste("[*][ATT&CK] Download ATT&CK MOBILE ..."))
+  # attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
+  # utils::download.file(url = attck.mob.raw.url, destfile = "data-raw/attack-mobile.json", quiet = T)
+  # if (verbose) print(paste("[*][ATT&CK] Download ATT&CK ENTERPRISE ..."))
+  # attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
+  # utils::download.file(url = attck.ent.raw.url, destfile = "data-raw/attack-enterprise.json", quiet = T)
 
   # SHIELD
   if (verbose) print(paste("[*][SHIELD] Download Tactics ..."))
