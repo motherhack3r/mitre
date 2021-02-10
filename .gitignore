@@ -40,10 +40,8 @@ vignettes/*.pdf
 inst/doc
 inst/temp
 
-data-raw/*.json
-data-raw/*.gz
-data-raw/*.xml
-data-raw/*.zip
+# Temporary raw files to parse
+data-raw/
 
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
