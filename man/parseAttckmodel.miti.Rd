@@ -6,7 +6,8 @@
 map variables from STIX to ATT&CK model and return tidy data.frame.}
 \usage{
 parseAttckmodel.miti(
-  domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack"), 1),
+  domain = sample(c("pre-attack", "ics-attack", "enterprise-attack", "mobile-attack"),
+    1),
   verbose = TRUE
 )
 }

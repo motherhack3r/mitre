@@ -5,7 +5,8 @@
 \title{Function to provide source JSON files by domain and STIX Object type}
 \usage{
 getGitHubCTIfiles(
-  domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack"), 1),
+  domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack", "ics-attack"),
+    1),
   object = sample(c("attack-pattern", "intrusion-set", "malware", "tool",
     "course-of-action", "x-mitre-tactic", "x-mitre-matrix"), 1)
 )
