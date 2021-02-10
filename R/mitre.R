@@ -104,14 +104,6 @@ downloadRawData <- function(verbose = FALSE) {
   # Create "data-raw" folder
   if (!dir.exists("data-raw")) dir.create("data-raw")
 
-  # ATT&CK
-  # if (verbose) print(paste("[*][ATT&CK] Download ATT&CK MOBILE ..."))
-  # attck.mob.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/mobile-attack/mobile-attack.json"
-  # utils::download.file(url = attck.mob.raw.url, destfile = "data-raw/attack-mobile.json", quiet = T)
-  # if (verbose) print(paste("[*][ATT&CK] Download ATT&CK ENTERPRISE ..."))
-  # attck.ent.raw.url <- "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
-  # utils::download.file(url = attck.ent.raw.url, destfile = "data-raw/attack-enterprise.json", quiet = T)
-
   # SHIELD
   if (verbose) print(paste("[*][SHIELD] Download Tactics ..."))
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
