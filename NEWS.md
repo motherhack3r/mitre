@@ -1,3 +1,5 @@
+# mitre 0.3.3
+
 # mitre 0.3.2
  
 * Developing functions to explore MITRE network

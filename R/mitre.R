@@ -12,7 +12,7 @@
 getLatestDataSet <- function(verbose = FALSE) {
   t <- tempfile()
   download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/mitre_latest.rds",
-                destfile = t, quiet = T)
+                destfile = t, quiet = verbose)
   mitre.data <- readRDS(t)
   file.remove(t)
   return(mitre.data)
