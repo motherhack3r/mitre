@@ -18,8 +18,6 @@
 #' }
 getAttckData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
-  # attck <- parseAttckData(verbose)
-  # attck2 <- attck
 
   if (verbose) print(paste("[*][ATT&CK] Building TACTICS ..."))
   tactics <- buildAttckTactics(verbose)
@@ -162,8 +160,8 @@ getAttckData <- function(verbose = FALSE) {
     dashes = rels$x_mitre_deprecated,
     team = rep("PURPLE", nrow(rels))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "default relationships ..."))
-  attck_edges <- rbind(attck_edges, ctinodes)
+  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctiedges), "default relationships ..."))
+  attck_edges <- rbind(attck_edges, ctiedges)
 
   # Technique -> Tactic
   tech2tact <- techniques[, c("mitreid", "tactic", "revoked", "x_mitre_deprecated")]
@@ -183,7 +181,7 @@ getAttckData <- function(verbose = FALSE) {
   tech2tact$team <- rep("RED", nrow(tech2tact))
   tech2tact$tactic <- NULL
   if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2tact), "Tactic relationships ..."))
-  attck_edges <- rbind(attck_edges, ctinodes)
+  attck_edges <- rbind(attck_edges, tech2tact)
 
   # Technique -> CAPEC
   tech2capec <- techniques[!is.na(techniques$capec), c("mitreid", "capec")]
@@ -201,7 +199,7 @@ getAttckData <- function(verbose = FALSE) {
   tech2capec$dashes <- rep(TRUE, nrow(tech2capec))
   tech2capec$team <- rep("RED", nrow(tech2capec))
   if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2capec), "CAPEC relationships ..."))
-  attck_edges <- rbind(attck_edges, ctinodes)
+  attck_edges <- rbind(attck_edges, tech2capec)
 
   # Technique -> CVE
   tech2cve <- techniques[!is.na(techniques$cve), c("mitreid", "cve")]
@@ -219,7 +217,7 @@ getAttckData <- function(verbose = FALSE) {
   tech2cve$dashes <- rep(TRUE, nrow(tech2cve))
   tech2cve$team <- rep("RED", nrow(tech2cve))
   if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2cve), "CVE relationships ..."))
-  attck_edges <- rbind(attck_edges, ctinodes)
+  attck_edges <- rbind(attck_edges, tech2cve)
 
   attck <- list(tactics = tactics,
                 techniques = techniques,
