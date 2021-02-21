@@ -13,7 +13,7 @@ downloadRawData(verbose = FALSE)
 Download from official sources raw files saving them in [working_directory]/data-raw/
 }
 \examples{
-\donttest{
-mitre::downloadRawData(T)
+\dontrun{
+mitre::downloadRawData(verbose = TRUE)
 }
 }

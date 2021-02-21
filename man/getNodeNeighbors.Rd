@@ -21,7 +21,7 @@ getNodeNeighbors(
 \item{verbose}{default is FALSE}
 }
 \value{
-
+list of nodes and edges
 }
 \description{
 Returns a list of nodes and edges (neighbors) based on input node.

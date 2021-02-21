@@ -19,8 +19,3 @@ ETL process that download current shield definitions and return a list of
 data frames for each object. The list also contains a visNetwork object with
 SHIELD objects as nodes and all relations as edges.
 }
-\examples{
-\donttest{
-shield <- mitre::getShieldData()
-}
-}

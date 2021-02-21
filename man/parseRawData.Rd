@@ -24,7 +24,7 @@ downloaded from official MITRE repositories stored in a folder named "data-raw";
 set downloadLatest parameter to TRUE and the function will create it for you.
 }
 \examples{
-\donttest{
-mitredata <- mitre::parseRawData(T)
+\dontrun{
+mitredata <- mitre::parseRawData(TRUE)
 }
 }

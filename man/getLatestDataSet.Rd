@@ -16,7 +16,7 @@ list of standards and network
 Download latest R data sets from Github previously parsed with this package.
 }
 \examples{
-\donttest{
-mitre.data <- mitre::getLatestDataSet(T)
+\dontrun{
+mitredata <- mitre::getLatestDataSet(TRUE)
 }
 }

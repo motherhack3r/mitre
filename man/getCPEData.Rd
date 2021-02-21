@@ -19,8 +19,3 @@ ETL process that download current CPE definitions and return a list with a
 data frame for CPE objects. The list also contains a visNetwork object with
 CPE objects as nodes and all relations as edges.
 }
-\examples{
-\donttest{
-cpes <- mitre::getCPEData()
-}
-}

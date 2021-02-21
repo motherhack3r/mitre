@@ -19,8 +19,3 @@ ETL process that download current CAPEC definitions and return a list with a
 data frame for CAPEC objects. The list also contains a visNetwork object with
 CAPEC objects as nodes and all relations as edges.
 }
-\examples{
-\donttest{
-capec <- mitre::getCAPECData()
-}
-}

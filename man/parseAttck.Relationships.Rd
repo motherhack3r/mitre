@@ -7,6 +7,9 @@ build model and return tidy data.frame with relationship variables.}
 \usage{
 parseAttck.Relationships(verbose = TRUE)
 }
+\arguments{
+\item{verbose}{default is FALSE}
+}
 \value{
 data.frame
 }

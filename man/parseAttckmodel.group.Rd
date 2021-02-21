@@ -13,6 +13,8 @@ parseAttckmodel.group(
 }
 \arguments{
 \item{domain}{must be "pre-attack", "enterprise-attack" or "mobile-attack"}
+
+\item{verbose}{default is FALSE}
 }
 \value{
 data.frame

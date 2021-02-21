@@ -7,6 +7,9 @@ map variables from STIX to ATT&CK model and return tidy data.frame with Tactic v
 \usage{
 parseAttck.Tactics(verbose = TRUE)
 }
+\arguments{
+\item{verbose}{default is FALSE}
+}
 \value{
 data.frame
 }

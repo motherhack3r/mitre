@@ -7,9 +7,9 @@
 MapCommonproperties(attack.obj = NA, domain = NA)
 }
 \arguments{
-\item{domain}{must be "pre-attack", "enterprise-attack" or "mobile-attack"}
+\item{attack.obj}{list}
 
-\item{attack.pattern}{list}
+\item{domain}{must be "pre-attack", "enterprise-attack" or "mobile-attack"}
 }
 \value{
 data.frame compliant with CTI USAGE document

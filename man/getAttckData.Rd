@@ -19,14 +19,3 @@ ETL process that download current attck definitions and return a list of
 data frames for each object. The list also contains a visNetwork object with
 ATT&CK objects as nodes and all relations as edges.
 }
-\examples{
-\donttest{
-attck <- mitre::getAttckData()
-attck_tactics <- attck[["tactics"]]
-attck_techniques <- attck[["techniques"]]
-attck_groups <- attck[["groups"]]
-attck_software <- attck[["software"]]
-attck_mitigation <- attck[["mitigations"]]
-attcknet <- attck[["attcknet"]]
-}
-}
