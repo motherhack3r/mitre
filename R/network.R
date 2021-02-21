@@ -5,7 +5,7 @@
 #' @param mitrenet MITRE network built with this package
 #' @param verbose default is FALSE
 #'
-#' @return
+#' @return list of nodes and edges
 #' @export
 getNodeNeighbors <- function(node = "T1104", direction = "both",
                              mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {

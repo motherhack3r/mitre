@@ -1,12 +1,15 @@
-# BUILD TIDY DATA FRAMES
-
+#' Parse tactics
+#'
+#' @param verbose
+#'
+#' @return data frame
 buildAttckTactics <- function(verbose = TRUE) {
   attck.tact <- parseAttck.Tactics()
 
   if (verbose) print(paste("[.][ATT&CK][CTI] Tidy Tactics data ..."))
-  attck.tact <- dplyr::select(attck.tact, domain, type, entry.id, entry.title,
-                              entry.text, x.mitre.tactic, created, created.by, modified,
-                              id.cti, entry.url, deprecated, revoked)
+  attck.tact <- attck.tact[, c("domain", "type", "entry.id", "entry.title",
+                              "entry.text", "x.mitre.tactic", "created", "created.by", "modified",
+                              "id.cti", "entry.url", "deprecated", "revoked")]
   attck.tact <- unique(attck.tact)
   attck.tact$revoked[is.na(attck.tact$revoked)] <- FALSE
   attck.tact$modified <- as.POSIXct.POSIXlt(strptime(attck.tact$modified, format = "%Y-%m-%dT%H:%M:%S"))
@@ -21,14 +24,14 @@ buildAttckTactics <- function(verbose = TRUE) {
 
 buildAttckTechniques <- function(verbose = TRUE) {
   attck.tech <- parseAttck.Techniques(verbose)
-  attck.tech <- dplyr::select(attck.tech, domain, type, entry.id, entry.title,
-                              entry.text, description, platform, data.sources,
-                              permissions.required, effective.permissions,
-                              defense.bypassed, system.requirements,
-                              network.requirements, remote.support, impact.type,
-                              detection.defenses, detection, adversary.easy, adversary,
-                              revoked, tactic, capec, cve, created, created.by, modified,
-                              id.cti, entry.url, deprecated)
+  attck.tech <- attck.tech[, c("domain", "type", "entry.id", "entry.title",
+                              "entry.text", "description", "platform", "data.sources",
+                              "permissions.required", "effective.permissions",
+                              "defense.bypassed", "system.requirements",
+                              "network.requirements", "remote.support", "impact.type",
+                              "detection.defenses", "detection", "adversary.easy", "adversary",
+                              "revoked", "tactic", "capec", "cve", "created", "created.by", "modified",
+                              "id.cti", "entry.url", "deprecated")]
   names(attck.tech) <- c("domain", "type", "mitreid", "name", "description",
                          "summary", "platform", "data.sources",
                          "permissions.required", "effective.permissions",
@@ -53,9 +56,9 @@ buildAttckMitigations <- function(verbose = TRUE) {
                          "created.by", "mitreid", "url", "name", "description",
                          "citation", "x_mitre_deprecated", "old_mitreid",
                          "summary", "src.file")
-  attck.miti <- dplyr::select(attck.miti, domain, type, mitreid, name, description,
-                              summary, created, created.by, modified, id.cti,
-                              url, x_mitre_deprecated)
+  attck.miti <- attck.miti[, c("domain", "type", "mitreid", "name", "description",
+                              "summary", "created", "created.by", "modified", "id.cti",
+                              "url", "x_mitre_deprecated")]
   attck.miti$modified <- as.POSIXct.POSIXlt(strptime(attck.miti$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.miti$created <- as.POSIXct.POSIXlt(strptime(attck.miti$created, format = "%Y-%m-%dT%H:%M:%S"))
   attck.miti$revoked <- rep(FALSE, nrow(attck.miti))
@@ -70,16 +73,17 @@ buildAttckGroups <- function(verbose = TRUE) {
                          "created.by", "mitreid", "url", "name", "description",
                          "citation", "x_mitre_deprecated", "revoked", "cve",
                          "summary", "contributors", "src.file")
-  attck.grup <- dplyr::select(attck.grup, domain, type, mitreid, name, description,
-                              summary, cve, created, created.by, modified,
-                              contributors, id.cti, url, x_mitre_deprecated, revoked)
+  attck.grup <- attck.grup[ , c("domain", "type", "mitreid", "name", "description",
+                              "summary", "cve", "created", "created.by", "modified",
+                              "contributors", "id.cti", "url", "x_mitre_deprecated",
+                              "revoked")]
   attck.grup$modified <- as.POSIXct.POSIXlt(strptime(attck.grup$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.grup$created <- as.POSIXct.POSIXlt(strptime(attck.grup$created, format = "%Y-%m-%dT%H:%M:%S"))
   attck.grup$revoked <- rep(FALSE, nrow(attck.grup))
 
   # Clean duplicated and incomplete entries
   attck.grup <- attck.grup[!is.na(attck.grup$mitreid), ]
-  attck.grup <- dplyr::select(attck.grup, -domain)
+  attck.grup$domain <- NULL
   attck.grup <- unique(attck.grup)
   attck.grup <- cbind(domain = rep("enterprise-attack", nrow(attck.grup)), attck.grup)
 
@@ -93,9 +97,9 @@ buildAttckSoftware <- function(verbose = TRUE) {
                          "created.by", "mitreid", "url", "name", "description",
                          "citation", "x_mitre_deprecated", "revoked", "oldid", "cve",
                          "summary", "contributors", "subtype", "platform", "src.file")
-  attck.soft <- dplyr::select(attck.soft, domain, type, mitreid, name, description,
-                              summary, cve, platform, created, created.by, modified,
-                              contributors, id.cti, url, x_mitre_deprecated, revoked)
+  attck.soft <- attck.soft[, c("domain", "type", "mitreid", "name", "description",
+                              "summary", "cve", "platform", "created", "created.by", "modified",
+                              "contributors", "id.cti", "url", "x_mitre_deprecated", "revoked")]
   attck.soft$modified <- as.POSIXct.POSIXlt(strptime(attck.soft$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.soft$created <- as.POSIXct.POSIXlt(strptime(attck.soft$created, format = "%Y-%m-%dT%H:%M:%S"))
   attck.soft$revoked <- rep(FALSE, nrow(attck.soft))
@@ -113,9 +117,9 @@ buildAttckRelations <- function(verbose = TRUE) {
                          "created.by", "name", "description",
                          "citation", "x_mitre_deprecated", "cve",
                          "relation", "src", "srctype", "dst", "dsttype", "src.file")
-  attck.rels <- dplyr::select(attck.rels, domain, type, description, src, srctype,
-                              relation, dst, dsttype, created, created.by, modified,
-                              id.cti, x_mitre_deprecated)
+  attck.rels <- attck.rels[, c("domain", "type", "description", "src", "srctype",
+                              "relation", "dst", "dsttype", "created", "created.by", "modified",
+                              "id.cti", "x_mitre_deprecated")]
   attck.rels$modified <- as.POSIXct.POSIXlt(strptime(attck.rels$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.rels$created <- as.POSIXct.POSIXlt(strptime(attck.rels$created, format = "%Y-%m-%dT%H:%M:%S"))
 
@@ -128,7 +132,7 @@ buildAttckRelations <- function(verbose = TRUE) {
 
 #' Extract common properties from attack pattern object (parsed with RJSONIO::fromJSON)
 #'
-#' @param attack.pattern list
+#' @param attack.obj list
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
 #'
 #' @return data.frame compliant with CTI USAGE document
@@ -440,6 +444,7 @@ MapRelations <- function(relationship = NA, domain = NA) {
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.tact <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -473,6 +478,7 @@ parseAttckmodel.tact <- function(domain = sample(c("pre-attack", "ics-attack",
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.tech <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -507,6 +513,7 @@ parseAttckmodel.tech <- function(domain = sample(c("pre-attack", "ics-attack",
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.group <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -540,6 +547,7 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack", "ics-attack",
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.soft <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -578,6 +586,7 @@ parseAttckmodel.soft <- function(domain = sample(c("pre-attack", "ics-attack",
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.miti <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -611,6 +620,7 @@ parseAttckmodel.miti <- function(domain = sample(c("pre-attack", "ics-attack",
 #' map variables from STIX to ATT&CK model and return tidy data.frame.
 #'
 #' @param domain must be "pre-attack", "enterprise-attack" or "mobile-attack"
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
@@ -644,6 +654,8 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
 #' Read MITRE CTI Repository browsing domain directories to extract data from x-mitre-tactic files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Tactic variables.
 #'
+#' @param verbose default is FALSE
+#'
 #' @return data.frame
 #'
 #' @examples
@@ -666,6 +678,8 @@ parseAttck.Tactics <- function(verbose = TRUE) {
 #' Read MITRE CTI Repository browsing domain directories to extract data from attack-pattern files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Technique variables.
 #'
+#' @param verbose default is FALSE
+#'
 #' @return data.frame
 #'
 #' @examples
@@ -685,11 +699,10 @@ parseAttck.Techniques <- function(verbose = TRUE) {
 }
 
 
-
-### EXPORTED FUNCTIONS
-
 #' Read MITRE CTI Repository browsing domain directories to extract data from intrusion-set files,
 #' map variables from STIX to ATT&CK model and return tidy data.frame with Group variables.
+#'
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 #'
@@ -712,6 +725,8 @@ parseAttck.Groups <- function(verbose = TRUE) {
 #' Read MITRE CTI Repository browsing domain directories to extract data from malware and tool files,
 #' build model and return tidy data.frame with Software variables.
 #'
+#' @param verbose default is FALSE
+#'
 #' @return data.frame
 #'
 #' @examples
@@ -732,6 +747,8 @@ parseAttck.Software <- function(verbose = TRUE) {
 
 #' Read MITRE CTI Repository browsing domain directories to extract data from course-of-action files,
 #' build model and return tidy data.frame with Mitigation variables.
+#'
+#' @param verbose default is FALSE
 #'
 #' @return data.frame
 #'
@@ -755,6 +772,8 @@ parseAttck.Mitigation <- function(verbose = TRUE) {
 #' Read MITRE CTI Repository browsing domain directories to extract data from relationship files,
 #' build model and return tidy data.frame with relationship variables.
 #'
+#' @param verbose default is FALSE
+#'
 #' @return data.frame
 #'
 #' @examples
@@ -769,38 +788,13 @@ parseAttck.Relationships <- function(verbose = TRUE) {
   df.ics <- parseAttckmodel.rels(domain = "ics-attack")
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
-  df <- dplyr::select(tidyr::separate(df, source.ref, c("source.type", "b"),
-                                      "--", remove = FALSE), -b)
-  df <- dplyr::select(tidyr::separate(df, target.ref, c("target.type", "b"),
-                                      "--", remove = FALSE), -b)
+  df <- dplyr::select(tidyr::separate(df, "source.ref", c("source.type", "b"),
+                                      "--", remove = FALSE), -"b")
+  df <- dplyr::select(tidyr::separate(df, "target.ref", c("target.type", "b"),
+                                      "--", remove = FALSE), -"b")
 
   return(df)
 }
-
-#' Parse ATT&CK source files from MITRE CTI Repository and build raw data sets
-#'
-#' @return list of data.frame objects (tactics, techniques, groups, software and relationships)
-parseCTIdata <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckdata] init ..."))
-  df.tactics <- parseAttck.Tactics()
-  df.techniques <- parseAttck.Techniques()
-  df.groups <- parseAttck.Groups()
-  df.software <- parseAttck.Software()
-  df.mitigations <- parseAttck.Mitigation()
-  df.relationships <- parseAttck.Relationships()
-
-  attck <- list(tactics = df.tactics,
-                techniques = df.techniques,
-                groups = df.groups,
-                software = df.software,
-                relationships = df.relationships)
-  return(attck)
-}
-
-
-#### ATT&CK DATA MODEL
-
-## RAW data frames adapted to store all CTI/STIX variables
 
 newAttckCommon <- function(id.cti = NA,
                            type = NA,
@@ -921,61 +915,4 @@ newAttckRelation <- function(relationship_type = NA,
 
 
 
-
-#### EXTRAS
-
-
-#' Function to provide source JSON files by domain and STIX Object type
-#'
-#' @param domain default set as random between "pre-attack", "enterprise-attack", "mobile-attack". Must be the same name of MITRE CTI Repository folders at github.com
-#' @param object default set as random between "attack-pattern", "intrusion-set", "malware", "tool", "course-of-action", "x-mitre-tactic", "x-mitre-matrix". Must be the same name of MITRE CTI Repository folders at github.com
-#'
-#' @return data.frame with filename and raw url as columns
-#'
-#' @examples
-#' \dontrun{
-#' pre.attck.pattern <- getGitHubCTIfiles(domain = "pre-attack", object = "attack-pattern")
-#' mob.malware <- getGitHubCTIfiles(domain = "mob-attack", object = "malware")
-#' }
-getGitHubCTIfiles <- function(domain = sample(c("pre-attack", "enterprise-attack", "mobile-attack", "ics-attack"), 1),
-                              object = sample(c("attack-pattern", "intrusion-set",
-                                                "malware", "tool", "course-of-action",
-                                                "x-mitre-tactic", "x-mitre-matrix"), 1)) {
-  # TODO: deal with 1000 files limit:
-  #       - Get directory sha: https://developer.github.com/v3/repos/contents/#response-if-content-is-a-directory
-  #       - Get directory tree: https://developer.github.com/v3/git/trees/#get-a-tree
-  giturl <- paste("https://api.github.com/repos/mitre/cti/contents", domain, object, sep = "/")
-  req <- httr::content(httr::GET(giturl))
-  if (is.null(names(req))) {
-    src.files <- data.frame(filename = unlist(lapply(req, "[", "name"), use.names = F),
-                            src.file = unlist(lapply(req, "[", "download_url"), use.names = F),
-                            stringsAsFactors = FALSE)
-  } else {
-    src.files <- data.frame(filename = character(),
-                            src.file = character(),
-                            stringsAsFactors = FALSE)
-  }
-
-  return(src.files)
-}
-
-# ATT&CK and CAPEC catalogs from MITRE CTI Repository
-
-#' ATT&CK mapping with STIX
-#'
-#' @return list of data frames representing each map table
-attck2stix <- function() {
-  doc <- xml2::read_html("https://github.com/mitre/cti/blob/master/USAGE.md")
-  attck2stix <- rvest::html_table(doc)
-  names(attck2stix) <- c("Objects",
-                         stringr::str_trim(sapply(rvest::html_nodes(doc, xpath = "//table/preceding::h3[1]"),
-                                                  rvest::html_text))[2:5])
-  return(attck2stix)
-}
-
-stixDomains <- function() {
-  k <- attck2stix()
-  k <- k[[which(sapply(k, function(x) "domain" %in% names(x)))]][["domain"]]
-  return(k)
-}
 

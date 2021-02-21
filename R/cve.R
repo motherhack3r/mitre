@@ -5,11 +5,6 @@
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#'
-#' @examples
-#' \donttest{
-#' cves <- mitre::getCVEData()
-#' }
 getCVEData <- function(verbose = FALSE) {
   if (verbose) print(paste("[#][CVE] ETL process started."))
   if (verbose) print(paste("[*][CVE] Building data frame ..."))

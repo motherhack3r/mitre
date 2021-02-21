@@ -3,16 +3,10 @@
 #' CVE objects as nodes and all relations as edges.
 #'
 #' @param verbose Default set as FALSE
-#' @param cwes.file raw xml file
 #'
 #' @return data frame
-#'
-#' @examples
-#' \donttest{
-#' cwes <- mitre::getCWEData()
-#' }
 getCWEData <- function(verbose = FALSE) {
-  cwes.file = "data-raw/cwec_v4.3.xml"
+  cwes.file <- "data-raw/cwec_v4.3.xml"
   if (verbose) print("[*][CWE] Indexing CWE XML raw file ...")
   doc <- suppressWarnings(rvest::html(cwes.file))
   cwes.weaknesses <- ParseCWEWeaknesses(doc, cwes.file, verbose)

@@ -5,11 +5,6 @@
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#'
-#' @examples
-#' \donttest{
-#' capec <- mitre::getCAPECData()
-#' }
 getCAPECData <- function(verbose = FALSE) {
   #### References: https://capec.mitre.org/data/index.html
   capec.file <- "data-raw/capec_latest.xml"
@@ -255,7 +250,7 @@ getCAPECData <- function(verbose = FALSE) {
   names(capecnodes) <- c("label", "title", "shadow", "descr")
   capecnodes$title <- paste0("<p><b>", capecnodes$title, "</b>")
   capecnodes$descr <- paste0("<br>", capecnodes$descr, "</p>")
-  capecnodes <- tidyr::unite(capecnodes, col = "title", title, descr, sep = "")
+  capecnodes <- tidyr::unite(capecnodes, col = "title", "title", "descr", sep = "")
   capecnodes$color <- rep("aquamarine", nrow(capecnodes))
   capecnodes$shape <- rep("diamond", nrow(capecnodes))
   capecnodes$shape <- rep("diamond", nrow(capecnodes))

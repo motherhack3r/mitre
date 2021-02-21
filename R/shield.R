@@ -291,11 +291,6 @@ getShieldNetwork <- function() {
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#'
-#' @examples
-#' \donttest{
-#' shield <- mitre::getShieldData()
-#' }
 getShieldData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Building output ..."))
   shield <- list(tactics = getShieldTactics(),

@@ -6,8 +6,8 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' mitre.data <- mitre::getLatestDataSet(T)
+#' \dontrun{
+#' mitredata <- mitre::getLatestDataSet(TRUE)
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
   t <- tempfile()
@@ -30,8 +30,8 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' mitredata <- mitre::parseRawData(T)
+#' \dontrun{
+#' mitredata <- mitre::parseRawData(TRUE)
 #' }
 parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   if (downloadLatest) downloadRawData(verbose)
@@ -97,8 +97,8 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' mitre::downloadRawData(T)
+#' \dontrun{
+#' mitre::downloadRawData(verbose = TRUE)
 #' }
 downloadRawData <- function(verbose = FALSE) {
   # Create "data-raw" folder

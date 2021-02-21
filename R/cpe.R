@@ -5,11 +5,6 @@
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#'
-#' @examples
-#' \donttest{
-#' cpes <- mitre::getCPEData()
-#' }
 getCPEData <- function(verbose = FALSE) {
   cpe.file <- "data-raw/official-cpe-dictionary_v2.3.xml"
   if (verbose) print("Indexing CPE XML and namespace schemas...")
@@ -40,8 +35,8 @@ getCPEData <- function(verbose = FALSE) {
                 "version", "update", "edition", "language", "sw_edition",
                 "target_sw", "target_hw", "other")
   cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
-  cpes <- tidyr::separate(data = cpes, col = cpe.23, into = new.cols, sep = ":", remove = F)
-  cpes <- dplyr::select(.data = cpes, -std, -std.v)
+  cpes <- tidyr::separate(data = cpes, col = "cpe.23", into = new.cols, sep = ":", remove = F)
+  cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
   cpes$vendor <- as.factor(cpes$vendor)
   cpes$product <- as.factor(cpes$product)
   cpes$language <- as.factor(cpes$language)
