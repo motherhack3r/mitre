@@ -1,3 +1,7 @@
+# mitre 0.3.4
+* Code style
+* Update documentation for CRAN
+
 # mitre 0.3.3
 * New ATT&CK parser from latest definitions from official CTI repositories
 * Normalized network adding all standards
