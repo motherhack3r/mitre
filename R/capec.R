@@ -8,11 +8,11 @@
 getCAPECData <- function(verbose = FALSE) {
   #### References: https://capec.mitre.org/data/index.html
   capec.file <- "data-raw/capec_latest.xml"
-  if (verbose) print("Indexing CAPEC XML raw file ...")
+  if (verbose) print("[.][CAPEC] Indexing CAPEC XML raw file ...")
   doc <- xml2::read_xml(capec.file)
 
   # CAPEC VIEWs
-  if (verbose) print("[*][CAPEC] Parsing CAPEC Views ...")
+  if (verbose) print("[.][CAPEC] Parsing CAPEC Views ...")
   views <-
     data.frame(id = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@ID")),
                name = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Name")),
@@ -23,7 +23,7 @@ getCAPECData <- function(verbose = FALSE) {
   views$id <- paste0("CAPEC-", views$id)
 
   # CAPEC CATEGORIES
-  if (verbose) print("[*][CAPEC] Parsing CAPEC Categories ...")
+  if (verbose) print("[.][CAPEC] Parsing CAPEC Categories ...")
   categories <-
     data.frame(id = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@ID")),
                name = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Name")),
@@ -33,7 +33,7 @@ getCAPECData <- function(verbose = FALSE) {
   categories$id <- paste0("CAPEC-", categories$id)
 
 
-  if (verbose) print("[*][CAPEC] Adding Taxonomy Mappings as network edges ...")
+  if (verbose) print("[.][CAPEC] Adding Taxonomy Mappings as network edges ...")
   raw.capec.categs <- rvest::xml_nodes(doc, xpath = "//capec:Category")
   kk <- lapply(raw.capec.categs,
                function(x) {
@@ -63,7 +63,7 @@ getCAPECData <- function(verbose = FALSE) {
   capecnet <- capec2other
 
   # CAPEC ATTACK PATTERNs
-  if (verbose) print("[*][CAPEC] Parsing CAPEC Patterns ...")
+  if (verbose) print("[.][CAPEC] Parsing CAPEC Patterns ...")
   raw.capec.atcks <- rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern")
   att.id <- paste0("CAPEC-", sapply(raw.capec.atcks,
                    function(x)
@@ -81,7 +81,7 @@ getCAPECData <- function(verbose = FALSE) {
                       function(x)
                         rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Description")))
 
-  if (verbose) print("[*][CAPEC] Extracting relatec attack patterns ...")
+  if (verbose) print("[.][CAPEC] Extracting relatec attack patterns ...")
   kk <- lapply(raw.capec.atcks,
                function(x) {
                  data.frame(id = rvest::html_text(rvest::xml_nodes(x, xpath=".//capec:Related_Attack_Pattern/@CAPEC_ID")),
@@ -97,32 +97,32 @@ getCAPECData <- function(verbose = FALSE) {
 
   capecnet <- dplyr::bind_rows(capecnet, capec2capec)
 
-  if (verbose) print("[*][CAPEC] Compacting pre-requisites ...")
+  if (verbose) print("[.][CAPEC] Compacting pre-requisites ...")
   att.prerequisites <- sapply(raw.capec.atcks,
                               function(x)
                                 jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Prerequisites/capec:Prerequisite"))))
 
-  if (verbose) print("[*][CAPEC] Selecting alternate terms ...")
+  if (verbose) print("[.][CAPEC] Selecting alternate terms ...")
   att.alernate_terms <- sapply(raw.capec.atcks,
                               function(x)
                                 jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Alternate_Terms/capec:Alternate_Term/capec:Term"))))
 
 
-  if (verbose) print("[*][CAPEC] Calculating typical severity ...")
+  if (verbose) print("[.][CAPEC] Calculating typical severity ...")
   att.severity <- sapply(raw.capec.atcks,
                          function(x) {
                            ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")), character(0)),
                                   yes = "Unknown",
                                   no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Typical_Severity")))})
 
-  if (verbose) print("[*][CAPEC] Estimating likelihood of attack ...")
+  if (verbose) print("[.][CAPEC] Estimating likelihood of attack ...")
   att.likelihoodatt <- sapply(raw.capec.atcks,
                               function(x) {
                                 ifelse(test = identical(rvest::html_text(rvest::html_nodes(x, xpath = "capec:Likelihood_Of_Attack")), character(0)),
                                        yes = "Unknown",
                                        no = rvest::html_text(rvest::html_nodes(x, xpath = "capec:Likelihood_Of_Attack")))})
 
-  if (verbose) print("[*][CAPEC] Extracting execution flow ...")
+  if (verbose) print("[.][CAPEC] Extracting execution flow ...")
   att.flow <- sapply(raw.capec.atcks,
                      function(x) {
                        k <- rvest::html_nodes(x, xpath = "capec:Execution_Flow")
@@ -130,7 +130,7 @@ getCAPECData <- function(verbose = FALSE) {
                        jsonlite::toJSON(k, pretty = T)
                      })
 
-  if (verbose) print("[*][CAPEC] Identifying required skills ...")
+  if (verbose) print("[.][CAPEC] Identifying required skills ...")
   att.skills <- sapply(raw.capec.atcks,
                        function(x) {
                          jsonlite::toJSON(data.frame(
@@ -140,17 +140,17 @@ getCAPECData <- function(verbose = FALSE) {
                                           xml2::xml_text), stringsAsFactors = FALSE))
                        })
 
-  if (verbose) print("[*][CAPEC] Listing required resources ...")
+  if (verbose) print("[.][CAPEC] Listing required resources ...")
   att.reqsrcs <- sapply(raw.capec.atcks,
                               function(x)
                                 jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Resources_Required/capec:Resource"))))
 
-  if (verbose) print("[*][CAPEC] Verifying indicators ...")
+  if (verbose) print("[.][CAPEC] Verifying indicators ...")
   att.indicators <- sapply(raw.capec.atcks,
                         function(x)
                           jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Indicators/capec:Indicator"))))
 
-  if (verbose) print("[*][CAPEC] Writting consequences ...")
+  if (verbose) print("[.][CAPEC] Writting consequences ...")
   att.consequences <- sapply(raw.capec.atcks,
                              function(x) {
                                cons <- rvest::html_nodes(x, xpath = "capec:Consequences/capec:Consequence")
@@ -163,17 +163,17 @@ getCAPECData <- function(verbose = FALSE) {
                                jsonlite::toJSON(csq, pretty = T)
                              })
 
-  if (verbose) print("[*][CAPEC] Detecting Mitigations ...")
+  if (verbose) print("[.][CAPEC] Detecting Mitigations ...")
   att.mitigations <- sapply(raw.capec.atcks,
                               function(x)
                                 jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Mitigations/capec:Mitigation"))))
 
-  if (verbose) print("[*][CAPEC] Collecting Example Instances ...")
+  if (verbose) print("[.][CAPEC] Collecting Example Instances ...")
   att.examples <- sapply(raw.capec.atcks,
                             function(x)
                               jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Example_Instances/capec:Example"))))
 
-  if (verbose) print("[*][CAPEC] Adding CVE examples to network ...")
+  if (verbose) print("[.][CAPEC] Adding CVE examples to network ...")
   capec2cve <- lapply(att.examples,
                       function(x)
                         data.frame(to = stringr::str_extract_all(x, "CVE-\\d+-\\d+")[[1]],
@@ -184,7 +184,7 @@ getCAPECData <- function(verbose = FALSE) {
   capec2cve$title <- capec2cve$label
   capecnet <- rbind(capecnet, capec2cve)
 
-  if (verbose) print("[*][CAPEC] Looking for related CWEs ...")
+  if (verbose) print("[.][CAPEC] Looking for related CWEs ...")
   capec2cwe <- lapply(raw.capec.atcks,
                       function(x)
                         data.frame(to = paste0("CWE-", xml2::xml_text(rvest::xml_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/@CWE_ID"))),
@@ -196,7 +196,7 @@ getCAPECData <- function(verbose = FALSE) {
   capecnet <- rbind(capecnet, capec2cwe)
 
 
-  if (verbose) print("[*][CAPEC] Adding Taxonomy Mappings as network edges ...")
+  if (verbose) print("[.][CAPEC] Adding Taxonomy Mappings as network edges ...")
   kk <- lapply(raw.capec.atcks,
                function(x) {
                  kl <- rvest::xml_nodes(x, xpath = "capec:Taxonomy_Mappings/capec:Taxonomy_Mapping")
@@ -225,7 +225,7 @@ getCAPECData <- function(verbose = FALSE) {
 
   capecnet <- dplyr::bind_rows(capecnet, capec2other)
 
-  if (verbose) print("[*][CAPEC] Building tidy CAPEC data set ...")
+  if (verbose) print("[.][CAPEC] Building tidy CAPEC data set ...")
   capec <- data.frame(id = att.id,
                       name = att.name,
                       abstraction = att.abstraction,
