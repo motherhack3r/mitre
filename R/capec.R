@@ -253,11 +253,11 @@ getCAPECData <- function(verbose = FALSE) {
   capecnodes <- tidyr::unite(capecnodes, col = "title", "title", "descr", sep = "")
   capecnodes$color <- rep("aquamarine", nrow(capecnodes))
   capecnodes$shape <- rep("diamond", nrow(capecnodes))
-  capecnodes$shape <- rep("diamond", nrow(capecnodes))
   capecnodes$value <- rep(5, nrow(capecnodes))
   capecnodes$team <- rep("RED", nrow(capecnodes))
+  capecnodes$group <- rep("capec", nrow(capecnodes))
   capecnodes$shadow <- capecnodes$shadow == "Deprecated"
-  capecnodes$id <- capecnodes$title
+  capecnodes$id <- capecnodes$label
 
   capecedges <- capecnet
   capecedges$arrows <- rep("to", rep(nrow(capecedges)))
