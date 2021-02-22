@@ -213,7 +213,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
   # GROUPS NODES
   ctinodes <- data.frame(
     id = groups$mitreid,
-    label = groups$mitreid,
+    label = groups$name,
     group = groups$type,
     value = rep(4, nrow(groups)),
     shape = rep("square", nrow(groups)),
@@ -228,7 +228,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
   # SOFTWARE NODES
   ctinodes <- data.frame(
     id = software$mitreid,
-    label = software$mitreid,
+    label = software$name,
     group = software$type,
     value = rep(4, nrow(software)),
     shape = rep("square", nrow(software)),
