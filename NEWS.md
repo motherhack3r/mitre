@@ -1,3 +1,8 @@
+# mitre 0.4.0
+* Removed missing columns
+* Filled missing values
+* Normalized network colors and groups
+
 # mitre 0.3.5
 * Network improvements in nodes populating missing data and some enrichment.
 
