@@ -7,7 +7,7 @@
 buildAttckTactics(verbose = TRUE)
 }
 \arguments{
-\item{verbose}{}
+\item{verbose}{Default set as FALSE}
 }
 \value{
 data frame

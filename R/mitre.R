@@ -11,7 +11,7 @@
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
   t <- tempfile()
-  download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/mitre_latest.rds",
+  utils::download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/mitre_latest.rds",
                 destfile = t, quiet = verbose)
   mitre.data <- readRDS(t)
   file.remove(t)
@@ -155,7 +155,7 @@ downloadRawData <- function(verbose = FALSE) {
 
   # CTI
   if (verbose) print(paste("[*][CTI] Download latest YAML definitions ..."))
-  download.file(url = "https://github.com/mitre/cti/archive/master.zip",
+  utils::download.file(url = "https://github.com/mitre/cti/archive/master.zip",
                 destfile = "data-raw/cti.zip", quiet = T)
   utils::unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw", overwrite = T)
 

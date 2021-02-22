@@ -48,7 +48,7 @@ getCPEData <- function(verbose = FALSE) {
   cpe2cve <- lapply(cpes$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe2cve <- sapply(cpe2cve, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe2cve <- data.frame(from = cpes$cpe.23, to = cpe2cve, stringsAsFactors = FALSE)
-  cpe2cve <- cpe2cve[complete.cases(cpe2cve), ]
+  cpe2cve <- cpe2cve[stats::complete.cases(cpe2cve), ]
 
   if (verbose) print("[*][CPE] Building CPE network ...")
   cpe2cve$team <- rep("SYSADMIN", nrow(cpe2cve))

@@ -42,6 +42,17 @@ getAttckData <- function(verbose = FALSE) {
   return(attck)
 }
 
+#' Create edges from ATTCK data frames
+#'
+#' @param tactics data.frame
+#' @param techniques data.frame
+#' @param mitigations data.frame
+#' @param groups data.frame
+#' @param software data.frame
+#' @param relations data.frame
+#' @param verbose Default set as FALSE
+#'
+#' @return data.frame
 createATTCKedges <- function(tactics, techniques, mitigations, groups, software, relations, verbose) {
   # CREATE NETWORK EDGES
   if (verbose) print(paste("[*][ATT&CK] Creating graph EDGES ..."))

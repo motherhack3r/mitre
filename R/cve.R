@@ -62,7 +62,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
                      stringsAsFactors = FALSE)
   edges2$cpes <- apply(cpes, 1,
                     function(x)
-                      as.character(na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
+                      as.character(stats::na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
 
   edges2 <- tidyr::unnest(edges2, cols = c("cpes"))
   names(edges2) <- c("to", "conf", "from")

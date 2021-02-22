@@ -11,7 +11,7 @@ getNodeNeighbors <- function(node = "T1104", direction = "both",
                              mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
   # Collect input node
   nnodes <- mitrenet$nodes[mitrenet$nodes$id == node, ]
-  eedges <- head(mitrenet$edges, 0)
+  eedges <- utils::head(mitrenet$edges, 0)
 
   if (direction %in% c("from", "both")) {
     # Find edges from node

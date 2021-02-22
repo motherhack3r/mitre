@@ -1,6 +1,7 @@
 #' Parse tactics
 #'
-#' @param verbose
+#' @param verbose Default set as FALSE
+#' @importFrom rlang .data
 #'
 #' @return data frame
 buildAttckTactics <- function(verbose = TRUE) {

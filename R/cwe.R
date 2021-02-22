@@ -41,7 +41,7 @@ getCWENetwork <- function(cwes, verbose) {
   names(cwe2cve) <- cwes$Code_Standard
   cwe2cve <- plyr::ldply(cwe2cve, rbind)
   names(cwe2cve) <- c("from", "to")
-  cwe2cve <- cwe2cve[complete.cases(cwe2cve), ]
+  cwe2cve <- cwe2cve[stats::complete.cases(cwe2cve), ]
   cwe2cve$team <- rep("SYSADMIN", nrow(cwe2cve))
   cwe2cve$label <- rep("example", nrow(cwe2cve))
   cwe2cve$dashes <- rep(FALSE, nrow(cwe2cve))
@@ -50,7 +50,7 @@ getCWENetwork <- function(cwes, verbose) {
 
   if (verbose) print("[*][CWE] Looking for CWE to CWE edges ...")
   cwe2cwe <- cwes[, c("Code_Standard","Related_Weakness")]
-  cwe2cwe <- cwe2cwe[complete.cases(cwe2cwe), ]
+  cwe2cwe <- cwe2cwe[stats::complete.cases(cwe2cwe), ]
 
   kk <- lapply(cwe2cwe$Related_Weakness,
                function(x) {
@@ -75,7 +75,7 @@ getCWENetwork <- function(cwes, verbose) {
 
   if (verbose) print("[*][CWE] Finding relations from CWE to CAPEC ...")
   cwe2capec <- cwes[, c("Code_Standard", "Related_Attack_Patterns")]
-  cwe2capec <- cwe2capec[complete.cases(cwe2capec), ]
+  cwe2capec <- cwe2capec[stats::complete.cases(cwe2capec), ]
 
   kk <- lapply(cwe2capec$Related_Attack_Patterns,
                function(x)
@@ -83,7 +83,7 @@ getCWENetwork <- function(cwes, verbose) {
                             stringsAsFactors = FALSE))
   names(kk) <- cwe2capec$Code_Standard
   cwe2capec <- dplyr::bind_rows(kk, .id = "from")
-  cwe2capec <- cwe2capec[complete.cases(cwe2capec), ]
+  cwe2capec <- cwe2capec[stats::complete.cases(cwe2capec), ]
   cwe2capec$team <- rep("BLUE", nrow(cwe2capec))
   cwe2capec$label <- rep("leverage", nrow(cwe2capec))
   cwe2capec$dashes <- rep(FALSE, nrow(cwe2capec))
