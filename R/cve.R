@@ -174,7 +174,7 @@ GetNISTvulnsByYear <- function(year, verbose) {
 
 NewNISTEntry <- function() {
   return(data.frame(cve.id = character(),
-                    affects = character(),
+                    # affects = character(),
                     problem.type = character(),
                     references = character(),
                     description = character(),
