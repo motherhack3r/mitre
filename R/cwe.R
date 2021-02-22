@@ -66,6 +66,7 @@ getCWENetwork <- function(cwes, verbose) {
   names(kk) <- cwe2cwe$Code_Standard
   cwe2cwe <- dplyr::bind_rows(kk, .id = "from")
   names(cwe2cwe) <- c("from", "label", "to", "view_id", "dashes", "chain_id")
+  cwe2cwe$label[which(is.na(cwe2cwe$label))] <- "HasMember"
   cwe2cwe$to <- paste0("CWE-", cwe2cwe$to)
   cwe2cwe$dashes <- is.na(cwe2cwe$dashes)
   cwe2cwe$arrows <- rep("to", nrow(cwe2cwe))
