@@ -1,3 +1,6 @@
+# mitre 0.3.5
+* Network improvements in nodes populating missing data and some enrichment.
+
 # mitre 0.3.4
 * Code style
 * Update documentation for CRAN
