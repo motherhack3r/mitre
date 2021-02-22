@@ -232,7 +232,7 @@ getShieldNodes <- function() {
   df$value <- rep(2, nrow(df))
   df$shape <- rep("star", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("grey", nrow(df))
+  df$color <- rep("khaki", nrow(df))
   df$description <- NULL
   df$team <- rep("BLUE", nrow(df))
 
@@ -245,7 +245,7 @@ getShieldNodes <- function() {
   df$value <- rep(4, nrow(df))
   df$shape <- rep("box", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("purple", nrow(df))
+  df$color <- rep("yellow", nrow(df))
   df$description <- NULL
   df$team <- rep("BLUE", nrow(df))
 
@@ -258,7 +258,7 @@ getShieldNodes <- function() {
   df$value <- rep(4, nrow(df))
   df$shape <- rep("ellipse", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("yellow", nrow(df))
+  df$color <- rep("purple", nrow(df))
   df$description <- NULL
   df$team <- rep("BLUE", nrow(df))
 

@@ -188,7 +188,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     value = rep(4, nrow(techniques)),
     shape = rep("square", nrow(techniques)),
     title = paste0("<p><b>", techniques$name, "</b><br>", techniques$description, "</p>"),
-    color = rep("lightblue", nrow(techniques)),
+    color = rep("orange", nrow(techniques)),
     shadow = techniques$x_mitre_deprecated,
     team = rep("RED", nrow(techniques))
   )
@@ -203,7 +203,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     value = rep(4, nrow(mitigations)),
     shape = rep("square", nrow(mitigations)),
     title = paste0("<p><b>", mitigations$name, "</b><br>", mitigations$description, "</p>"),
-    color = rep("lightblue", nrow(mitigations)),
+    color = rep("yellow", nrow(mitigations)),
     shadow = mitigations$x_mitre_deprecated,
     team = rep("RED", nrow(mitigations))
   )
@@ -218,7 +218,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     value = rep(4, nrow(groups)),
     shape = rep("square", nrow(groups)),
     title = paste0("<p><b>", groups$name, "</b><br>", groups$description, "</p>"),
-    color = rep("lightblue", nrow(groups)),
+    color = rep("antiquewhite", nrow(groups)),
     shadow = groups$x_mitre_deprecated,
     team = rep("RED", nrow(groups))
   )
@@ -233,10 +233,11 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     value = rep(4, nrow(software)),
     shape = rep("square", nrow(software)),
     title = paste0("<p><b>", software$name, "</b><br>", software$description, "</p>"),
-    color = rep("lightblue", nrow(software)),
+    color = rep("palevioletred", nrow(software)),
     shadow = software$x_mitre_deprecated,
     team = rep("RED", nrow(software))
   )
+  ctinodes$color[ctinodes$color == "malware"] <- "tomato"
   if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "software nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
