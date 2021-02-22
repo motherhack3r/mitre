@@ -198,7 +198,7 @@ getShieldNodes <- function() {
   ### Tactics nodes
   df <- getShieldTactics()
   df$label <- df$id
-  df$group <- rep("tactic", nrow(df))
+  df$group <- rep("shield-tactic", nrow(df))
   df$value <- rep(5, nrow(df))
   df$shape <- rep("triangle", nrow(df))
   df$title <- paste0("<p><b>", df$name, "</b><br>", df$description, "</p>")
@@ -213,7 +213,7 @@ getShieldNodes <- function() {
   ### Techniques nodes
   df <- getShieldTechniques()
   df$label <- df$id
-  df$group <- rep("technique", nrow(df))
+  df$group <- rep("shield-technique", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("square", nrow(df))
   df$title <- paste0("<p><b>", df$name, "</b><br>", df$description, "</p>")
@@ -228,7 +228,7 @@ getShieldNodes <- function() {
   ### Opportunities nodes
   df <- getShieldOpportunities()
   df$label <- df$id
-  df$group <- rep("opportunity", nrow(df))
+  df$group <- rep("shield-opportunity", nrow(df))
   df$value <- rep(2, nrow(df))
   df$shape <- rep("star", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
@@ -241,7 +241,7 @@ getShieldNodes <- function() {
   ### Procedures nodes
   df <- getShieldProcedures()
   df$label <- df$id
-  df$group <- rep("procedure", nrow(df))
+  df$group <- rep("shield-procedure", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("box", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
@@ -254,7 +254,7 @@ getShieldNodes <- function() {
   ### Use Cases nodes
   df <- getShieldUseCases()
   df$label <- df$id
-  df$group <- rep("usecase", nrow(df))
+  df$group <- rep("shield-usecase", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("ellipse", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
