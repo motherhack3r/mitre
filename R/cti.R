@@ -486,7 +486,7 @@ parseAttckmodel.tech <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.tech]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttckmodel.tech]", domain,  "..."))
   # sf.attack.pattern <- getGitHubCTIfiles(domain, "attack-pattern")
   sf.attack.pattern <- list.files(path = paste0("data-raw/cti-master/", domain, "/attack-pattern"),
                                   full.names = T)
@@ -521,7 +521,7 @@ parseAttckmodel.group <- function(domain = sample(c("pre-attack", "ics-attack",
                                                     "enterprise-attack",
                                                     "mobile-attack"), 1),
                                   verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.group]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttckmodel.group]", domain,  "..."))
   # sf.intrusion.set <- getGitHubCTIfiles(domain, "intrusion-set")
   sf.intrusion.set <- list.files(path = paste0("data-raw/cti-master/", domain, "/intrusion-set"),
                                   full.names = T)
@@ -555,7 +555,7 @@ parseAttckmodel.soft <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.soft]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttckmodel.soft]", domain,  "..."))
   # MALWARE
   # sf.maltool <- getGitHubCTIfiles(domain, "malware")
   sf.maltool <- list.files(path = paste0("data-raw/cti-master/", domain, "/malware"),
@@ -594,7 +594,7 @@ parseAttckmodel.miti <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.miti]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttckmodel.miti]", domain,  "..."))
   sf.course.action <- list.files(path = paste0("data-raw/cti-master/", domain, "/course-of-action"),
                            full.names = T)
 
@@ -628,7 +628,7 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
                                                    "enterprise-attack",
                                                    "mobile-attack"), 1),
                                  verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttckmodel.rels]", domain,  "..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttckmodel.rels]", domain,  "..."))
   # sf.relationship <- getGitHubCTIfiles(domain, "relationship")
   sf.relationship <- list.files(path = paste0("data-raw/cti-master/", domain, "/relationship"),
                                  full.names = T)
@@ -688,7 +688,7 @@ parseAttck.Tactics <- function(verbose = TRUE) {
 #' df.techniques <- parseAttck.Techniques()
 #' }
 parseAttck.Techniques <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Techniques] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Techniques] init ..."))
   df.pre <- parseAttckmodel.tech(domain = "pre-attack")
   df.ent <- parseAttckmodel.tech(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.tech(domain = "mobile-attack")
@@ -712,7 +712,7 @@ parseAttck.Techniques <- function(verbose = TRUE) {
 #' df.groups <- parseAttck.Groups()
 #' }
 parseAttck.Groups <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Groups] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Groups] init ..."))
   df.pre <- parseAttckmodel.group(domain = "pre-attack")
   df.ent <- parseAttckmodel.group(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.group(domain = "mobile-attack")
@@ -735,7 +735,7 @@ parseAttck.Groups <- function(verbose = TRUE) {
 #' df.software <- parseAttck.Software()
 #' }
 parseAttck.Software <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Software] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Software] init ..."))
   df.pre <- parseAttckmodel.soft(domain = "pre-attack")
   df.ent <- parseAttckmodel.soft(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.soft(domain = "mobile-attack")
@@ -758,7 +758,7 @@ parseAttck.Software <- function(verbose = TRUE) {
 #' df.mitigations <- parseAttck.Mitigation()
 #' }
 parseAttck.Mitigation <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Mitigation] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Mitigation] init ..."))
   df.pre <- parseAttckmodel.miti(domain = "pre-attack")
   df.ent <- parseAttckmodel.miti(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.miti(domain = "mobile-attack")
@@ -782,7 +782,7 @@ parseAttck.Mitigation <- function(verbose = TRUE) {
 #' df.relationships <- parseAttck.Relationships()
 #' }
 parseAttck.Relationships <- function(verbose = TRUE) {
-  if (verbose) print(paste("[*][ATT&CK][CTI][parseAttck.Relationships] init ..."))
+  if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Relationships] init ..."))
   df.pre <- parseAttckmodel.rels(domain = "pre-attack")
   df.ent <- parseAttckmodel.rels(domain = "enterprise-attack")
   df.mob <- parseAttckmodel.rels(domain = "mobile-attack")

@@ -6,24 +6,24 @@
 #'
 #' @return list of data frames
 getAttckData <- function(verbose = FALSE) {
-  if (verbose) print(paste("[*][ATT&CK] Starting parsers ..."))
+  if (verbose) print(paste("[-][ATT&CK] Starting parsers ..."))
 
-  if (verbose) print(paste("[*][ATT&CK] Building TACTICS ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building TACTICS ..."))
   tactics <- buildAttckTactics(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building TECHNIQUES ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building TECHNIQUES ..."))
   techniques <- buildAttckTechniques(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building MITIGATIONS ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building MITIGATIONS ..."))
   mitigations <- buildAttckMitigations(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building GROUPS ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building GROUPS ..."))
   groups <- buildAttckGroups(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building SOFTWARE ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building SOFTWARE ..."))
   software <- buildAttckSoftware(verbose)
 
-  if (verbose) print(paste("[*][ATT&CK] Building RELATIONS ..."))
+  if (verbose) print(paste("[-][ATT&CK] Building RELATIONS ..."))
   relations <- buildAttckRelations(verbose)
 
   attck_nodes <- createATTCKnodes(tactics, techniques, mitigations,
@@ -55,7 +55,7 @@ getAttckData <- function(verbose = FALSE) {
 #' @return data.frame
 createATTCKedges <- function(tactics, techniques, mitigations, groups, software, relations, verbose) {
   # CREATE NETWORK EDGES
-  if (verbose) print(paste("[*][ATT&CK] Creating graph EDGES ..."))
+  if (verbose) print(paste("[-][ATT&CK] Creating graph EDGES ..."))
   attck_edges <- data.frame(
     from = character(0),
     to = character(0),
@@ -89,7 +89,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
     dashes = rels$x_mitre_deprecated,
     team = rep("PURPLE", nrow(rels))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctiedges), "default relationships ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctiedges), "default relationships ..."))
   attck_edges <- rbind(attck_edges, ctiedges)
 
   # Technique -> Tactic
@@ -109,7 +109,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
   tech2tact$title <- rep("kill_chain_phase", nrow(tech2tact))
   tech2tact$team <- rep("RED", nrow(tech2tact))
   tech2tact$tactic <- NULL
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2tact), "Tactic relationships ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(tech2tact), "Tactic relationships ..."))
   attck_edges <- rbind(attck_edges, tech2tact)
 
   # Technique -> CAPEC
@@ -127,7 +127,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
   tech2capec$title <- rep("include", nrow(tech2capec))
   tech2capec$dashes <- rep(TRUE, nrow(tech2capec))
   tech2capec$team <- rep("RED", nrow(tech2capec))
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2capec), "CAPEC relationships ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(tech2capec), "CAPEC relationships ..."))
   attck_edges <- rbind(attck_edges, tech2capec)
 
   # Technique -> CVE
@@ -145,7 +145,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
   tech2cve$title <- rep("exploit", nrow(tech2cve))
   tech2cve$dashes <- rep(TRUE, nrow(tech2cve))
   tech2cve$team <- rep("RED", nrow(tech2cve))
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(tech2cve), "CVE relationships ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(tech2cve), "CVE relationships ..."))
   attck_edges <- rbind(attck_edges, tech2cve)
 
   return(attck_edges)
@@ -153,7 +153,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
 
 createATTCKnodes <- function(tactics, techniques, mitigations, groups, software, verbose) {
   # CREATE NETWORK NODES
-  if (verbose) print(paste("[*][ATT&CK] Creating graph NODES ..."))
+  if (verbose) print(paste("[-][ATT&CK] Creating graph NODES ..."))
   attck_nodes <- data.frame(
     id = character(0),
     label = character(0),
@@ -177,7 +177,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     shadow = tactics$x_mitre_deprecated,
     team = rep("RED", nrow(tactics))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "tactic nodes ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "tactic nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
   # TECHNIQUES NODES
@@ -192,7 +192,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     shadow = techniques$x_mitre_deprecated,
     team = rep("RED", nrow(techniques))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "technique nodes ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "technique nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
   # MITIGATION NODES
@@ -207,7 +207,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     shadow = mitigations$x_mitre_deprecated,
     team = rep("RED", nrow(mitigations))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "mitigation nodes ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "mitigation nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
   # GROUPS NODES
@@ -222,7 +222,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     shadow = groups$x_mitre_deprecated,
     team = rep("RED", nrow(groups))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "group nodes ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "group nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
   # SOFTWARE NODES
@@ -237,7 +237,7 @@ createATTCKnodes <- function(tactics, techniques, mitigations, groups, software,
     shadow = software$x_mitre_deprecated,
     team = rep("RED", nrow(software))
   )
-  if (verbose) print(paste("[*][ATT&CK] Adding", nrow(ctinodes), "software nodes ..."))
+  if (verbose) print(paste("[.][ATT&CK] Adding", nrow(ctinodes), "software nodes ..."))
   attck_nodes <- rbind(attck_nodes, ctinodes)
 
   return(attck_nodes)
