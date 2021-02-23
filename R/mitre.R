@@ -101,41 +101,42 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
 #' mitre::downloadRawData(verbose = TRUE)
 #' }
 downloadRawData <- function(verbose = FALSE) {
+  if (verbose) print(paste("[#][MITRE] Start Download process."))
   # Create "data-raw" folder
   if (!dir.exists("data-raw")) dir.create("data-raw")
 
   # SHIELD
-  if (verbose) print(paste("[*][SHIELD] Download Tactics ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Tactics ..."))
   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
   utils::download.file(url = tactics_url, destfile = "data-raw/shield-tactics.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Techniques ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Techniques ..."))
   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
   utils::download.file(url = tech_url, destfile = "data-raw/shield-techniques.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Opportunities ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Opportunities ..."))
   opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
   utils::download.file(url = opport_url, destfile = "data-raw/shield-opportunities.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Procedures ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Procedures ..."))
   proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
   utils::download.file(url = proced_url, destfile = "data-raw/shield-procedures.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Use cases ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Use cases ..."))
   usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
   utils::download.file(url = usecase_url, destfile = "data-raw/shield-use_cases.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Tactic details ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Tactic details ..."))
   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
   utils::download.file(url = tact_det_url, destfile = "data-raw/shield-tactic_details.json", quiet = T)
-  if (verbose) print(paste("[*][SHIELD] Download Technique details ..."))
+  if (verbose) print(paste("[-][SHIELD] Download Technique details ..."))
   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
   utils::download.file(url = tech_det_url, destfile = "data-raw/shield-technique_details.json", quiet = T)
 
   # CVE
   for (year in 2002:strftime(Sys.Date(), "%Y")) {
-    if (verbose) print(paste0("[*][CVE] Download ", year," CVEs ..."))
+    if (verbose) print(paste0("[-][CVE] Download ", year," CVEs ..."))
     cve_url <- paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", year,".json.gz")
     utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = T)
   }
 
   # CWE
-  if (verbose) print(paste("[*][CWE] Download latest XML definitions ..."))
+  if (verbose) print(paste("[-][CWE] Download latest XML definitions ..."))
   cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
   utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = T)
   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
@@ -143,21 +144,22 @@ downloadRawData <- function(verbose = FALSE) {
                overwrite = T)
 
   # CPE
-  if (verbose) print(paste("[*][CPE] Download latest XML definitions ..."))
+  if (verbose) print(paste("[-][CPE] Download latest XML definitions ..."))
   cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
   utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw", overwrite = T)
 
   # CAPEC
-  if (verbose) print(paste("[*][CAPEC] Download latest XML definitions ..."))
+  if (verbose) print(paste("[-][CAPEC] Download latest XML definitions ..."))
   capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = T)
 
   # CTI
-  if (verbose) print(paste("[*][CTI] Download latest YAML definitions ..."))
+  if (verbose) print(paste("[-][CTI] Download latest YAML definitions ..."))
   utils::download.file(url = "https://github.com/mitre/cti/archive/master.zip",
                 destfile = "data-raw/cti.zip", quiet = T)
   utils::unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw", overwrite = T)
 
+  if (verbose) print(paste("[#][MITRE] End download process."))
 }
 
