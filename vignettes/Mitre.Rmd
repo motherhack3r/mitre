@@ -1,9 +1,6 @@
 ---
 title: "Mitre"
-author: "Humbert Costas"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
-runtime: shiny
 vignette: >
   %\VignetteIndexEntry{Mitre}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,10 +8,12 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-library(shiny)
-library(visNetwork)
-library(mitre)
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
+
 You can explore MITRE Shield data frames as you usually analyze data, but
 the power reside in relations. Let's try to visualize the hole graph with 
 a ShinyApp... let's call it: MITRExplorer.
@@ -27,30 +26,36 @@ Try to build your own MITRExplorer app using the following code for ui and serve
 
 ## Shinyapp demo
 ```{r shiny_demo}
-
-mitredata <- mitre::getLatestDataSet()
-shieldnet <- mitredata$standards$shield$shieldnet
-
-# Define UI for application that draws a histogram
-ui <- shinyUI(fluidPage(
-   # Application title
-   titlePanel("MITRE Shield Explorer"),
-   # Show a plot of the generated distribution
-   mainPanel(
-       visNetworkOutput("shieldnetwork")
-   )
-))
-
-## server.R
-server <- shinyServer(function(input, output) {
-   output$shieldnetwork <- renderVisNetwork({
-      ggnet <- visNetwork(nodes = shieldnet$nodes,
-                          edges = shieldnet$edges)
-      ggnet %>%
-         visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
-         visLayout(randomSeed = 123)
-   })
-})
-
-shiny::shinyApp(ui, server)
+# library(shiny)
+# library(visNetwork)
+# library(mitre)
+# 
+# mitredata <- mitre::getLatestDataSet()
+# shieldnet <- mitredata$standards$shield$shieldnet
+# 
+# # Define UI for application that draws a histogram
+# ui <- shinyUI(fluidPage(
+#    # Application title
+#    titlePanel("MITRE Shield Explorer"),
+#    # Show a plot of the generated distribution
+#    mainPanel(
+#        visNetworkOutput("shieldnetwork")
+#    )
+# ))
+# 
+# ## server.R
+# server <- shinyServer(function(input, output) {
+#    output$shieldnetwork <- renderVisNetwork({
+#       ggnet <- visNetwork(nodes = shieldnet$nodes,
+#                           edges = shieldnet$edges)
+#       ggnet %>%
+#          visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
+#          visLayout(randomSeed = 123)
+#    })
+# })
+# 
+# shiny::shinyApp(ui, server)
 ```
+
+Check this app running in [here](https://security.shinyapps.io/mitreshield/) as free shinyapps.io service.
+
