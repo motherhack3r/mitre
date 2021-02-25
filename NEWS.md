@@ -1,3 +1,7 @@
+# mitre 0.5.0
+* Update documentation
+* Added vignettes
+
 # mitre 0.4.0
 * Removed missing columns
 * Filled missing values
