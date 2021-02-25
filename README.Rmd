@@ -71,7 +71,7 @@ This is a example which shows you how to visualize shield network:
 Find some more examples in vignettes to build your own graph like [this](https://security.shinyapps.io/mitreshield/). 
 
 ## Advanced exploratory analysis
-Check [this](https://datadrivensecurity-project.web.app/) proof of concept project. It is a Rmarkdown document performing an exploratory analysis with mitre network and [this data set]().
+Check [this](https://datadrivensecurity-project.web.app/) proof of concept project. It is a Rmarkdown document performing an exploratory analysis with mitre network and [this data set](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat).
 
  - [Exploratory analysis](https://github.com/Barbero95/DataDrivenSecurity-Project): developed by [barbero95](https://github.com/Barbero95). 
  - Sample incidents data set from rpackage [attckr](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat) developed by [Bob Rudis](https://github.com/hrbrmstr).
