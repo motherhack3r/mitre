@@ -9,6 +9,7 @@
 status](https://travis-ci.org/motherhack3r/mitre.svg?branch=master)](https://travis-ci.org/motherhack3r/mitre)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/mitre)](https://cran.r-project.org/package=mitre)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/mitre)](https://cran.r-project.org/package=mitre)
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data
@@ -74,8 +75,9 @@ This is a example which shows you how to visualize shield network:
 # g
 ```
 
-![Shield network zoom in](vignettes/images/readme_example.png) Find some
-more examples in vignettes to build your own graph like
+![Shield network zoom in](vignettes/images/readme_example.png)
+
+Find some more examples in vignettes to build your own graph like
 [this](https://security.shinyapps.io/mitreshield/).
 
 ## Advanced exploratory analysis
@@ -87,14 +89,11 @@ set](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat).
 
 -   [Exploratory
     analysis](https://github.com/Barbero95/DataDrivenSecurity-Project):
-    developed by [barbero95](https://github.com/Barbero95).
+    developed by [barbero95](https://github.com/Barbero95) and
+    [marta](https://github.com/martavilab).
 -   Sample incidents data set from rpackage
     [attckr](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat)
     developed by [Bob Rudis](https://github.com/hrbrmstr).
-
-Check how useful could be for cybersecurity analytics in
-[this](https://datadrivensecurity-project.web.app/) project and its
-[code](https://github.com/Barbero95/DataDrivenSecurity-Project).
 
 ## Code of conduct
 
