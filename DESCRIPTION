@@ -17,7 +17,6 @@ BugReports: https://github.com/motherhack3r/mitre/issues
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    visNetwork,
     dplyr,
     plyr,
     tidyr,
@@ -31,6 +30,7 @@ Imports:
     rlang
 RoxygenNote: 7.1.1
 Suggests: 
+    visNetwork,
     knitr,
     rmarkdown,
     utils,
