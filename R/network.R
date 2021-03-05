@@ -41,3 +41,30 @@ getNodeNeighbors <- function(nodes = c("T1104"), direction = "both",
 
   return(nn)
 }
+
+#' Returns mitrenet without deprecated nodes
+#'
+#' @param mitrenet
+#' @param verbose
+#'
+#' @return list of nodes and edges
+#' @export
+omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
+  # Select nodes not deprecated
+  nodes <- mitrenet$nodes
+  nodes <- unique(nodes[!nodes$shadow, ])
+
+  # Select edges related to nodes
+  edges <- mitrenet$edges[((mitrenet$edges$from %in% nodes$id) |
+                             (mitrenet$edges$to %in% nodes$id)), ]
+  edges <- unique(edges)
+
+  # Select nodes with relationships
+  nodes <- nodes[((nodes$id %in% edges$from) |
+                    (nodes$id %in% edges$to)), ]
+
+  mitrenet$nodes <- nodes
+  mitrenet$edges <- edges
+
+  return(mitrenet)
+}
