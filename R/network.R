@@ -44,8 +44,8 @@ getNodeNeighbors <- function(nodes = c("T1104"), direction = "both",
 
 #' Returns mitrenet without deprecated nodes
 #'
-#' @param mitrenet
-#' @param verbose
+#' @param mitrenet MITRE network built with this package
+#' @param verbose default is FALSE
 #'
 #' @return list of nodes and edges
 #' @export
