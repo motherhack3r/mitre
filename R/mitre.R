@@ -23,7 +23,7 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' downloaded from official MITRE repositories stored in a folder named "data-raw";
 #' set downloadLatest parameter to TRUE and the function will create it for you.
 #'
-#' @param verbose default is FALSE
+#' @param verbose default is TRUE
 #' @param downloadLatest default as FALSE, set to TRUE to download latest raw source files from official MITRE repositories
 #'
 #' @return list of two data frames: nodes and edges
