@@ -22,7 +22,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   nodes$label <- nodes$cve.id
   nodes$group <- rep("cve", nrow(nodes))
   nodes$value <- max(nodes$cvss2.score, nodes$cvss3.score)
-  nodes$value[which(is.na(nodes$value))] <- -1
+  nodes$value[which(is.na(nodes$value))] <- 0
   nodes$shape <- rep("rectangle", nrow(nodes))
   nodes$title <- nodes$description
   nodes$color <- rep("grey", nrow(nodes))

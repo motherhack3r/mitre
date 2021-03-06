@@ -27,7 +27,7 @@ getCWENetwork <- function(cwes, verbose) {
   names(cwenodes) <- c("id", "label", "title", "shadow", "group")
   cwenodes$shadow <- cwenodes$shadow %in% c("Deprecated", "Obsolete", "Incomplete")
   cwenodes$value <- rep(2, nrow(cwenodes))
-  cwenodes$shape <- rep("database", nrow(cwenodes))
+  cwenodes$shape <- rep("rectangle", nrow(cwenodes))
   cwenodes$color <- rep("papayawhip", nrow(cwenodes))
   cwenodes$group <- rep("cwe", nrow(cwenodes))
   cwenodes$team <- rep("BLUE", nrow(cwenodes))
