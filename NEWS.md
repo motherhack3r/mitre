@@ -1,3 +1,6 @@
+# mitre (development version)
+* Added network relations schema
+
 # mitre 0.5.0
 * Update documentation
 * Added vignettes

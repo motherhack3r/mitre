@@ -23,7 +23,7 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' downloaded from official MITRE repositories stored in a folder named "data-raw";
 #' set downloadLatest parameter to TRUE and the function will create it for you.
 #'
-#' @param verbose default is FALSE
+#' @param verbose default is TRUE
 #' @param downloadLatest default as FALSE, set to TRUE to download latest raw source files from official MITRE repositories
 #'
 #' @return list of two data frames: nodes and edges
@@ -69,11 +69,20 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
 
   if (verbose) print(paste("[#][CAR] Start ETL process."))
   mitre.car <- getCARData(verbose)
-  car_nodes <- mitre.capec$carnet$nodes
-  car_edges <- mitre.capec$carnet$edges
+  car_nodes <- mitre.car$carnet$nodes
+  car_edges <- mitre.car$carnet$edges
 
   nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes, car_nodes)
   edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges, car_edges)
+
+  nodes$name <- nodes$id
+  nodes$id <- seq_len(nrow(nodes))
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("from"="name"))
+  edges$from <- edges$id
+  edges$id <- NULL
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("to"="name"))
+  edges$to <- edges$id
+  edges$id <- NULL
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)
