@@ -19,7 +19,8 @@ file.latest <- "sample.rds"
 
 print(paste0("START at ", as.character(Sys.time())))
 
-mitredata <- mitre::parseRawData(verbose = T)
+# mitredata <- mitre::parseRawData(verbose = T)
+mitredata <- readRDS("C:/DEVEL/datasets/mitre-datasets/latest/mitre_latest.rds")
 
 print(paste0("Parsed at ", as.character(Sys.time())))
 print(paste0("NODES: ", nrow(mitredata$mitrenet$nodes)))
@@ -32,51 +33,88 @@ print(paste0("NODES: ", nrow(mitrenet$nodes)))
 print(paste0("EDGES: ", nrow(mitrenet$edges)))
 
 edges <- mitrenet$edges
+nodes <- mitrenet$nodes
+
+edges <- dplyr::left_join(edges, nodes[, c("id", "name")], by = c("from"="id"))
+edges$src <- edges$name
+edges$name <- NULL
+edges <- dplyr::left_join(edges, nodes[, c("id", "name")], by = c("to"="id"))
+edges$dst <- edges$name
+edges$name <- NULL
+
+kk <- nodes[!(nodes$id %in% unique(c(edges$from, edges$to))), ]
+kk <- edges[is.na(edges$to) | is.na(edges$from),]
+kk <- edges[is.na(edges$src) | is.na(edges$dst),]
 
 # Select the most related CVEs with CWEs
-rels <- edges[grepl("^CVE-\\d+-\\d+$", edges$from),]
-rels <- rels[grepl("^CWE-\\d+$", rels$to),]
-top.rels <- names(tail(sort(table(rels$from)), 5))
+rels <- edges[grepl("^CVE-\\d+-\\d+$", edges$src),]
+rels <- rels[grepl("^CWE-\\d+$", rels$dst),]
+top.rels <- names(tail(sort(table(rels$src)), 5))
 
 # Select the most related CAPEC with CVEs
-rels <- edges[grepl("^CAPEC-\\d+$", edges$from),]
-rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^CAPEC-\\d+$", edges$src),]
+rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related CPEs with CVEs
-rels <- edges[grepl("^cpe:2.+$", edges$from),]
-rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+# rels <- edges[grepl("^cpe:2.+$", edges$src),]
+# rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$dst),]
+# top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related CWEs with CAPECs
-rels <- edges[grepl("^CWE-\\d+$", edges$from),]
-rels <- rels[grepl("^CAPEC-\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^CWE-\\d+$", edges$src),]
+rels <- rels[grepl("^CAPEC-\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related ATTCK Techniques with CAPECs
-rels <- edges[grepl("^T\\d+$", edges$from),]
-rels <- rels[grepl("^CAPEC-\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^T\\d+$", edges$src),]
+rels <- rels[grepl("^CAPEC-\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related ATTCK Techniques with CVEs
-rels <- edges[grepl("^T\\d+$", edges$from),]
-rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^T\\d+$", edges$src),]
+rels <- rels[grepl("^CVE-\\d+-\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related SHIELD Techniques with ATTCK Techniques
-rels <- edges[grepl("^DTE\\d+$", edges$from),]
-rels <- rels[grepl("^T\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^DTE\\d+$", edges$src),]
+rels <- rels[grepl("^T\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
 
 # Select the most related SHIELD Techniques with ATTCK Tactics
-rels <- edges[grepl("^DTE\\d+$", edges$from),]
-rels <- rels[grepl("^TA\\d+$", rels$to),]
-top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
+rels <- edges[grepl("^DTE\\d+$", edges$src),]
+rels <- rels[grepl("^TA\\d+$", rels$dst),]
+top.rels <- c(top.rels, names(tail(sort(table(rels$src)), 5)))
+
+mymitrenet <- mitrenet
+mymitrenet$edges <- edges
+mymitrenet$nodes <- nodes
+
+ed <- mitre::getNodeNeighbors(nodes = top.rels, mitrenet = mymitrenet)
 
 
-ed <- mitre::getNodeNeighbors(nodes = top.rels, mitrenet = mitrenet)
+library(igraph)
+library(networkD3)
+library(visNetwork)
 
+ig <- graph_from_data_frame(ed$edges, directed = T, vertices = ed$nodes)
+# print(g, e=T, v=T)
 
+# Convert to object suitable for networkD3
+mitre_d3 <- igraph_to_networkD3(ig, group = ed$nodes$group)
+
+# Create force directed network plot
+f <- forceNetwork(Links = mitre_d3$links, Nodes = mitre_d3$nodes,
+                  Source = 'source', Target = 'target',
+                  NodeID = 'name', Group = 'group', zoom = TRUE)
+f
+
+g <- visNetwork(nodes = ed$nodes, edges = ed$edges) %>%
+  visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%
+  visLayout(randomSeed = 123)
+g
+
+################
 
 
 
