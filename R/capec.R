@@ -187,6 +187,7 @@ getCAPECData <- function(verbose = FALSE) {
   if (verbose) print("[.][CAPEC] Looking for related CWEs ...")
   capec2cwe <- lapply(raw.capec.atcks,
                       function(x)
+                        # XXX: Sometimes xml is empty
                         data.frame(to = paste0("CWE-", xml2::xml_text(rvest::xml_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/@CWE_ID"))),
                                    stringsAsFactors = FALSE))
   names(capec2cwe) <- att.id
@@ -263,6 +264,9 @@ getCAPECData <- function(verbose = FALSE) {
   capecedges$arrows <- rep("to", rep(nrow(capecedges)))
   capecedges$team <- rep("RED", rep(nrow(capecedges)))
   capecedges$dashes <- rep(FALSE, rep(nrow(capecedges)))
+
+  # XXX: Workarrond for empty relations to CWEs
+  capecedges <- capecedges[!grepl(pattern = "^CWE-$", x = capecedges$to), ]
 
 
   mitre.capec <- list(views = views,
