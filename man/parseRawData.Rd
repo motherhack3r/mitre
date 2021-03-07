@@ -10,7 +10,7 @@ set downloadLatest parameter to TRUE and the function will create it for you.}
 parseRawData(verbose = FALSE, downloadLatest = TRUE)
 }
 \arguments{
-\item{verbose}{default is FALSE}
+\item{verbose}{default is TRUE}
 
 \item{downloadLatest}{default as FALSE, set to TRUE to download latest raw source files from official MITRE repositories}
 }
