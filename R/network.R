@@ -9,6 +9,8 @@
 #' @export
 getNodeNeighbors <- function(nodes = c("T1104"), direction = "both",
                              mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
+  # nodes <- c("CVE-2017-8535", "CVE-2017-8536", "CVE-2017-8537", "CVE-2017-8539", "CVE-2017-8542")
+  nodes <- mitrenet$nodes[mitrenet$nodes$name %in% nodes, "id"]
   # Collect input node
   nnodes <- mitrenet$nodes[mitrenet$nodes$id %in% nodes, ]
   eedges <- utils::head(mitrenet$edges, 0)
@@ -55,13 +57,14 @@ omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose 
   nodes <- unique(nodes[!nodes$shadow, ])
 
   # Select edges related to nodes
-  edges <- mitrenet$edges[((mitrenet$edges$from %in% nodes$id) |
+  edges <- mitrenet$edges[((mitrenet$edges$from %in% nodes$id) &
                              (mitrenet$edges$to %in% nodes$id)), ]
   edges <- unique(edges)
 
-  # Select nodes with relationships
-  nodes <- nodes[((nodes$id %in% edges$from) |
-                    (nodes$id %in% edges$to)), ]
+  # Select nodes in relationships
+  # nodes <- nodes[((nodes$id %in% edges$from) &
+  #                   (nodes$id %in% edges$to)), ]
+  nodes <- nodes[nodes$id %in% unique(c(edges$from, edges$to)), ]
 
   mitrenet$nodes <- nodes
   mitrenet$edges <- edges
