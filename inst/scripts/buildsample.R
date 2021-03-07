@@ -26,7 +26,10 @@ print(paste0("NODES: ", nrow(mitredata$mitrenet$nodes)))
 print(paste0("EDGES: ", nrow(mitredata$mitrenet$edges)))
 
 
+print("Removing deprecated nodes from network")
 mitrenet <- mitre::omitDeprecated(mitredata$mitrenet)
+print(paste0("NODES: ", nrow(mitrenet$nodes)))
+print(paste0("EDGES: ", nrow(mitrenet$edges)))
 
 edges <- mitrenet$edges
 
@@ -72,6 +75,24 @@ top.rels <- c(top.rels, names(tail(sort(table(rels$from)), 5)))
 
 
 ed <- mitre::getNodeNeighbors(nodes = top.rels, mitrenet = mitrenet)
+
+
+
+
+
+# library(networkD3)
+#
+# data(MisLinks)
+# data(MisNodes)
+#
+# networkD3::forceNetwork(Links = ed$edges, Nodes = ed$nodes,
+#              Source = "from", Target = "to",
+#              Value = "value", NodeID = "id",
+#              Group = "group", opacity = 0.8)
+
+
+
+
 
 g <- visNetwork::visNetwork(nodes = ed$nodes, edges = ed$edges)
 
