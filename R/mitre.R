@@ -75,6 +75,15 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes, car_nodes)
   edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges, car_edges)
 
+  nodes$name <- nodes$id
+  nodes$id <- seq_len(nrow(nodes))
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("from"="name"))
+  edges$from <- edges$id
+  edges$id <- NULL
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("to"="name"))
+  edges$to <- edges$id
+  edges$id <- NULL
+
   mitrenet <- list(edges = edges,
                    nodes = nodes)
 
