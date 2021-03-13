@@ -4,7 +4,7 @@
 
 # Session Data files
 .RData
-data-raw/
+inst/scripts/
 
 # User-specific files
 .Ruserdata
