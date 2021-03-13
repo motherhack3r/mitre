@@ -1,5 +1,8 @@
-# mitre (development version)
+# mitre 0.5.1
 * Added network relations schema
+* Include CAR in network
+* Multiple network cleansing
+* Solved minor issues
 
 # mitre 0.5.0
 * Update documentation

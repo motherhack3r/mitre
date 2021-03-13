@@ -1,6 +1,6 @@
 #' Returns a list of nodes and edges (neighbors) based on input node.
 #'
-#' @param node MITRE Standard Id
+#' @param nodes MITRE Standard Id as character vector
 #' @param direction value should be: "from", "to" or "both"
 #' @param mitrenet MITRE network built with this package
 #' @param verbose default is FALSE
