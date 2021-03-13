@@ -75,6 +75,7 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes, car_nodes)
   edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges, car_edges)
 
+  nodes <- unique(nodes)
   nodes$name <- nodes$id
   nodes$id <- seq_len(nrow(nodes))
   edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("from"="name"))
