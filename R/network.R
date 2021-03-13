@@ -6,7 +6,6 @@
 #' @param verbose default is FALSE
 #'
 #' @return list of nodes and edges
-#' @export
 getNodeNeighbors <- function(nodes = c("T1104"), direction = "both",
                              mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
   # nodes <- c("CVE-2017-8535", "CVE-2017-8536", "CVE-2017-8537", "CVE-2017-8539", "CVE-2017-8542")
@@ -50,7 +49,6 @@ getNodeNeighbors <- function(nodes = c("T1104"), direction = "both",
 #' @param verbose default is FALSE
 #'
 #' @return list of nodes and edges
-#' @export
 omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
   # Select nodes not deprecated
   nodes <- mitrenet$nodes
