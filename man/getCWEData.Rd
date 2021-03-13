@@ -21,8 +21,3 @@ ETL process that download current CVE definitions and return a list with a
 data frame for CVE objects. The list also contains a visNetwork object with
 CVE objects as nodes and all relations as edges.
 }
-\examples{
-\donttest{
-cwes <- mitre::getCWEData()
-}
-}

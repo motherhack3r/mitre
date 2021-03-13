@@ -170,6 +170,7 @@ getShieldRelations <- function() {
   relations$label <- rep("uses", nrow(relations))
   relations$arrows <- rep("to", nrow(relations))
   relations$title <- rep("uses", nrow(relations))
+  relations$dashes <- rep(FALSE, nrow(relations))
 
   return(relations)
 }
@@ -189,14 +190,15 @@ getShieldNodes <- function() {
     shape = character(0),
     title = character(0),
     color = character(0),
-    shadow = logical(0)
+    shadow = logical(0),
+    team = character(0)
   )
   shield_nodes <- nodes
 
   ### Tactics nodes
   df <- getShieldTactics()
   df$label <- df$id
-  df$group <- rep("tactic", nrow(df))
+  df$group <- rep("shield-tactic", nrow(df))
   df$value <- rep(5, nrow(df))
   df$shape <- rep("triangle", nrow(df))
   df$title <- paste0("<p><b>", df$name, "</b><br>", df$description, "</p>")
@@ -204,13 +206,14 @@ getShieldNodes <- function() {
   df$description <- NULL
   df$name <- NULL
   df$long_description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Techniques nodes
   df <- getShieldTechniques()
   df$label <- df$id
-  df$group <- rep("technique", nrow(df))
+  df$group <- rep("shield-technique", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("square", nrow(df))
   df$title <- paste0("<p><b>", df$name, "</b><br>", df$description, "</p>")
@@ -218,42 +221,46 @@ getShieldNodes <- function() {
   df$description <- NULL
   df$name <- NULL
   df$long_description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Opportunities nodes
   df <- getShieldOpportunities()
   df$label <- df$id
-  df$group <- rep("opportunity", nrow(df))
+  df$group <- rep("shield-opportunity", nrow(df))
   df$value <- rep(2, nrow(df))
   df$shape <- rep("star", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("grey", nrow(df))
+  df$color <- rep("khaki", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Procedures nodes
   df <- getShieldProcedures()
   df$label <- df$id
-  df$group <- rep("procedure", nrow(df))
+  df$group <- rep("shield-procedure", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("box", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("purple", nrow(df))
+  df$color <- rep("yellow", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
 
   ### Use Cases nodes
   df <- getShieldUseCases()
   df$label <- df$id
-  df$group <- rep("usecase", nrow(df))
+  df$group <- rep("shield-usecase", nrow(df))
   df$value <- rep(4, nrow(df))
   df$shape <- rep("ellipse", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
-  df$color <- rep("yellow", nrow(df))
+  df$color <- rep("purple", nrow(df))
   df$description <- NULL
+  df$team <- rep("BLUE", nrow(df))
 
   shield_nodes <- rbind(shield_nodes, df)
   shield_nodes$shadow <- rep(FALSE, nrow(shield_nodes))
@@ -284,12 +291,6 @@ getShieldNetwork <- function() {
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#' @export
-#'
-#' @examples
-#' \donttest{
-#' shield <- mitre::getShieldData()
-#' }
 getShieldData <- function(verbose = FALSE) {
   if (verbose) print(paste("[*][SHIELD] Building output ..."))
   shield <- list(tactics = getShieldTactics(),

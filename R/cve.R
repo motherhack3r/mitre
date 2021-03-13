@@ -5,12 +5,6 @@
 #' @param verbose Default set as FALSE
 #'
 #' @return list of data frames
-#' @export
-#'
-#' @examples
-#' \donttest{
-#' cves <- mitre::getCVEData()
-#' }
 getCVEData <- function(verbose = FALSE) {
   if (verbose) print(paste("[#][CVE] ETL process started."))
   if (verbose) print(paste("[*][CVE] Building data frame ..."))
@@ -22,22 +16,22 @@ getCVEData <- function(verbose = FALSE) {
 }
 
 getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
-  if (verbose) print(paste("[-][CVE] Building nodes ..."))
+  if (verbose) print(paste("[.][CVE] Building nodes ..."))
   nodes <- dplyr::select(cve, c("cve.id", "cvss2.score", "cvss3.score", "description"))
   nodes$id <- nodes$cve.id
   nodes$label <- nodes$cve.id
   nodes$group <- rep("cve", nrow(nodes))
   nodes$value <- max(nodes$cvss2.score, nodes$cvss3.score)
-  nodes$value[which(is.na(nodes$value))] <- -1
+  nodes$value[which(is.na(nodes$value))] <- 0
   nodes$shape <- rep("rectangle", nrow(nodes))
   nodes$title <- nodes$description
   nodes$color <- rep("grey", nrow(nodes))
-  nodes$shadow <- rep(TRUE, nrow(nodes))
+  nodes$shadow <- rep(FALSE, nrow(nodes))
   nodes <- dplyr::select(nodes, c("id", "label", "group", "value", "shape",
                                   "title", "color", "shadow"))
 
   # CVE -> CWE
-  if (verbose) print(paste("[-][CVE] Searching relations with CWE ..."))
+  if (verbose) print(paste("[.][CVE] Searching relations with CWE ..."))
   edges <- dplyr::select(cve, c("cve.id", "problem.type"))
   edges[edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
   edges$problem.type <- lapply(edges$problem.type, jsonlite::fromJSON)
@@ -48,9 +42,10 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   edges$arrows <- rep("to", nrow(edges))
   edges$title <- rep("imply", nrow(edges))
   edges <- edges[-which(edges$to == "NVD-CWE-noinfo"), ]
+  edges <- edges[-which(edges$to == "NVD-CWE-Other"), ]
 
   # CPE -> CVE
-  if (verbose) print(paste("[-][CVE] Searching relations with CPE ..."))
+  if (verbose) print(paste("[.][CVE] Searching relations with CPE ..."))
   edges2 <- dplyr::select(cve, c("cve.id", "vulnerable.configuration"))
   cpematch <- lapply(cve$vulnerable.configuration,
                      function(x)
@@ -68,7 +63,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
                      stringsAsFactors = FALSE)
   edges2$cpes <- apply(cpes, 1,
                     function(x)
-                      as.character(na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
+                      as.character(stats::na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
 
   edges2 <- tidyr::unnest(edges2, cols = c("cpes"))
   names(edges2) <- c("to", "conf", "from")
@@ -80,6 +75,10 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
 
   edges <- rbind(edges, edges2)
 
+  # Tidy
+  edges$dashes <- rep(FALSE, nrow(edges))
+  nodes$team <- rep("SYSADMIN", nrow(nodes))
+
   cvenet <- list(nodes = nodes,
                  edges = as.data.frame(edges))
 
@@ -89,6 +88,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
 ParseCVEsData <- function(verbose = FALSE) {
   cves <- NewNISTEntry()
   for (year in 2002:strftime(Sys.Date(), "%Y")) {
+    if (verbose) print(paste0("[-][CVE][", year,"] Start parser ..."))
     cves <- dplyr::bind_rows(cves, GetNISTvulnsByYear(year, verbose))
   }
   if (verbose) print("[-][CVE] Adapt column types ...")
@@ -115,30 +115,30 @@ ParseCVEsData <- function(verbose = FALSE) {
 }
 
 GetNISTvulnsByYear <- function(year, verbose) {
-  if (verbose) print(paste0("[-][CVE][", year,"] Reading raw file ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Reading raw file ..."))
   raw.cves <- jsonlite::fromJSON(paste0("data-raw/cve-", year,".json.gz"))
 
-  if (verbose) print(paste0("[-][CVE][", year,"] Initial data frame ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Initial data frame ..."))
   raw.cves <- raw.cves$CVE_Items
   cves <- data.frame(cve.id = raw.cves$cve$CVE_data_meta$ID,
                      stringsAsFactors = F)
-  if (verbose) print(paste0("[-][CVE][", year,"] Parsing description ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Parsing description ..."))
   cves$description <- unlist(lapply(raw.cves$cve$description$description_data,
                                     function(x) x[["value"]][1]))
-  if (verbose) print(paste0("[-][CVE][", year,"] Extract problem type ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Extract problem type ..."))
   cves$problem.type <- unlist(lapply(raw.cves$cve$problemtype$problemtype_data,
                                      function(x)
                                        jsonlite::toJSON(x[[1]][[1]]$value)))
-  if (verbose) print(paste0("[-][CVE][", year,"] Reading affected configurations ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Reading affected configurations ..."))
   cves$vulnerable.configuration <- unlist(lapply(raw.cves$configurations$nodes,
                                                  function(x)
                                                    jsonlite::toJSON(x)))
-  if (verbose) print(paste0("[-][CVE][", year,"] Extract references ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Extract references ..."))
   cves$references <- unlist(lapply(raw.cves$cve$references$reference_data,
                                    function(x)
                                      jsonlite::toJSON(x)))
 
-  if (verbose) print(paste0("[-][CVE][", year,"] Tidy CVSS v3 ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Tidy CVSS v3 ..."))
   cves$cvss3.vector <- raw.cves$impact$baseMetricV3$cvssV3$vectorString
   cves$cvss3.av <- raw.cves$impact$baseMetricV3$cvssV3$attackVector
   cves$cvss3.ac <- raw.cves$impact$baseMetricV3$cvssV3$attackComplexity
@@ -152,7 +152,7 @@ GetNISTvulnsByYear <- function(year, verbose) {
   cves$cvss3.severity <- raw.cves$impact$baseMetricV3$cvssV3$baseSeverity
   cves$cvss3.score.exploit <- raw.cves$impact$baseMetricV3$exploitabilityScore
   cves$cvss3.score.impact <- raw.cves$impact$baseMetricV3$impactScore
-  if (verbose) print(paste0("[-][CVE][", year,"] Tidy CVSS v2 ..."))
+  if (verbose) print(paste0("[.][CVE][", year,"] Tidy CVSS v2 ..."))
   cves$cvss2.vector <- raw.cves$impact$baseMetricV2$cvssV2$vectorString
   cves$cvss2.av <- raw.cves$impact$baseMetricV2$cvssV2$accessVector
   cves$cvss2.ac <- raw.cves$impact$baseMetricV2$cvssV2$accessComplexity
@@ -176,7 +176,7 @@ GetNISTvulnsByYear <- function(year, verbose) {
 
 NewNISTEntry <- function() {
   return(data.frame(cve.id = character(),
-                    affects = character(),
+                    # affects = character(),
                     problem.type = character(),
                     references = character(),
                     description = character(),
