@@ -67,10 +67,6 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   capec_nodes <- mitre.capec$capecnet$nodes
   capec_edges <- mitre.capec$capecnet$edges
 
-<<<<<<< HEAD
-  nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes)
-  edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges)
-=======
   if (verbose) print(paste("[#][CAR] Start ETL process."))
   mitre.car <- getCARData(verbose)
   car_nodes <- mitre.car$carnet$nodes
@@ -88,7 +84,6 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
   edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("to"="name"))
   edges$to <- edges$id
   edges$id <- NULL
->>>>>>> devel
 
   mitrenet <- list(edges = edges,
                    nodes = nodes)
@@ -98,12 +93,8 @@ parseRawData <- function(verbose = FALSE, downloadLatest = TRUE) {
                     cpe = mitre.cpes,
                     cve = mitre.cves,
                     cwe = mitre.cwes,
-<<<<<<< HEAD
-                    capec = mitre.capec)
-=======
                     capec = mitre.capec,
                     car = mitre.car)
->>>>>>> devel
   mitre.data <- list(standards = standards,
                      mitrenet = mitrenet)
 
@@ -155,11 +146,7 @@ downloadRawData <- function(verbose = FALSE) {
   }
 
   # CWE
-<<<<<<< HEAD
-  if (verbose) print(paste("[*][CWE] Download latest XML definitions ..."))
-=======
   if (verbose) print(paste("[-][CWE] Download latest XML definitions ..."))
->>>>>>> devel
   cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
   utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = T)
   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
@@ -167,21 +154,13 @@ downloadRawData <- function(verbose = FALSE) {
                overwrite = T)
 
   # CPE
-<<<<<<< HEAD
-  if (verbose) print(paste("[*][CPE] Download latest XML definitions ..."))
-=======
   if (verbose) print(paste("[-][CPE] Download latest XML definitions ..."))
->>>>>>> devel
   cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
   utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw", overwrite = T)
 
   # CAPEC
-<<<<<<< HEAD
-  if (verbose) print(paste("[*][CAPEC] Download latest XML definitions ..."))
-=======
   if (verbose) print(paste("[-][CAPEC] Download latest XML definitions ..."))
->>>>>>> devel
   capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = T)
 
