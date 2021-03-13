@@ -2,7 +2,5 @@
 
 export(downloadRawData)
 export(getLatestDataSet)
-export(getNodeNeighbors)
-export(omitDeprecated)
 export(parseRawData)
 importFrom(rlang,.data)
