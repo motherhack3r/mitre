@@ -67,16 +67,16 @@ getCAPECData <- function(verbose = FALSE) {
   raw.capec.atcks <- rvest::html_elements(doc, xpath = "//capec:Attack_Pattern")
   att.id <- paste0("CAPEC-", sapply(raw.capec.atcks,
                    function(x)
-                     rvest::html_text(rvest::xml_node(x, xpath="./@ID"))))
+                     rvest::html_text(rvest::html_element(x, xpath="./@ID"))))
   att.name <- sapply(raw.capec.atcks,
                      function(x)
-                       rvest::html_text(rvest::xml_node(x, xpath="./@Name")))
+                       rvest::html_text(rvest::html_element(x, xpath="./@Name")))
   att.status <- sapply(raw.capec.atcks,
                        function(x)
-                         rvest::html_text(rvest::xml_node(x, xpath="./@Status")))
+                         rvest::html_text(rvest::html_element(x, xpath="./@Status")))
   att.abstraction <- sapply(raw.capec.atcks,
                             function(x)
-                              rvest::html_text(rvest::xml_node(x, xpath="./@Abstraction")))
+                              rvest::html_text(rvest::html_element(x, xpath="./@Abstraction")))
   att.descr <- sapply(raw.capec.atcks,
                       function(x)
                         rvest::html_text(rvest::html_elements(x, xpath = "capec:Description")))

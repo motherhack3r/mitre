@@ -10,8 +10,6 @@ getCWEData(verbose = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}
-
-\item{cwes.file}{raw xml file}
 }
 \value{
 data frame
