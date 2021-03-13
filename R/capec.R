@@ -14,34 +14,34 @@ getCAPECData <- function(verbose = FALSE) {
   # CAPEC VIEWs
   if (verbose) print("[.][CAPEC] Parsing CAPEC Views ...")
   views <-
-    data.frame(id = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@ID")),
-               name = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Name")),
-               type = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Type")),
-               status = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/@Status")),
-               description = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:View/capec:Objective")),
+    data.frame(id = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:View/@ID")),
+               name = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:View/@Name")),
+               type = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:View/@Type")),
+               status = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:View/@Status")),
+               description = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:View/capec:Objective")),
                stringsAsFactors = FALSE)
   views$id <- paste0("CAPEC-", views$id)
 
   # CAPEC CATEGORIES
   if (verbose) print("[.][CAPEC] Parsing CAPEC Categories ...")
   categories <-
-    data.frame(id = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@ID")),
-               name = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Name")),
-               status = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/@Status")),
-               description = rvest::html_text(rvest::xml_nodes(doc, xpath = "//capec:Category/capec:Summary")),
+    data.frame(id = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:Category/@ID")),
+               name = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:Category/@Name")),
+               status = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:Category/@Status")),
+               description = rvest::html_text(rvest::html_elements(doc, xpath = "//capec:Category/capec:Summary")),
                stringsAsFactors = FALSE)
   categories$id <- paste0("CAPEC-", categories$id)
 
 
   if (verbose) print("[.][CAPEC] Adding Taxonomy Mappings as network edges ...")
-  raw.capec.categs <- rvest::xml_nodes(doc, xpath = "//capec:Category")
+  raw.capec.categs <- rvest::html_elements(doc, xpath = "//capec:Category")
   kk <- lapply(raw.capec.categs,
                function(x) {
-                 kl <- rvest::xml_nodes(x, xpath = "capec:Taxonomy_Mappings/capec:Taxonomy_Mapping")
+                 kl <- rvest::html_elements(x, xpath = "capec:Taxonomy_Mappings/capec:Taxonomy_Mapping")
                  k<-lapply(kl,
                            function(y) {
-                             eids <- xml2::xml_text(rvest::xml_nodes(y, xpath="capec:Entry_ID"))
-                             enam <- xml2::xml_text(rvest::xml_nodes(y,xpath="capec:Entry_Name"))
+                             eids <- xml2::xml_text(rvest::html_elements(y, xpath="capec:Entry_ID"))
+                             enam <- xml2::xml_text(rvest::html_elements(y,xpath="capec:Entry_Name"))
                              data.frame(taxonomy_id=ifelse(identical(eids, character(0)), NA, eids),
                                         taxonomy_name=ifelse(identical(enam, character(0)), NA, enam),
                                         stringsAsFactors = FALSE)
@@ -64,7 +64,7 @@ getCAPECData <- function(verbose = FALSE) {
 
   # CAPEC ATTACK PATTERNs
   if (verbose) print("[.][CAPEC] Parsing CAPEC Patterns ...")
-  raw.capec.atcks <- rvest::xml_nodes(doc, xpath = "//capec:Attack_Pattern")
+  raw.capec.atcks <- rvest::html_elements(doc, xpath = "//capec:Attack_Pattern")
   att.id <- paste0("CAPEC-", sapply(raw.capec.atcks,
                    function(x)
                      rvest::html_text(rvest::xml_node(x, xpath="./@ID"))))
@@ -79,13 +79,13 @@ getCAPECData <- function(verbose = FALSE) {
                               rvest::html_text(rvest::xml_node(x, xpath="./@Abstraction")))
   att.descr <- sapply(raw.capec.atcks,
                       function(x)
-                        rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Description")))
+                        rvest::html_text(rvest::html_elements(x, xpath = "capec:Description")))
 
   if (verbose) print("[.][CAPEC] Extracting relatec attack patterns ...")
   kk <- lapply(raw.capec.atcks,
                function(x) {
-                 data.frame(id = rvest::html_text(rvest::xml_nodes(x, xpath=".//capec:Related_Attack_Pattern/@CAPEC_ID")),
-                            nature = rvest::html_text(rvest::xml_nodes(x, xpath=".//capec:Related_Attack_Pattern/@Nature")),
+                 data.frame(id = rvest::html_text(rvest::html_elements(x, xpath=".//capec:Related_Attack_Pattern/@CAPEC_ID")),
+                            nature = rvest::html_text(rvest::html_elements(x, xpath=".//capec:Related_Attack_Pattern/@Nature")),
                             stringsAsFactors = F)
                })
   names(kk) <- att.id
@@ -100,12 +100,12 @@ getCAPECData <- function(verbose = FALSE) {
   if (verbose) print("[.][CAPEC] Compacting pre-requisites ...")
   att.prerequisites <- sapply(raw.capec.atcks,
                               function(x)
-                                jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Prerequisites/capec:Prerequisite"))))
+                                jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Prerequisites/capec:Prerequisite"))))
 
   if (verbose) print("[.][CAPEC] Selecting alternate terms ...")
   att.alernate_terms <- sapply(raw.capec.atcks,
                               function(x)
-                                jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Alternate_Terms/capec:Alternate_Term/capec:Term"))))
+                                jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Alternate_Terms/capec:Alternate_Term/capec:Term"))))
 
 
   if (verbose) print("[.][CAPEC] Calculating typical severity ...")
@@ -143,12 +143,12 @@ getCAPECData <- function(verbose = FALSE) {
   if (verbose) print("[.][CAPEC] Listing required resources ...")
   att.reqsrcs <- sapply(raw.capec.atcks,
                               function(x)
-                                jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Resources_Required/capec:Resource"))))
+                                jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Resources_Required/capec:Resource"))))
 
   if (verbose) print("[.][CAPEC] Verifying indicators ...")
   att.indicators <- sapply(raw.capec.atcks,
                         function(x)
-                          jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Indicators/capec:Indicator"))))
+                          jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Indicators/capec:Indicator"))))
 
   if (verbose) print("[.][CAPEC] Writting consequences ...")
   att.consequences <- sapply(raw.capec.atcks,
@@ -166,12 +166,12 @@ getCAPECData <- function(verbose = FALSE) {
   if (verbose) print("[.][CAPEC] Detecting Mitigations ...")
   att.mitigations <- sapply(raw.capec.atcks,
                               function(x)
-                                jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Mitigations/capec:Mitigation"))))
+                                jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Mitigations/capec:Mitigation"))))
 
   if (verbose) print("[.][CAPEC] Collecting Example Instances ...")
   att.examples <- sapply(raw.capec.atcks,
                             function(x)
-                              jsonlite::toJSON(rvest::html_text(rvest::xml_nodes(x, xpath = "capec:Example_Instances/capec:Example"))))
+                              jsonlite::toJSON(rvest::html_text(rvest::html_elements(x, xpath = "capec:Example_Instances/capec:Example"))))
 
   if (verbose) print("[.][CAPEC] Adding CVE examples to network ...")
   capec2cve <- lapply(att.examples,
@@ -188,7 +188,7 @@ getCAPECData <- function(verbose = FALSE) {
   capec2cwe <- lapply(raw.capec.atcks,
                       function(x)
                         # XXX: Sometimes xml is empty
-                        data.frame(to = paste0("CWE-", xml2::xml_text(rvest::xml_nodes(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/@CWE_ID"))),
+                        data.frame(to = paste0("CWE-", xml2::xml_text(rvest::html_elements(x, xpath = "capec:Related_Weaknesses/capec:Related_Weakness/@CWE_ID"))),
                                    stringsAsFactors = FALSE))
   names(capec2cwe) <- att.id
   capec2cwe <- dplyr::bind_rows(capec2cwe, .id = "from")
@@ -200,11 +200,11 @@ getCAPECData <- function(verbose = FALSE) {
   if (verbose) print("[.][CAPEC] Adding Taxonomy Mappings as network edges ...")
   kk <- lapply(raw.capec.atcks,
                function(x) {
-                 kl <- rvest::xml_nodes(x, xpath = "capec:Taxonomy_Mappings/capec:Taxonomy_Mapping")
+                 kl <- rvest::html_elements(x, xpath = "capec:Taxonomy_Mappings/capec:Taxonomy_Mapping")
                  k<-lapply(kl,
                    function(y) {
-                     eids <- xml2::xml_text(rvest::xml_nodes(y, xpath="capec:Entry_ID"))
-                     enam <- xml2::xml_text(rvest::xml_nodes(y,xpath="capec:Entry_Name"))
+                     eids <- xml2::xml_text(rvest::html_elements(y, xpath="capec:Entry_ID"))
+                     enam <- xml2::xml_text(rvest::html_elements(y,xpath="capec:Entry_Name"))
                      data.frame(taxonomy_id=ifelse(identical(eids, character(0)), NA, eids),
                                 taxonomy_name=ifelse(identical(enam, character(0)), NA, enam),
                                 stringsAsFactors = FALSE)
