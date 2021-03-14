@@ -12,13 +12,13 @@ getNodeNeighbors(
 )
 }
 \arguments{
+\item{nodes}{MITRE Standard Id as character vector}
+
 \item{direction}{value should be: "from", "to" or "both"}
 
 \item{mitrenet}{MITRE network built with this package}
 
 \item{verbose}{default is FALSE}
-
-\item{node}{MITRE Standard Id}
 }
 \value{
 list of nodes and edges

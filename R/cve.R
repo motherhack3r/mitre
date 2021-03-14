@@ -26,7 +26,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   nodes$shape <- rep("rectangle", nrow(nodes))
   nodes$title <- nodes$description
   nodes$color <- rep("grey", nrow(nodes))
-  nodes$shadow <- rep(TRUE, nrow(nodes))
+  nodes$shadow <- rep(FALSE, nrow(nodes))
   nodes <- dplyr::select(nodes, c("id", "label", "group", "value", "shape",
                                   "title", "color", "shadow"))
 
@@ -42,6 +42,7 @@ getCVENetwork <- function(cve = data.frame(), verbose = FALSE) {
   edges$arrows <- rep("to", nrow(edges))
   edges$title <- rep("imply", nrow(edges))
   edges <- edges[-which(edges$to == "NVD-CWE-noinfo"), ]
+  edges <- edges[-which(edges$to == "NVD-CWE-Other"), ]
 
   # CPE -> CVE
   if (verbose) print(paste("[.][CVE] Searching relations with CPE ..."))

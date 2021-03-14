@@ -4,6 +4,7 @@ today <- as.character(Sys.Date())
 path.latest <- file.path("c:","DEVEL","datasets","mitre-datasets")
 file.current <- paste0(today, "_mitre_v", packageVersion("mitre"), ".rds")
 file.latest <- "mitre_latest.rds"
+path.datasets <- "C:/DEVEL/datasets/mitre-datasets/"
 
 print(paste0("START at ", as.character(Sys.time())))
 
