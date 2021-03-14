@@ -81,6 +81,7 @@ omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose 
 #' @return igraph
 #' @export
 as_igraph <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
+  mitrenet <- omitDeprecated(mitrenet, verbose)
   nodes <- mitrenet$nodes
   edges <- mitrenet$edges
 
