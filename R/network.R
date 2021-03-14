@@ -54,8 +54,8 @@ omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose 
   nodes <- mitrenet$nodes
   nodes <- unique(nodes[!nodes$shadow, ])
 
-  # Select edges related to nodes
-  edges <- mitrenet$edges[((mitrenet$edges$from %in% nodes$id) |
+  # Select edges related to any node
+  edges <- mitrenet$edges[((mitrenet$edges$from %in% nodes$id) &
                              (mitrenet$edges$to %in% nodes$id)), ]
   edges <- unique(edges)
 
@@ -63,8 +63,41 @@ omitDeprecated <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose 
   nodes <- nodes[((nodes$id %in% edges$from) |
                     (nodes$id %in% edges$to)), ]
 
+  # Select edges related to nodes
+  edges <- edges[((edges$from %in% nodes$id) &
+                    (edges$to %in% nodes$id)), ]
+  edges <- unique(edges)
+
   mitrenet$nodes <- nodes
   mitrenet$edges <- edges
 
   return(mitrenet)
+}
+
+#' Given a mitre network it returns the same as igraph
+#'
+#' @param mitrenet MITRE network built with this package
+#' @param verbose default is FALSE
+#'
+#' @return igraph
+#' @export
+as_igraph <- function(mitrenet = getLatestDataSet()[["mitrenet"]], verbose = FALSE) {
+  nodes <- mitrenet$nodes
+  edges <- mitrenet$edges
+
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], by = c("from"="id"))
+  edges$src <- edges$name
+  edges$name <- NULL
+  edges <- dplyr::left_join(edges, nodes[, c("id", "name")], by = c("to"="id"))
+  edges$dst <- edges$name
+  edges$name <- NULL
+
+  # kk <- nodes[!(nodes$id %in% unique(c(edges$from, edges$to))), ]
+  # kk <- edges[is.na(edges$to) | is.na(edges$from),]
+  # kk <- edges[is.na(edges$src) | is.na(edges$dst),]
+  # kk <- nodes[which(nodes$shadow),]
+
+  ig <- igraph::graph_from_data_frame(edges, directed = T, vertices = nodes)
+
+  return(ig)
 }
