@@ -1,4 +1,5 @@
-mitredata <- readRDS("C:/DEVEL/datasets/mitre-datasets/latest/mitre_latest.rds")
+# mitredata <- readRDS("C:/DEVEL/datasets/mitre-datasets/latest/mitre_latest.rds")
+mitredata <- mitre::getLatestDataSet(T)
 
 mitrenet <- mitre::omitDeprecated(mitredata$mitrenet)
 nodes <- mitrenet$nodes
