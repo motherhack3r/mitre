@@ -15,7 +15,6 @@ option_list <- list(
 today <- as.character(Sys.Date())
 
 opt <- optparse::parse_args(optparse::OptionParser(option_list=option_list))
-print(opt$verbose)
 
 if (dir.exists(opt$output)) {
   if (opt$verbose) print(paste0("START at ", as.character(Sys.time())))
@@ -29,20 +28,20 @@ if (dir.exists(opt$output)) {
 
   library(mitre)
 
-  # mitredata <- mitre::parseRawData(verbose = opt$verbose)
-  # if (opt$verbose) print(paste0("Parsed at ", as.character(Sys.time())))
-  # if (opt$verbose) print(paste0("NODES: ", nrow(mitredata$mitrenet$nodes)))
-  # if (opt$verbose) print(paste0("EDGES: ", nrow(mitredata$mitrenet$edges)))
-  #
-  # file.save <- file.path(path.beta, file.beta)
-  # if (opt$verbose) print(paste0("Saving ", file.save))
-  # saveRDS(object = mitredata, file = file.save)
-  #
-  # file.save <- file.path(path.latest, file.latest)
-  # if (opt$verbose) print(paste0("Saving ", file.save))
-  # saveRDS(object = mitredata, file = file.save)
-  #
-  # if (opt$verbose) print(paste0("END at ", as.character(Sys.time())))
+  mitredata <- mitre::parseRawData(verbose = opt$verbose)
+  if (opt$verbose) print(paste0("Parsed at ", as.character(Sys.time())))
+  if (opt$verbose) print(paste0("NODES: ", nrow(mitredata$mitrenet$nodes)))
+  if (opt$verbose) print(paste0("EDGES: ", nrow(mitredata$mitrenet$edges)))
+
+  file.save <- file.path(path.beta, file.beta)
+  if (opt$verbose) print(paste0("Saving ", file.save))
+  saveRDS(object = mitredata, file = file.save)
+
+  file.save <- file.path(path.latest, file.latest)
+  if (opt$verbose) print(paste0("Saving ", file.save))
+  saveRDS(object = mitredata, file = file.save)
+
+  if (opt$verbose) print(paste0("END at ", as.character(Sys.time())))
 
 } else {
   warning(paste0("Path: ", opt$output, " does NOT exist."))

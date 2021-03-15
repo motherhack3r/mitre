@@ -1,3 +1,6 @@
+# mitre (development version)
+* Rscript to easy automate building latest data sets
+
 # mitre 0.5.1
 * Added network relations schema
 * Include CAR in network
