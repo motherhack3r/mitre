@@ -5,7 +5,7 @@
 #'
 #' @return data frame
 buildAttckTactics <- function(verbose = TRUE) {
-  attck.tact <- parseAttck.Tactics()
+  attck.tact <- parseAttck.Tactics(verbose)
 
   if (verbose) print(paste("[.][ATT&CK][CTI] Tidy Tactics data ..."))
   attck.tact <- attck.tact[, c("domain", "type", "entry.id", "entry.title",
@@ -665,10 +665,10 @@ parseAttckmodel.rels <- function(domain = sample(c("pre-attack", "ics-attack",
 #' }
 parseAttck.Tactics <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI] Parsing Tactics init ..."))
-  df.pre <- parseAttckmodel.tact(domain = "pre-attack")
-  df.ent <- parseAttckmodel.tact(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.tact(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.tact(domain = "ics-attack")
+  df.pre <- parseAttckmodel.tact(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.tact(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.tact(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.tact(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
@@ -689,10 +689,10 @@ parseAttck.Tactics <- function(verbose = TRUE) {
 #' }
 parseAttck.Techniques <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Techniques] init ..."))
-  df.pre <- parseAttckmodel.tech(domain = "pre-attack")
-  df.ent <- parseAttckmodel.tech(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.tech(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.tech(domain = "ics-attack")
+  df.pre <- parseAttckmodel.tech(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.tech(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.tech(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.tech(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
@@ -713,10 +713,10 @@ parseAttck.Techniques <- function(verbose = TRUE) {
 #' }
 parseAttck.Groups <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Groups] init ..."))
-  df.pre <- parseAttckmodel.group(domain = "pre-attack")
-  df.ent <- parseAttckmodel.group(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.group(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.group(domain = "ics-attack")
+  df.pre <- parseAttckmodel.group(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.group(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.group(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.group(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
@@ -736,10 +736,10 @@ parseAttck.Groups <- function(verbose = TRUE) {
 #' }
 parseAttck.Software <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Software] init ..."))
-  df.pre <- parseAttckmodel.soft(domain = "pre-attack")
-  df.ent <- parseAttckmodel.soft(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.soft(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.soft(domain = "ics-attack")
+  df.pre <- parseAttckmodel.soft(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.soft(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.soft(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.soft(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
@@ -759,10 +759,10 @@ parseAttck.Software <- function(verbose = TRUE) {
 #' }
 parseAttck.Mitigation <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Mitigation] init ..."))
-  df.pre <- parseAttckmodel.miti(domain = "pre-attack")
-  df.ent <- parseAttckmodel.miti(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.miti(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.miti(domain = "ics-attack")
+  df.pre <- parseAttckmodel.miti(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.miti(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.miti(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.miti(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob, df.ics)
 
@@ -783,10 +783,10 @@ parseAttck.Mitigation <- function(verbose = TRUE) {
 #' }
 parseAttck.Relationships <- function(verbose = TRUE) {
   if (verbose) print(paste("[.][ATT&CK][CTI][parseAttck.Relationships] init ..."))
-  df.pre <- parseAttckmodel.rels(domain = "pre-attack")
-  df.ent <- parseAttckmodel.rels(domain = "enterprise-attack")
-  df.mob <- parseAttckmodel.rels(domain = "mobile-attack")
-  df.ics <- parseAttckmodel.rels(domain = "ics-attack")
+  df.pre <- parseAttckmodel.rels(domain = "pre-attack", verbose = verbose)
+  df.ent <- parseAttckmodel.rels(domain = "enterprise-attack", verbose = verbose)
+  df.mob <- parseAttckmodel.rels(domain = "mobile-attack", verbose = verbose)
+  df.ics <- parseAttckmodel.rels(domain = "ics-attack", verbose = verbose)
 
   df <- dplyr::bind_rows(df.pre, df.ent, df.mob)
   df <- dplyr::select(tidyr::separate(df, "source.ref", c("source.type", "b"),
