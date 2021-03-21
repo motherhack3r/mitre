@@ -26,12 +26,43 @@ test_that("mitre att&ck techniques data frame", {
   df <- mitredata$standards$attck$techniques
   expect_true(is.data.frame(df))
   expect_true(ncol(df) == 30)
-  # expect_true(identical(names(df), c("id","name","description","long_description")))
-  # expect_true(all(apply(df, 2, class) == "character"))
   # Check if any column is all NA
   expect_false(any(apply(df, 2, function(x) all(is.na(x)))))
   # Check column id format
   expect_true(all(grepl(pattern = "T\\d+[\\.\\d+]?", df$mitreid)))
+})
+
+test_that("mitre att&ck mitigations data frame", {
+  df <- mitredata$standards$attck$mitigations
+  expect_true(is.data.frame(df))
+  expect_true(ncol(df) == 13)
+  # Check if any column is all NA
+  expect_false(any(apply(df, 2, function(x) all(is.na(x)))))
+  # Check column id format
+  expect_true(all(grepl(pattern = "(M|T)\\d+", df$mitreid)))
+  # Check old id's starting with T as deprecated
+  expect_true(all(df[grepl(pattern = "T\\d+", df$mitreid), "x_mitre_deprecated"]))
+
+})
+
+test_that("mitre att&ck groups data frame", {
+  df <- mitredata$standards$attck$groups
+  expect_true(is.data.frame(df))
+  expect_true(ncol(df) == 15)
+  # Check if any column is all NA
+  expect_false(any(apply(df, 2, function(x) all(is.na(x)))))
+  # Check column id format
+  expect_true(all(grepl(pattern = "G\\d+", df$mitreid)))
+})
+
+test_that("mitre att&ck software data frame", {
+  df <- mitredata$standards$attck$software
+  expect_true(is.data.frame(df))
+  expect_true(ncol(df) == 16)
+  # Check if any column is all NA
+  expect_false(any(apply(df, 2, function(x) all(is.na(x)))))
+  # Check column id format
+  expect_true(all(grepl(pattern = "S\\d+", df$mitreid)))
 })
 
 test_that("mitre att&ck network", {
