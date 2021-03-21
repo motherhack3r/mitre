@@ -36,7 +36,9 @@ Suggests:
     rmarkdown,
     utils,
     shiny,
-    curl
+    curl,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Config/testthat/edition: 3
