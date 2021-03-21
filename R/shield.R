@@ -230,7 +230,7 @@ getShieldNodes <- function() {
   df$label <- df$id
   df$group <- rep("shield-opportunity", nrow(df))
   df$value <- rep(2, nrow(df))
-  df$shape <- rep("star", nrow(df))
+  df$shape <- rep("vrectangle", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("khaki", nrow(df))
   df$description <- NULL
@@ -243,7 +243,7 @@ getShieldNodes <- function() {
   df$label <- df$id
   df$group <- rep("shield-procedure", nrow(df))
   df$value <- rep(4, nrow(df))
-  df$shape <- rep("box", nrow(df))
+  df$shape <- rep("crectangle", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("yellow", nrow(df))
   df$description <- NULL
@@ -256,7 +256,7 @@ getShieldNodes <- function() {
   df$label <- df$id
   df$group <- rep("shield-usecase", nrow(df))
   df$value <- rep(4, nrow(df))
-  df$shape <- rep("ellipse", nrow(df))
+  df$shape <- rep("circle", nrow(df))
   df$title <- paste0("<p><b>", df$description, "</b></p>")
   df$color <- rep("purple", nrow(df))
   df$description <- NULL
