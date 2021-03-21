@@ -34,7 +34,7 @@ test_that("mitre att&ck techniques data frame", {
   expect_true(all(grepl(pattern = "T\\d+[\\.\\d+]?", df$mitreid)))
 })
 
-test_that("mitre shield network", {
+test_that("mitre att&ck network", {
   net <- mitredata$standards$shield$shieldnet
   expect_true(is.list(net))
   expect_true(length(net) == 2)
@@ -42,8 +42,10 @@ test_that("mitre shield network", {
   # Check nodes
   expect_true(ncol(net$nodes) == 9)
   expect_true(all(names(net$nodes) %in% nodenames))
+  expect_false(any(apply(net$nodes, 2, function(x) all(is.na(x)))))
   # Check edges
   expect_true(ncol(net$edges) == 7)
   expect_true(all(names(net$edges) %in% nodeedges))
+  expect_false(any(apply(net$edges, 2, function(x) all(is.na(x)))))
 })
 #> Test passed 😸

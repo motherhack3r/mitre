@@ -80,8 +80,10 @@ test_that("mitre shield network", {
   # Check nodes
   expect_true(ncol(net$nodes) == 9)
   expect_true(all(names(net$nodes) %in% nodenames))
+  expect_false(any(apply(net$nodes, 2, function(x) all(is.na(x)))))
   # Check edges
   expect_true(ncol(net$edges) == 7)
   expect_true(all(names(net$edges) %in% nodeedges))
+  expect_false(any(apply(net$edges, 2, function(x) all(is.na(x)))))
 })
 #> Test passed 😸
