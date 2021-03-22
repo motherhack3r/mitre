@@ -6,8 +6,9 @@
 #'
 #' @return data frame
 getCWEData <- function(verbose = FALSE) {
-  cwes.file <- "data-raw/cwec_v4.3.xml"
-  if (verbose) print("[.][CWE] Indexing CWE XML raw file ...")
+  cwexmlfile <- dir(path = "data-raw", pattern = "^cwe.*\\.xml$")
+  cwes.file <- file.path("data-raw", cwexmlfile)
+  if (verbose) print(paste("[.][CWE] Indexing CWE raw file", cwexmlfile, "..."))
   doc <- rvest::read_html(cwes.file)
   cwes.weaknesses <- ParseCWEWeaknesses(doc, cwes.file, verbose)
   cwes.categories <- ParseCWECategories(doc, cwes.file, verbose)
