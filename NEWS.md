@@ -1,5 +1,6 @@
 # mitre (development version)
 * Rscript to easy automate building latest data sets
+* CWE updated to parse v4.4
 
 # mitre 0.5.1
 * Added network relations schema
