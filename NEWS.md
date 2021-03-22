@@ -1,6 +1,8 @@
-# mitre (development version)
+# mitre 0.5.2
+* New function as_igraph that transform mitre list of nodes and edges to igraph
 * Rscript to easy automate building latest data sets
 * CWE updated to parse v4.4
+* Added some unit tests for parsed data sets
 
 # mitre 0.5.1
 * Added network relations schema
