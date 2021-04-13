@@ -1,10 +1,11 @@
 #' Parse tactics
 #'
 #' @param verbose Default set as FALSE
+#' @param deprecated Default set as FALSE, change it if you want to include deprecated objects
 #' @importFrom rlang .data
 #'
 #' @return data frame
-buildAttckTactics <- function(verbose = TRUE) {
+buildAttckTactics <- function(verbose = FALSE, deprecated = FALSE) {
   attck.tact <- parseAttck.Tactics(verbose)
 
   if (verbose) print(paste("[.][ATT&CK][CTI] Tidy Tactics data ..."))
@@ -20,10 +21,11 @@ buildAttckTactics <- function(verbose = TRUE) {
                          "x_mitre_shortname", "created", "created_by_ref", "modified", "id",
                          "url", "x_mitre_deprecated", "revoked")
 
+  if (!deprecated) attck.tact <- attck.tact[!attck.tact$x_mitre_deprecated, ]
   return(attck.tact)
 }
 
-buildAttckTechniques <- function(verbose = TRUE) {
+buildAttckTechniques <- function(verbose = FALSE, deprecated = FALSE) {
   attck.tech <- parseAttck.Techniques(verbose)
   attck.tech <- attck.tech[, c("domain", "type", "entry.id", "entry.title",
                               "entry.text", "description", "platform", "data.sources",
@@ -47,10 +49,11 @@ buildAttckTechniques <- function(verbose = TRUE) {
   attck.tech$modified <- as.POSIXct.POSIXlt(strptime(attck.tech$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.tech$created <- as.POSIXct.POSIXlt(strptime(attck.tech$created, format = "%Y-%m-%dT%H:%M:%S"))
 
+  if (!deprecated) attck.tech <- attck.tech[!attck.tech$x_mitre_deprecated, ]
   return(attck.tech)
 }
 
-buildAttckMitigations <- function(verbose = TRUE) {
+buildAttckMitigations <- function(verbose = FALSE, deprecated = FALSE) {
   attck.miti <- parseAttck.Mitigation(verbose)
   attck.miti <- attck.miti[,colSums(is.na(attck.miti)) < nrow(attck.miti)]
   names(attck.miti) <- c("domain", "id.cti", "type", "modified", "created",
@@ -64,10 +67,11 @@ buildAttckMitigations <- function(verbose = TRUE) {
   attck.miti$created <- as.POSIXct.POSIXlt(strptime(attck.miti$created, format = "%Y-%m-%dT%H:%M:%S"))
   attck.miti$revoked <- rep(FALSE, nrow(attck.miti))
 
+  if (!deprecated) attck.miti <- attck.miti[!attck.miti$x_mitre_deprecated, ]
   return(attck.miti)
 }
 
-buildAttckGroups <- function(verbose = TRUE) {
+buildAttckGroups <- function(verbose = FALSE, deprecated = FALSE) {
   attck.grup <- parseAttck.Groups(verbose)
   attck.grup <- attck.grup[,colSums(is.na(attck.grup)) < nrow(attck.grup)]
   names(attck.grup) <- c("domain", "id.cti", "type", "modified", "created",
@@ -88,10 +92,11 @@ buildAttckGroups <- function(verbose = TRUE) {
   attck.grup <- unique(attck.grup)
   attck.grup <- cbind(domain = rep("enterprise-attack", nrow(attck.grup)), attck.grup)
 
+  if (!deprecated) attck.grup <- attck.grup[!attck.grup$x_mitre_deprecated, ]
   return(attck.grup)
 }
 
-buildAttckSoftware <- function(verbose = TRUE) {
+buildAttckSoftware <- function(verbose = FALSE, deprecated = FALSE) {
   attck.soft <- parseAttck.Software(verbose)
   attck.soft <- attck.soft[,colSums(is.na(attck.soft)) < nrow(attck.soft)]
   names(attck.soft) <- c("domain", "id.cti", "type", "modified", "created",
@@ -108,10 +113,12 @@ buildAttckSoftware <- function(verbose = TRUE) {
   # Clean duplicated and incomplete entries
   attck.soft <- attck.soft[!grepl(pattern = "collaborate.mitre.org", attck.soft$url), ]
 
+  if (!deprecated) attck.soft <- attck.soft[!attck.soft$x_mitre_deprecated, ]
+
   return(attck.soft)
 }
 
-buildAttckRelations <- function(verbose = TRUE) {
+buildAttckRelations <- function(verbose = FALSE, deprecated = FALSE) {
   attck.rels <- parseAttck.Relationships(verbose)
   attck.rels <- attck.rels[,colSums(is.na(attck.rels)) < nrow(attck.rels)]
   names(attck.rels) <- c("domain", "id.cti", "type", "modified", "created",
@@ -124,6 +131,7 @@ buildAttckRelations <- function(verbose = TRUE) {
   attck.rels$modified <- as.POSIXct.POSIXlt(strptime(attck.rels$modified, format = "%Y-%m-%dT%H:%M:%S"))
   attck.rels$created <- as.POSIXct.POSIXlt(strptime(attck.rels$created, format = "%Y-%m-%dT%H:%M:%S"))
 
+  if (!deprecated) attck.rels <- attck.rels[!attck.rels$x_mitre_deprecated, ]
   return(attck.rels)
 }
 

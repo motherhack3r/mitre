@@ -4,10 +4,12 @@
 \alias{buildAttckTactics}
 \title{Parse tactics}
 \usage{
-buildAttckTactics(verbose = TRUE)
+buildAttckTactics(verbose = FALSE, deprecated = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}
+
+\item{deprecated}{Default set as FALSE, change it if you want to include deprecated objects}
 }
 \value{
 data frame
