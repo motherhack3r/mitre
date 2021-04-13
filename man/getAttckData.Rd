@@ -3,19 +3,21 @@
 \name{getAttckData}
 \alias{getAttckData}
 \title{ETL process that download current attck definitions and return a list of
-data frames for each object. The list also contains a visNetwork object with
+data frames for each object. The list also contains a graph as list with
 ATT&CK objects as nodes and all relations as edges.}
 \usage{
-getAttckData(verbose = FALSE)
+getAttckData(verbose = FALSE, deprecated = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}
+
+\item{deprecated}{Default set as FALSE, change it if you want to include deprecated objects}
 }
 \value{
 list of data frames
 }
 \description{
 ETL process that download current attck definitions and return a list of
-data frames for each object. The list also contains a visNetwork object with
+data frames for each object. The list also contains a graph as list with
 ATT&CK objects as nodes and all relations as edges.
 }
