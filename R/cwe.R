@@ -5,7 +5,7 @@
 #' @param verbose Default set as FALSE
 #'
 #' @return data frame
-getCWEData <- function(verbose = FALSE) {
+getCWEData <- function(verbose = FALSE, deprecated = FALSE) {
   cwexmlfile <- dir(path = "data-raw", pattern = "^cwe.*\\.xml$")
   cwes.file <- file.path("data-raw", cwexmlfile)
   if (verbose) print(paste("[.][CWE] Indexing CWE raw file", cwexmlfile, "..."))
@@ -16,14 +16,16 @@ getCWEData <- function(verbose = FALSE) {
   cwes <- dplyr::bind_rows(cwes.weaknesses, cwes.categories, cwes.views)
   cwes$CWE_Type <- as.factor(cwes$CWE_Type)
 
-  cwenet <- getCWENetwork(cwes, verbose)
+  cwenet <- getCWENetwork(cwes, verbose, deprecated)
   cwe <- list(cwe = cwes, cwenet = cwenet)
 
   return(cwe)
 }
 
-getCWENetwork <- function(cwes, verbose) {
+getCWENetwork <- function(cwes, verbose, deprecated) {
   if (verbose) print("[-][CWE] Collecting CWE nodes ...")
+  if (!deprecated) cwes <- cwes[!(cwes$Status %in% c("Deprecated", "Obsolete")), ]
+
   cwenodes <- cwes[, c("Code_Standard", "Name", "Description", "Status", "Abstraction")]
   names(cwenodes) <- c("id", "label", "title", "shadow", "group")
   cwenodes$shadow <- cwenodes$shadow %in% c("Deprecated", "Obsolete", "Incomplete")
