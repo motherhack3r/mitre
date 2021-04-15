@@ -3,6 +3,7 @@
 #' CVE objects as nodes and all relations as edges.
 #'
 #' @param verbose Default set as FALSE
+#' @param deprecated Default set as FALSE
 #'
 #' @return data frame
 getCWEData <- function(verbose = FALSE, deprecated = FALSE) {

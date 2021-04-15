@@ -10,6 +10,8 @@ getCWEData(verbose = FALSE, deprecated = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}
+
+\item{deprecated}{Default set as FALSE}
 }
 \value{
 data frame
