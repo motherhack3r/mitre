@@ -21,9 +21,8 @@ getCPEData <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictio
   }
 }
 
-downloadCPE_API <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictionary_v2.3.json") {
+downloadCPE_API <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictionary_v2.3.json", pageini = 600000) {
   baseURL <- "https://services.nvd.nist.gov/rest/json/cpes/1.0?addOns=cves"
-  pageini <- 273200
   seed <- sample(5:49, 1)
   maxitem <- seed * 100
 
@@ -163,8 +162,6 @@ parseCPEjson <- function(verbose = F, savepath = "data-raw/official-cpe-dictiona
                   "refs", "deprecated", "lastModifiedDate", "vulnerabilities")]
 
   if (verbose) print("[.][CPE] Extracting CVE references...")
-
-
   cpe2cve <- lapply(cpes$vulnerabilities, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe2cve <- sapply(cpe2cve, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe2cve <- data.frame(from = cpes$cpe23Uri, to = cpe2cve, stringsAsFactors = FALSE)
