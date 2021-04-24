@@ -11,3 +11,9 @@ There was 1 NOTE:
   Unable to find GhostScript executable to run checks on size reduction
 
 I added a vignette as PDF to easy view some examples.
+
+## RHUB check results
+* Fedora build execution halted with an error: 
+  Bioconductor version '3.13' requires R version '4.1'; R version is too new
+  Ref: https://github.com/r-hub/rhub/issues/462
+  This package does not depend on Bioconductor
