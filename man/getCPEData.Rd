@@ -8,7 +8,7 @@ CPE objects as nodes and all relations as edges.}
 \usage{
 getCPEData(
   verbose = FALSE,
-  savepath = "data-raw/official-cpe-dictionary_v2.3.xml"
+  savepath = "data-raw/official-cpe-dictionary_v2.3.json"
 )
 }
 \arguments{

@@ -22,6 +22,7 @@ getCPEData <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictio
 }
 
 downloadCPE_API <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictionary_v2.3.json", pageini = 600000) {
+  # NOTE: This process take more than 3h. It is caused by server rate limits.
   baseURL <- "https://services.nvd.nist.gov/rest/json/cpes/1.0?addOns=cves"
   seed <- sample(5:49, 1)
   maxitem <- seed * 100
