@@ -6,18 +6,18 @@
 #' @param savepath file path to store CPE dictionary
 #'
 #' @return list of data frames
-getCPEData <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictionary_v2.3.xml") {
+getCPEData <- function(verbose = FALSE, savepath = "data-raw/official-cpe-dictionary_v2.3.json") {
   if (!file.exists(savepath)) {
-    savepath <- "data-raw/official-cpe-dictionary_v2.3.json"
+    savepath <- "data-raw/official-cpe-dictionary_v2.3.xml"
     if (!file.exists(savepath)) {
       # download from gitrepo
     } else {
-      if (verbose) print("[.][CPE] Parsing JSON raw data...")
-      cpes <- parseCPEjson(verbose, savepath)
+      if (verbose) print("[.][CPE] Parsing XML raw data...")
+      cpes <- parseCPExml(verbose, savepath)
     }
   } else {
-    if (verbose) print("[.][CPE] Parsing XML raw data...")
-    cpes <- parseCPExml(verbose, savepath)
+    if (verbose) print("[.][CPE] Parsing JSON raw data...")
+    cpes <- parseCPEjson(verbose, savepath)
   }
 }
 
@@ -65,7 +65,7 @@ downloadCPE_API <- function(verbose = FALSE, savepath = "data-raw/official-cpe-d
   jsonlite::write_json(rawdf, savepath)
 }
 
-parseCPExml <- function(verbose = F, savepath = "data-raw/official-cpe-dictionary_v2.3.json") {
+parseCPExml <- function(verbose = F, savepath = "data-raw/official-cpe-dictionary_v2.3.xml") {
   if (verbose) print("[.][CPE] Indexing XML and namespace schemas...")
   doc <- xml2::read_xml(savepath)
 
