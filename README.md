@@ -61,8 +61,8 @@ This example shows the number of ATT&CK Techniques by domain:
 ``` r
 table(mitredata$standards$attck$techniques$domain)
 #> 
-#> enterprise-attack        ics-attack     mobile-attack        pre-attack 
-#>               670                81               104               174
+#> enterprise-attack        ics-attack     mobile-attack 
+#>               659                81               103
 ```
 
 ## Network visualization
@@ -91,7 +91,7 @@ set](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat).
 -   [Exploratory
     analysis](https://github.com/Barbero95/DataDrivenSecurity-Project):
     developed by [barbero95](https://github.com/Barbero95) and
-    [marta](https://github.com/martavilab).
+    [Marta](https://github.com/martavilab).
 -   Sample incidents data set from rpackage
     [attckr](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat)
     developed by [Bob Rudis](https://github.com/hrbrmstr).
