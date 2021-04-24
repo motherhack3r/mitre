@@ -155,9 +155,15 @@ downloadRawData <- function(verbose = FALSE) {
 
   # CPE
   if (verbose) print(paste("[-][CPE] Download latest XML definitions ..."))
-  cpe.url  <- "http://static.nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
-  utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
-  utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw", overwrite = T)
+  cpe.url  <- "https://nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
+  # utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
+  r <- httr::GET(cpe.url, httr::write_disk("data-raw/cpe-mitre.xml.zip", overwrite = TRUE))
+  if (r$status_code == 200) {
+    utils::unzip(zipfile = "data-raw/cpe-mitre.xml.zip", exdir = "data-raw", overwrite = T)
+  } else {
+    downloadCPE_API(verbose)
+  }
+
 
   # CAPEC
   if (verbose) print(paste("[-][CAPEC] Download latest XML definitions ..."))
