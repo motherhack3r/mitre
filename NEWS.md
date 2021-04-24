@@ -1,4 +1,7 @@
-# mitre (development version)
+# mitre 0.6.0
+* Removed deprecated nodes in mitre network, kept in standards data frames
+* Raw data is downloaded from github repo to avoid official servers rate limitations
+* CPE source changed to JSON. It include more references to CVE.
 
 # mitre 0.5.2
 * New function as_igraph that transform mitre list of nodes and edges to igraph
