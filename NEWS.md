@@ -1,3 +1,5 @@
+# mitre (development version)
+
 # mitre 0.6.0
 * Removed deprecated nodes in mitre network, kept in standards data frames
 * Raw data is downloaded from github repo to avoid official servers rate limitations
