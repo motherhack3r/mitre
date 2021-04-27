@@ -184,6 +184,11 @@ parseCPEjson <- function(verbose = F, savepath = "data-raw/official-cpe-dictiona
   cpenodes$color <- rep("honeydew", nrow(cpenodes))
   cpenodes$team <- rep("SYSADMIN", nrow(cpenodes))
 
+  # remove nodes without edges
+  selected <- names(cpenodes)
+  cpenodes <- dplyr::inner_join(cpenodes, cpe2cve[, c("from", "to")], by = c("id" = "from"), keep = F)
+  cpenodes <- unique(cpenodes[, selected])
+
   cpes <- list(cpes = cpes,
                cpenet = list(nodes = cpenodes,
                              edges = cpe2cve))
