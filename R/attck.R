@@ -1,30 +1,31 @@
 #' ETL process that download current attck definitions and return a list of
-#' data frames for each object. The list also contains a visNetwork object with
+#' data frames for each object. The list also contains a graph as list with
 #' ATT&CK objects as nodes and all relations as edges.
 #'
 #' @param verbose Default set as FALSE
+#' @param deprecated Default set as FALSE, change it if you want to include deprecated objects
 #'
 #' @return list of data frames
-getAttckData <- function(verbose = FALSE) {
+getAttckData <- function(verbose = FALSE, deprecated = FALSE) {
   if (verbose) print(paste("[-][ATT&CK] Starting parsers ..."))
 
   if (verbose) print(paste("[-][ATT&CK] Building TACTICS ..."))
-  tactics <- buildAttckTactics(verbose)
+  tactics <- buildAttckTactics(verbose, deprecated)
 
   if (verbose) print(paste("[-][ATT&CK] Building TECHNIQUES ..."))
-  techniques <- buildAttckTechniques(verbose)
+  techniques <- buildAttckTechniques(verbose, deprecated)
 
   if (verbose) print(paste("[-][ATT&CK] Building MITIGATIONS ..."))
-  mitigations <- buildAttckMitigations(verbose)
+  mitigations <- buildAttckMitigations(verbose, deprecated)
 
   if (verbose) print(paste("[-][ATT&CK] Building GROUPS ..."))
-  groups <- buildAttckGroups(verbose)
+  groups <- buildAttckGroups(verbose, deprecated)
 
   if (verbose) print(paste("[-][ATT&CK] Building SOFTWARE ..."))
-  software <- buildAttckSoftware(verbose)
+  software <- buildAttckSoftware(verbose, deprecated)
 
   if (verbose) print(paste("[-][ATT&CK] Building RELATIONS ..."))
-  relations <- buildAttckRelations(verbose)
+  relations <- buildAttckRelations(verbose, deprecated)
 
   attck_nodes <- createATTCKnodes(tactics, techniques, mitigations,
                                   groups, software, verbose)
@@ -51,6 +52,8 @@ getAttckData <- function(verbose = FALSE) {
 #' @param software data.frame
 #' @param relations data.frame
 #' @param verbose Default set as FALSE
+#'
+#' @importFrom stats complete.cases
 #'
 #' @return data.frame
 createATTCKedges <- function(tactics, techniques, mitigations, groups, software, relations, verbose) {
@@ -148,6 +151,7 @@ createATTCKedges <- function(tactics, techniques, mitigations, groups, software,
   if (verbose) print(paste("[.][ATT&CK] Adding", nrow(tech2cve), "CVE relationships ..."))
   attck_edges <- rbind(attck_edges, tech2cve)
 
+  attck_edges <- attck_edges[complete.cases(attck_edges),]
   return(attck_edges)
 }
 

@@ -6,10 +6,12 @@
 data frame for CVE objects. The list also contains a visNetwork object with
 CVE objects as nodes and all relations as edges.}
 \usage{
-getCWEData(verbose = FALSE)
+getCWEData(verbose = FALSE, deprecated = FALSE)
 }
 \arguments{
 \item{verbose}{Default set as FALSE}
+
+\item{deprecated}{Default set as FALSE}
 }
 \value{
 data frame
