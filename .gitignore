@@ -41,8 +41,5 @@ vignettes/*.html
 inst/doc
 inst/temp
 
-# Temporary raw files to parse
-data-raw/
-
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
