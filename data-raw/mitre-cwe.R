@@ -2,7 +2,7 @@ library(usethis)
 library(dplyr, warn.conflicts = FALSE)
 library(rvest, warn.conflicts = FALSE)
 library(xml2, warn.conflicts = FALSE)
-library(RJSONIO)
+library(RJSONIO, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -248,3 +248,5 @@ vals <- sapply(xml2::xml_find_all(doc, "//view/members"),
 df <- data.frame(ID = ids, Related_Weakness = vals, stringsAsFactors = F)
 cwe.views <- dplyr::left_join(cwes, df, by = c("ID"))
 usethis::use_data(cwe.views, compress = "xz", overwrite = TRUE)
+
+rm(cwes, df, doc, raw.cwes, cwes.file, ids, vals)

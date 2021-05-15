@@ -1,12 +1,12 @@
 # library(jsonlite)
 library(usethis)
-library(dplyr, warn.conflicts = FALSE)
 library(tidyr, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
 
 # Download
-if (length(list.files(path = "data-raw", pattern = "^car-.*\\.json$")) != 3) {
+if (length(list.files(path = "data-raw", pattern = "^car-.*\\.yaml$")) != 3) {
   req <- httr::GET("https://api.github.com/repos/mitre-attack/car/git/trees/master?recursive=1")
   httr::stop_for_status(req)
   filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
@@ -138,8 +138,8 @@ for (i in 1:length(coverage)) {
     z
   })
   kk$from <- rep(cx.id, nrow(kk))
-  kk <- kk %>% group_by(to, from, coverage) %>% summarise(.groups = "keep", force = n()) %>% as_data_frame()
-  covnet <- dplyr::bind_rows(covnet, kk)
+  kk <- kk %>% group_by(to, from, coverage) %>% summarise(.groups = "keep", force = n())
+  covnet <- dplyr::bind_rows(covnet, as.data.frame(kk))
   rm(kk, cx, cx.id)
 }
 coverage <- covnet
