@@ -5,10 +5,10 @@ if (!dir.exists("data")) dir.create("data")
 # Download
 if (!file.exists("data-raw/nist-cpe.xml.zip"))
   download.file(url = "https://nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip",
-                destfile = "data-raw/nist-cpe.xml.zip")
+                destfile = "data-raw/cpe-nist.xml.zip")
 
 
-doc <- xml2::read_xml("data-raw/nist-cpe.xml.zip")
+doc <- xml2::read_xml("data-raw/cpe-nist.xml.zip")
 
 cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*[@xml:lang='en-US'][1]")),
                    cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/@name")),
