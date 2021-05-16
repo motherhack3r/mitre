@@ -43,3 +43,9 @@ inst/temp
 
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
+
+# Raw files
+data-raw/*.json
+data-raw/*.xml
+data-raw/*.gz
+data-raw/*.zip
