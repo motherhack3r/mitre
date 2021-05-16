@@ -41,10 +41,18 @@ This is a basic example which shows you how to view shield tactics ids
 and names:
 
 ``` r
-# library(mitre)
-# mitredata <- mitre::getLatestDataSet()
-# shield <- mitredata$standards$shield
-# shield$tactics[, c("id", "name")]
+library(mitre)
+shield <- mitre::shield.tactics
+shield[, c("id", "name")]
+#>        id       name
+#> 1 DTA0001    Channel
+#> 2 DTA0002    Collect
+#> 3 DTA0003    Contain
+#> 4 DTA0004     Detect
+#> 5 DTA0005    Disrupt
+#> 6 DTA0006 Facilitate
+#> 7 DTA0007 Legitimize
+#> 8 DTA0008       Test
 ```
 
 This example shows the number of ATT&CK Techniques by domain:

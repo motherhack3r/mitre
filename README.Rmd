@@ -46,10 +46,9 @@ devtools::install_github("motherhack3r/mitre")
 This is a basic example which shows you how to view shield tactics ids and names:
 
 ```{r example}
-# library(mitre)
-# mitredata <- mitre::getLatestDataSet()
-# shield <- mitredata$standards$shield
-# shield$tactics[, c("id", "name")]
+library(mitre)
+shield <- mitre::shield.tactics
+shield[, c("id", "name")]
 ```
 This example shows the number of ATT&CK Techniques by domain:
 
