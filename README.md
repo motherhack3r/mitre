@@ -41,28 +41,16 @@ This is a basic example which shows you how to view shield tactics ids
 and names:
 
 ``` r
-library(mitre)
-mitredata <- mitre::getLatestDataSet()
-shield <- mitredata$standards$shield
-shield$tactics[, c("id", "name")]
-#>        id       name
-#> 1 DTA0001    Channel
-#> 2 DTA0002    Collect
-#> 3 DTA0003    Contain
-#> 4 DTA0004     Detect
-#> 5 DTA0005    Disrupt
-#> 6 DTA0006 Facilitate
-#> 7 DTA0007 Legitimize
-#> 8 DTA0008       Test
+# library(mitre)
+# mitredata <- mitre::getLatestDataSet()
+# shield <- mitredata$standards$shield
+# shield$tactics[, c("id", "name")]
 ```
 
 This example shows the number of ATT&CK Techniques by domain:
 
 ``` r
-table(mitredata$standards$attck$techniques$domain)
-#> 
-#> enterprise-attack        ics-attack     mobile-attack 
-#>               659                81               103
+# table(mitredata$standards$attck$techniques$domain)
 ```
 
 ## Network visualization
@@ -76,7 +64,7 @@ This is a example which shows you how to visualize shield network:
 # g
 ```
 
-![Shield network zoom in](vignettes/images/readme_example.png)
+![Shield network zoom in](inst/doc/images/readme_example.png)
 
 Find some more examples in vignettes to build your own graph like
 [this](https://security.shinyapps.io/mitreshield/).
