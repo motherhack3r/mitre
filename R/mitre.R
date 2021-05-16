@@ -1,255 +1,128 @@
-#' #' Download latest R data sets from Github previously parsed with this package.
-#' #'
-#' #' @param verbose default is FALSE
-#' #'
-#' #' @return list of standards and network
-#' #' @export
-#' #'
-#' #' @examples
-#' #' \dontrun{
-#' #' mitredata <- mitre::getLatestDataSet(TRUE)
-#' #' }
-#' getLatestDataSet <- function(verbose = FALSE) {
-#'   t <- tempfile()
-#'   utils::download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/mitre_latest.rds",
-#'                 destfile = t, quiet = !verbose)
-#'   mitre.data <- readRDS(t)
-#'   file.remove(t)
-#'   return(mitre.data)
-#' }
+#' Create a list of nodes and edges related to all standards in data folder.
 #'
-#' #' ETL process for all standards, it also create a list of nodes and edges
-#' #' representing the relationships between standard objects. It needs raw files
-#' #' pre-downloaded from official MITRE repositories stored in a folder named "data-raw".
-#' #'
-#' #' @param verbose default is TRUE
-#' #'
-#' #' @return list of two data frames: nodes and edges
-#' #' @export
-#' #'
-#' #' @examples
-#' #' \dontrun{
-#' #' mitredata <- mitre::parseRawData(TRUE)
-#' #' }
-#' parseRawData <- function(verbose = FALSE) {
-#'   getRawData(verbose)
-#'   if (!dir.exists("data-raw")) stop('Please, set downloadLatest to TRUE or ensure that your working directory contains a folder named "data-raw" with MITRE raw files.', call. = FALSE)
+#' @return list, containing nodes and edges as data frames
+#' @export
+build_network <- function() {
+
+  # NODES
+  nodes <- newNode()
+
+  ## IT SYSTEMS (MITRE & NIST)
+  ### CPE
+  cpe.nodes <- cpe.nist[, c("title", "cpe.23", "deprecated")]
+  names(cpe.nodes) <- c("label", "title", "hidden")
+  cpe.nodes$group <- rep("cpe", nrow(cpe.nodes))
+  cpe.nodes$value <- rep(1, nrow(cpe.nodes))
+  cpe.nodes$standard <- cpe.nodes$title
+  cpe.nodes$shape <- rep("circle", nrow(cpe.nodes))
+  cpe.nodes$color <- rep("blue", nrow(cpe.nodes))
+  cpe.nodes$mass <- rep(1, nrow(cpe.nodes))
+  cpe.nodes$description <- cpe.nodes$label
+
+  nodes <- dplyr::bind_rows(nodes, cpe.nodes)
+
+  ### CVE
+  cve.nodes <- cve.nist[, c("cve.id", "description", "cvss3.score", "cvss2.score", "references")]
+  cve.nodes$label <- cve.nodes$cve.id
+  cve.nodes$group <- rep("cve", nrow(cve.nodes))
+
+  cve.nodes$cvss3.score[is.na(cve.nodes$cvss3.score)] <- 0
+  cve.nodes$cvss2.score[is.na(cve.nodes$cvss2.score)] <- 0
+  cve.nodes$value <- apply(cve.nodes, 1,
+                           function(x) as.numeric(ifelse(is.na(x["cvss3.score"]),
+                                                         yes = ifelse(is.na(x["cvss2.score"]),
+                                                                      yes = 0,
+                                                                      no = x["cvss2.score"]),
+                                                         no = x["cvss3.score"])))
+  cve.nodes$title <- cve.nodes$cve.id
+  cve.nodes$standard <- cve.nodes$cve.id
+  cve.nodes$shape <- rep("triangle", nrow(cve.nodes))
+  cve.nodes$color <- rep("blue", nrow(cve.nodes))
+  cve.nodes$mass <- cve.nodes$value
+  cve.nodes$description <- cve.nodes$references
+  cve.nodes <- cve.nodes[, names(nodes)]
+  cve.nodes$id <- rep(NA, nrow(cve.nodes))
+
+  nodes <- dplyr::bind_rows(nodes, cve.nodes)
+
+  ### CWE
+  cwe.nodes <- cwe.weaknesses
+
+  ## ATT&CK MITRE
+
+  ## CAPEC MITRE
+
+  ## SHIELD MITRE
+
+  ## CAR MITRE
+
+
+}
+
+
+
+#' Create an empty node
 #'
-#'   if (verbose) print(paste("[#][SHIELD] Start ETL process."))
-#'   shield <- getShieldData(verbose)
-#'   shield_nodes <- shield$shieldnet$nodes
-#'   shield_edges <- shield$shieldnet$edges
+#' \code{id} : The id of the node unique value for all standard elements.
+#' \code{label} : The label is the piece of text shown in or under the node, depending on the shape.
+#' \code{group} : When not undefined, the group of node(s)
+#' \code{value} : When a value is set, the nodes will be scaled using the options in the scaling object defined above.
+#' \code{title} : Title to be displayed when the user hovers over the node. The title can be an HTML element or a string containing plain text or HTML.
+#' \code{standard} : The id of the standard
+#' \code{shape} : The shape defines what the node looks like. The types with the label inside of it are: ellipse, circle, database, box, text. The ones with the label outside of it are: image, circularImage, diamond, dot, star, triangle, triangleDown, square and icon.
+#' \code{color} : Color for the node.
+#' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
+#' \code{mass} : Default to 1. The barnesHut physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
+#' \code{description} : Description could include extra information or nested data which include other columns from original data frame observation.
 #'
-#'   if (verbose) print(paste("[#][ATT&CK] Start ETL process."))
-#'   attck <- getAttckData(verbose)
-#'   attck_nodes <- attck$attcknet$nodes
-#'   attck_edges <- attck$attcknet$edges
+#' @return data.frame
+newNode <- function() {
+  node <- data.frame(
+    id = character(),
+    label = character(),
+    group = character(),
+    value = numeric(),
+    title = character(),
+    standard = character(),
+    shape = character(),
+    color = character(),
+    hidden = logical(),
+    mass = numeric(),
+    description = character(),
+    stringsAsFactors = FALSE
+  )
+
+  return(node)
+}
+
+
+#' Create an empty node
 #'
-#'   if (verbose) print(paste("[#][CVE] Start ETL process."))
-#'   mitre.cves <- getCVEData(verbose)
-#'   cve_nodes <- mitre.cves$cvenet$nodes
-#'   cve_edges <- mitre.cves$cvenet$edges
+#' \code{from} : node id of begin of the edge
+#' \code{to} : node id of end of the edge
+#' \code{title} : The title is shown in a pop-up when the mouse moves over the edge.
+#' \code{value} : When a value is set, the nodes will be scaled using the options in the scaling object defined above.
+#' \code{label} : The label of the edge. HTML does not work in here because the network uses HTML5 Canvas.
+#' \code{arrows} : To draw an arrow with default settings a string can be supplied. For example: 'to, from,middle' or 'to;from', any combination with any seperating symbol is fine. If you want to control the size of the arrowheads, you can supply an object.
+#' \code{dashes} : When true, the edge will be drawn as a dashed line.
+#' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
+#' \code{color} : Color for the node.
+#' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
 #'
-#'   if (verbose) print(paste("[#][CWE] Start ETL process."))
-#'   mitre.cwes <- getCWEData(verbose)
-#'   cwe_nodes <- mitre.cwes$cwenet$nodes
-#'   cwe_edges <- mitre.cwes$cwenet$edges
-#'
-#'   if (verbose) print(paste("[#][CPE] Start ETL process."))
-#'   mitre.cpes <- getCPEData(verbose)
-#'   cpe_nodes <- mitre.cpes$cpenet$nodes
-#'   cpe_edges <- mitre.cpes$cpenet$edges
-#'
-#'   if (verbose) print(paste("[#][CAPEC] Start ETL process."))
-#'   mitre.capec <- getCAPECData(verbose)
-#'   capec_nodes <- mitre.capec$capecnet$nodes
-#'   capec_edges <- mitre.capec$capecnet$edges
-#'
-#'   if (verbose) print(paste("[#][CAR] Start ETL process."))
-#'   mitre.car <- getCARData(verbose)
-#'   car_nodes <- mitre.car$carnet$nodes
-#'   car_edges <- mitre.car$carnet$edges
-#'
-#'   nodes <- dplyr::bind_rows(shield_nodes, attck_nodes, cve_nodes, cwe_nodes, cpe_nodes, capec_nodes, car_nodes)
-#'   edges <- dplyr::bind_rows(shield_edges, attck_edges, cve_edges, cwe_edges, cpe_edges, capec_edges, car_edges)
-#'
-#'   nodes <- unique(nodes)
-#'   nodes$name <- nodes$id
-#'   nodes$id <- seq_len(nrow(nodes))
-#'   edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("from"="name"))
-#'   edges$from <- edges$id
-#'   edges$id <- NULL
-#'   edges <- dplyr::left_join(edges, nodes[, c("id", "name")], c("to"="name"))
-#'   edges$to <- edges$id
-#'   edges$id <- NULL
-#'
-#'   mitrenet <- list(edges = edges,
-#'                    nodes = nodes)
-#'
-#'   standards <- list(shield = shield,
-#'                     attck = attck,
-#'                     cpe = mitre.cpes,
-#'                     cve = mitre.cves,
-#'                     cwe = mitre.cwes,
-#'                     capec = mitre.capec,
-#'                     car = mitre.car)
-#'   mitre.data <- list(standards = standards,
-#'                      mitrenet = mitrenet)
-#'
-#'   return(mitre.data)
-#' }
-#'
-#' getRawData <- function(verbose = FALSE) {
-#'   if (verbose) print(paste("[#][MITRE] Start Download process."))
-#'   # Create "data-raw" folder
-#'   if (!dir.exists("data-raw")) dir.create("data-raw")
-#'
-#'   # SHIELD
-#'   if (verbose) print(paste("[-][SHIELD] Download Tactics ..."))
-#'   tactics_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-tactics.json"
-#'   utils::download.file(url = tactics_url, destfile = "data-raw/shield-tactics.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Techniques ..."))
-#'   tech_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-techniques.json"
-#'   utils::download.file(url = tech_url, destfile = "data-raw/shield-techniques.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Opportunities ..."))
-#'   opport_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-opportunities.json"
-#'   utils::download.file(url = opport_url, destfile = "data-raw/shield-opportunities.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Procedures ..."))
-#'   proced_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-procedures.json"
-#'   utils::download.file(url = proced_url, destfile = "data-raw/shield-procedures.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Use cases ..."))
-#'   usecase_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-use_cases.json"
-#'   utils::download.file(url = usecase_url, destfile = "data-raw/shield-use_cases.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Tactic details ..."))
-#'   tact_det_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-tactic_details.json"
-#'   utils::download.file(url = tact_det_url, destfile = "data-raw/shield-tactic_details.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Technique details ..."))
-#'   tech_det_url <- "https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/latest/data-raw/shield-technique_details.json"
-#'   utils::download.file(url = tech_det_url, destfile = "data-raw/shield-technique_details.json", quiet = T)
-#'
-#'   # CVE
-#'   for (year in 2002:strftime(Sys.Date(), "%Y")) {
-#'     if (verbose) print(paste0("[-][CVE] Download ", year," CVEs ..."))
-#'     cve_url <- paste0("https://github.com/motherhack3r/mitre-datasets/raw/master/latest/data-raw/cve-", year,".json.gz")
-#'     utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = T)
-#'   }
-#'
-#'   # CWE
-#'   if (verbose) print(paste("[-][CWE] Download latest XML definitions ..."))
-#'   cwe.url  <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/data-raw/cwe-mitre.xml.zip"
-#'   utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = T)
-#'   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
-#'                exdir = paste0("data-raw"),
-#'                overwrite = T)
-#'   unlink("data-raw/cwe-mitre.xml.zip")
-#'
-#'   # CPE
-#'   if (verbose) print(paste("[-][CPE] Download latest XML definitions ..."))
-#'   cpe.url  <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/data-raw/cpe-nist.xml.zip"
-#'   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-nist.xml.zip", quiet = T)
-#'   utils::unzip(zipfile = paste0("data-raw/cpe-nist.xml.zip"),
-#'                exdir = paste0("data-raw"),
-#'                overwrite = T)
-#'   unlink("data-raw/cpe-nist.xml.zip")
-#'   if (verbose) print(paste("[-][CPE] Download latest JSON definitions ..."))
-#'   cpe.url  <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/data-raw/cpe-nist.json.zip"
-#'   utils::download.file(url = cpe.url, destfile = "data-raw/cpe-nist.json.zip", quiet = T)
-#'   utils::unzip(zipfile = paste0("data-raw/cpe-nist.json.zip"),
-#'                exdir = paste0("data-raw"),
-#'                overwrite = T)
-#'   unlink("data-raw/cpe-nist.json.zip")
-#'
-#'   # CAPEC
-#'   if (verbose) print(paste("[-][CAPEC] Download latest XML definitions ..."))
-#'   capec.url  <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/data-raw/capec_latest.xml"
-#'   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = T)
-#'
-#'   # CTI
-#'   if (verbose) print(paste("[-][CTI] Download latest YAML definitions ..."))
-#'   utils::download.file(url = "https://github.com/mitre/cti/archive/master.zip",
-#'                        destfile = "data-raw/cti.zip", quiet = T)
-#'   utils::unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw", overwrite = T)
-#'   unlink("data-raw/cti.zip")
-#'
-#'   if (verbose) print(paste("[#][MITRE] End download process."))
-#' }
-#'
-#' #' Download from official sources raw files saving them in [working_directory]/data-raw/
-#' #'
-#' #' @param verbose default is FALSE
-#' #' @export
-#' #'
-#' #' @examples
-#' #' \dontrun{
-#' #' mitre::downloadRawData(verbose = TRUE)
-#' #' }
-#' downloadRawData <- function(verbose = FALSE) {
-#'   if (verbose) print(paste("[#][MITRE] Start Download process."))
-#'   # Create "data-raw" folder
-#'   if (!dir.exists("data-raw")) dir.create("data-raw")
-#'
-#'   # SHIELD
-#'   if (verbose) print(paste("[-][SHIELD] Download Tactics ..."))
-#'   tactics_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json"
-#'   utils::download.file(url = tactics_url, destfile = "data-raw/shield-tactics.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Techniques ..."))
-#'   tech_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json"
-#'   utils::download.file(url = tech_url, destfile = "data-raw/shield-techniques.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Opportunities ..."))
-#'   opport_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json"
-#'   utils::download.file(url = opport_url, destfile = "data-raw/shield-opportunities.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Procedures ..."))
-#'   proced_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json"
-#'   utils::download.file(url = proced_url, destfile = "data-raw/shield-procedures.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Use cases ..."))
-#'   usecase_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json"
-#'   utils::download.file(url = usecase_url, destfile = "data-raw/shield-use_cases.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Tactic details ..."))
-#'   tact_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json"
-#'   utils::download.file(url = tact_det_url, destfile = "data-raw/shield-tactic_details.json", quiet = T)
-#'   if (verbose) print(paste("[-][SHIELD] Download Technique details ..."))
-#'   tech_det_url <- "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json"
-#'   utils::download.file(url = tech_det_url, destfile = "data-raw/shield-technique_details.json", quiet = T)
-#'
-#'   # CVE
-#'   for (year in 2002:strftime(Sys.Date(), "%Y")) {
-#'     if (verbose) print(paste0("[-][CVE] Download ", year," CVEs ..."))
-#'     cve_url <- paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", year,".json.gz")
-#'     utils::download.file(url = cve_url, destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = T)
-#'   }
-#'
-#'   # CWE
-#'   if (verbose) print(paste("[-][CWE] Download latest XML definitions ..."))
-#'   cwe.url  <- "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip"
-#'   utils::download.file(url = cwe.url, destfile = "data-raw/cwe-mitre.xml.zip", quiet = T)
-#'   utils::unzip(zipfile = paste0("data-raw/cwe-mitre.xml.zip"),
-#'                exdir = paste0("data-raw"),
-#'                overwrite = T)
-#'   unlink("data-raw/cwe-mitre.xml.zip")
-#'
-#'   # CPE
-#'   if (verbose) print(paste("[-][CPE] Download latest XML definitions ..."))
-#'   cpe.url  <- "https://nvd.nist.gov/feeds/xml/cpe/dictionary/official-cpe-dictionary_v2.3.xml.zip"
-#'   # utils::download.file(url = cpe.url, destfile = "data-raw/cpe-mitre.xml.zip", quiet = T)
-#'   r <- httr::GET(cpe.url, httr::write_disk("data-raw/cpe-nist.xml.zip", overwrite = TRUE))
-#'   if (r$status_code == 200) {
-#'     utils::unzip(zipfile = "data-raw/cpe-nist.xml.zip", exdir = "data-raw", overwrite = T)
-#'   } else {
-#'     downloadCPE_API(verbose)
-#'   }
-#'
-#'   # CAPEC
-#'   if (verbose) print(paste("[-][CAPEC] Download latest XML definitions ..."))
-#'   capec.url  <- "https://capec.mitre.org/data/xml/capec_latest.xml"
-#'   utils::download.file(url = capec.url, destfile = "data-raw/capec_latest.xml", quiet = T)
-#'
-#'   # CTI
-#'   if (verbose) print(paste("[-][CTI] Download latest YAML definitions ..."))
-#'   utils::download.file(url = "https://github.com/mitre/cti/archive/master.zip",
-#'                 destfile = "data-raw/cti.zip", quiet = T)
-#'   utils::unzip(zipfile = "data-raw/cti.zip", exdir = "data-raw", overwrite = T)
-#'   unlink("data-raw/cti.zip")
-#'
-#'   if (verbose) print(paste("[#][MITRE] End download process."))
-#' }
-#'
+#' @return data.frame
+newEdge <- function() {
+  edge <- data.frame(
+    from = character(),
+    to = character(),
+    title = character(),
+    value = numeric(),
+    label = character(),
+    arrows = character(),
+    dashes = logical(),
+    hidden = logical(),
+    color = character(),
+    stringsAsFactors = FALSE
+  )
+
+  return(edge)
+}
