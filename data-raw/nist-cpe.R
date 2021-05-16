@@ -42,4 +42,5 @@ cpes$target_hw <- as.factor(cpes$target_hw)
 
 cpe.nist <- cpes
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
+rm(nodes, coes, new.cols, doc, cpe.nist)
 
