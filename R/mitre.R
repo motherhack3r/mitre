@@ -28,7 +28,6 @@ build_network <- function() {
 build_nodes <- function() {
   nodes <- newNode()
 
-  ## IT SYSTEMS (MITRE & NIST)
   ### CPE
   cpe.nodes <- cpe.nist[, c("title", "cpe.23", "deprecated")]
   names(cpe.nodes) <- c("label", "title", "hidden")
@@ -357,17 +356,34 @@ build_nodes <- function() {
 #' \code{to} : node id of edge end
 #' \code{from_std} : standard id of edge start
 #' \code{to_std} : standard id of edge end
-#' \code{title} : The title is shown in a pop-up when the mouse moves over the edge.
 #' \code{value} : When a value is set, the nodes will be scaled using the options in the scaling object defined above.
-#' \code{label} : The label of the edge. HTML does not work in here because the network uses HTML5 Canvas.
+#' \code{title} : The title is shown in a pop-up when the mouse moves over the edge.
 #' \code{arrows} : To draw an arrow with default settings a string can be supplied. For example: 'to, from,middle' or 'to;from', any combination with any separating symbol is fine. If you want to control the size of the arrowheads, you can supply an object.
 #' \code{dashes} : When true, the edge will be drawn as a dashed line.
-#' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
 #' \code{color} : Color for the node.
 #' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
 #'
 #' @return data.frame
 build_edges <- function() {
+  edges <- newEdge()
+
+  ### CPE
+  cpe.edges <- lapply(cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
+  cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
+  cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
+  cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
+  cpe.edges$from <- rep(NA, nrow(cpe.edges))
+  cpe.edges$to <- rep(NA, nrow(cpe.edges))
+  cpe.edges$title <- rep("is_vulnerable", nrow(cpe.edges))
+  cpe.edges$value <- rep(1, nrow(cpe.edges))
+  cpe.edges$label <- rep("is_vulnerable", nrow(cpe.edges))
+  cpe.edges$arrows <- rep("to", nrow(cpe.edges))
+  cpe.edges$dashes <- rep(FALSE, nrow(cpe.edges))
+  cpe.edges$hidden <- rep(FALSE, nrow(cpe.edges))
+  cpe.edges$color <- rep("red", nrow(cpe.edges))
+
+  edges <- dplyr::bind_rows(edges, cpe.edges)
+
 
 }
 
