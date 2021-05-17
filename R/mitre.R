@@ -242,7 +242,7 @@ build_nodes <- function() {
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
   shield.nodes$type <- rep("use_case", nrow(shield.nodes))
   shield.nodes$value <- rep(1, nrow(shield.nodes))
-  shield.nodes$title <- shield.nodes$name
+  shield.nodes$title <- shield.nodes$label
   shield.nodes$standard <- shield.nodes$label
   shield.nodes$shape <- rep("circle", nrow(shield.nodes))
   shield.nodes$color <- rep("grey", nrow(shield.nodes))
@@ -260,7 +260,7 @@ build_nodes <- function() {
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
   shield.nodes$type <- rep("opportunity", nrow(shield.nodes))
   shield.nodes$value <- rep(1, nrow(shield.nodes))
-  shield.nodes$title <- shield.nodes$name
+  shield.nodes$title <- shield.nodes$label
   shield.nodes$standard <- shield.nodes$label
   shield.nodes$shape <- rep("square", nrow(shield.nodes))
   shield.nodes$color <- rep("grey", nrow(shield.nodes))
@@ -382,6 +382,7 @@ build_edges <- function() {
   cpe.edges$hidden <- rep(FALSE, nrow(cpe.edges))
   cpe.edges$color <- rep("red", nrow(cpe.edges))
 
+  cpe.edges <- cpe.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cpe.edges)
 
   ### CVE -> CWE
@@ -403,6 +404,7 @@ build_edges <- function() {
   cve.edges <- cve.edges[-which(cve.edges$to_std == "NVD-CWE-noinfo"), ]
   cve.edges <- cve.edges[-which(cve.edges$to_std == "NVD-CWE-Other"), ]
 
+  cve.edges <- cve.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cve.edges)
 
   ### CVE -> CPE
@@ -438,6 +440,7 @@ build_edges <- function() {
   cve.edges$color <- rep("red", nrow(cve.edges))
   rm(cpematch, cpechild, tocpes)
 
+  cve.edges <- cve.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cve.edges)
 
   ### CWE -> CVE
@@ -460,6 +463,7 @@ build_edges <- function() {
   cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
   cwe.edges$color <- rep("orange", nrow(cwe.edges))
 
+  cwe.edges <- cwe.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CAPEC
@@ -482,6 +486,7 @@ build_edges <- function() {
   cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
   cwe.edges$color <- rep("red", nrow(cwe.edges))
 
+  cwe.edges <- cwe.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CWE
@@ -514,11 +519,13 @@ build_edges <- function() {
   cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
   cwe.edges$color <- rep("blue", nrow(cwe.edges))
 
+  cwe.edges <- cwe.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, cwe.edges)
+  rm(cwe2capec, cwe2cwe)
 
   ### CAPEC multiple relations
   capec.edges <- capec.relations
-  # XXX: Workarrond for empty relations to CWEs
+  # XXX: Workaround for empty relations to CWEs
   capec.edges <- capec.edges[!grepl(pattern = "^CWE-$", x = capec.edges$to), ]
   names(capec.edges) <- c("from_std", "label", "to_std", "title")
   capec.edges$from <- rep(NA, nrow(capec.edges))
@@ -529,8 +536,70 @@ build_edges <- function() {
   capec.edges$hidden <- rep(FALSE, nrow(capec.edges))
   capec.edges$color <- rep("orange", nrow(capec.edges))
 
+  capec.edges <- capec.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, capec.edges)
 
+  ### ATTCK multiple relations
+  attck.edges <- attck.relations
+  attck.edges <- attck.edges[, c("from", "to", "description", "relationship_type")]
+  names(attck.edges) <- c("from_std", "to_std", "title", "label")
+  attck.edges$from <- rep(NA, nrow(attck.edges))
+  attck.edges$to <- rep(NA, nrow(attck.edges))
+  attck.edges$value <- rep(1, nrow(attck.edges))
+  attck.edges$arrows <- rep("to", nrow(attck.edges))
+  attck.edges$dashes <- rep(FALSE, nrow(attck.edges))
+  attck.edges$hidden <- rep(FALSE, nrow(attck.edges))
+  attck.edges$color <- rep("red", nrow(attck.edges))
+
+  attck.edges <- attck.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, attck.edges)
+
+  ### SHIELD multiple relations
+  shield.edges <- shield.relations
+  names(shield.edges) <- c("from_std", "to_std", "label")
+  shield.edges$title <- shield.edges$label
+  shield.edges$from <- rep(NA, nrow(shield.edges))
+  shield.edges$to <- rep(NA, nrow(shield.edges))
+  shield.edges$value <- rep(1, nrow(shield.edges))
+  shield.edges$arrows <- rep("to", nrow(shield.edges))
+  shield.edges$dashes <- rep(FALSE, nrow(shield.edges))
+  shield.edges$hidden <- rep(FALSE, nrow(shield.edges))
+  shield.edges$color <- rep("blue", nrow(shield.edges))
+
+  shield.edges <- shield.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, shield.edges)
+
+  ### CAR multiple relations
+  #### CAR -> ATTCK
+  car.edges <- car.coverage
+  names(car.edges) <- c("from_std", "to_std", "title", "value")
+  car.edges$label <- rep("cover", nrow(car.edges))
+  car.edges$from <- rep(NA, nrow(car.edges))
+  car.edges$to <- rep(NA, nrow(car.edges))
+  car.edges$arrows <- rep("to", nrow(car.edges))
+  car.edges$dashes <- rep(FALSE, nrow(car.edges))
+  car.edges$hidden <- rep(FALSE, nrow(car.edges))
+  car.edges$color <- rep("blue", nrow(car.edges))
+
+  car.edges <- car.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, car.edges)
+
+  #### CAR -> CAR Data Model
+  #### CAR Data Model -> CAR Sensor
+  car.edges <- car.relations
+  names(car.edges) <- c("from_std", "to_std")
+  car.edges$label <- rep("implement", nrow(car.edges))
+  car.edges$title <- car.edges$label
+  car.edges$from <- rep(NA, nrow(car.edges))
+  car.edges$to <- rep(NA, nrow(car.edges))
+  car.edges$value <- rep(1, nrow(car.edges))
+  car.edges$arrows <- rep("to", nrow(car.edges))
+  car.edges$dashes <- rep(FALSE, nrow(car.edges))
+  car.edges$hidden <- rep(FALSE, nrow(car.edges))
+  car.edges$color <- rep("blue", nrow(car.edges))
+
+  car.edges <- car.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, car.edges)
 
   return(edges)
 }
