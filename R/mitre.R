@@ -367,7 +367,7 @@ build_nodes <- function() {
 build_edges <- function() {
   edges <- newEdge()
 
-  ### CPE
+  ### CPE -> CVE
   cpe.edges <- lapply(cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
@@ -384,7 +384,155 @@ build_edges <- function() {
 
   edges <- dplyr::bind_rows(edges, cpe.edges)
 
+  ### CVE -> CWE
+  cve.edges <- dplyr::select(cve.nist, c("cve.id", "problem.type"))
+  cve.edges[cve.edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
+  cve.edges$problem.type <- lapply(cve.edges$problem.type, jsonlite::fromJSON)
+  cve.edges <- tidyr::unnest(cve.edges, cols = c("problem.type"))
+  names(cve.edges) <- c("from_std", "to_std")
+  cve.edges$from <- rep(NA, nrow(cve.edges))
+  cve.edges$to <- rep(NA, nrow(cve.edges))
+  cve.edges$title <- rep("takes_advantage_of", nrow(cve.edges))
+  cve.edges$value <- rep(1, nrow(cve.edges))
+  cve.edges$label <- rep("problem_type", nrow(cve.edges))
+  cve.edges$arrows <- rep("to", nrow(cve.edges))
+  cve.edges$dashes <- rep(FALSE, nrow(cve.edges))
+  cve.edges$hidden <- rep(FALSE, nrow(cve.edges))
+  cve.edges$color <- rep("orange", nrow(cve.edges))
 
+  cve.edges <- cve.edges[-which(cve.edges$to_std == "NVD-CWE-noinfo"), ]
+  cve.edges <- cve.edges[-which(cve.edges$to_std == "NVD-CWE-Other"), ]
+
+  edges <- dplyr::bind_rows(edges, cve.edges)
+
+  ### CVE -> CPE
+  cve.edges <- dplyr::select(cve.nist, c("cve.id", "vulnerable.configuration"))
+  cpematch <- lapply(cve.edges$vulnerable.configuration,
+                     function(x)
+                       unique(jsonlite::fromJSON(x)$cpe_match[[1]]$cpe23Uri))
+  cpematch <- unlist(lapply(cpematch, function(x) ifelse(is.null(x), NA, x)))
+  cpechild <- lapply(cve.edges$vulnerable.configuration,
+                     function(x)
+                       unique(unlist(sapply(jsonlite::fromJSON(x)$children,
+                                            function(y)
+                                              unlist(sapply(y$cpe_match,
+                                                            function(z) z$cpe23Uri))))))
+  cpechild <- unlist(lapply(cpechild, function(x) ifelse(is.null(x), NA, x)))
+  tocpes <- data.frame(cpematch = cpematch,
+                     cpechild = cpechild,
+                     stringsAsFactors = FALSE)
+  cve.edges$to_std <- apply(tocpes, 1,
+                       function(x)
+                         as.character(stats::na.exclude(unique(c(x[["cpematch"]], x[["cpechild"]])))))
+  cve.edges <- tidyr::unnest(cve.edges, cols = c("to_std"))
+  cve.edges$vulnerable.configuration <- NULL
+  cve.edges$from_std <- cve.edges$cve.id
+  cve.edges$from <- rep(NA, nrow(cve.edges))
+  cve.edges$to <- rep(NA, nrow(cve.edges))
+  cve.edges$title <- rep("vulnerable_configuration", nrow(cve.edges))
+  cve.edges$value <- rep(1, nrow(cve.edges))
+  cve.edges$label <- rep("is_vulnerable", nrow(cve.edges))
+  cve.edges$arrows <- rep("to", nrow(cve.edges))
+  cve.edges$dashes <- rep(FALSE, nrow(cve.edges))
+  cve.edges$hidden <- rep(FALSE, nrow(cve.edges))
+  cve.edges$color <- rep("red", nrow(cve.edges))
+  rm(cpematch, cpechild, tocpes)
+
+  edges <- dplyr::bind_rows(edges, cve.edges)
+
+  ### CWE -> CVE
+  cwe.edges <- lapply(cwe.weaknesses$Observed_Examples,
+                      function(x) {
+                        cves <- stringr::str_extract_all(x, "CVE-\\d+-\\d+")[[1]]
+                        data.frame(to_std = cves, stringsAsFactors = FALSE)
+                      })
+  names(cwe.edges) <- cwe.weaknesses$Code_Standard
+  cwe.edges <- plyr::ldply(cwe.edges, rbind)
+  names(cwe.edges) <- c("from_std", "to_std")
+  cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
+  cwe.edges$from <- rep(NA, nrow(cwe.edges))
+  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$title <- rep("vulnerability_example", nrow(cwe.edges))
+  cwe.edges$value <- rep(1, nrow(cwe.edges))
+  cwe.edges$label <- rep("example", nrow(cwe.edges))
+  cwe.edges$arrows <- rep("to", nrow(cwe.edges))
+  cwe.edges$dashes <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$color <- rep("orange", nrow(cwe.edges))
+
+  edges <- dplyr::bind_rows(edges, cwe.edges)
+
+  ### CWE -> CAPEC
+  cwe.edges <- cwe.weaknesses[, c("Code_Standard", "Related_Attack_Patterns")]
+  cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
+  cwe2capec <- lapply(cwe.edges$Related_Attack_Patterns,
+                      function(x)
+                        data.frame(to_std = paste0("CAPEC-", RJSONIO::fromJSON(x)),
+                                   stringsAsFactors = FALSE))
+  names(cwe2capec) <- cwe.edges$Code_Standard
+  cwe.edges <- dplyr::bind_rows(cwe2capec, .id = "from_std")
+  cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
+  cwe.edges$from <- rep(NA, nrow(cwe.edges))
+  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$title <- rep("leverage_attack", nrow(cwe.edges))
+  cwe.edges$value <- rep(1, nrow(cwe.edges))
+  cwe.edges$label <- rep("leverage", nrow(cwe.edges))
+  cwe.edges$arrows <- rep("to", nrow(cwe.edges))
+  cwe.edges$dashes <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$color <- rep("red", nrow(cwe.edges))
+
+  edges <- dplyr::bind_rows(edges, cwe.edges)
+
+  ### CWE -> CWE
+  cwe.edges <- dplyr::bind_rows(cwe.views[, c("Code_Standard", "Related_Weakness")],
+                                cwe.categories[, c("Code_Standard", "Related_Weakness")],
+                                cwe.weaknesses[, c("Code_Standard", "Related_Weakness")])
+  cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
+  cwe2cwe <- lapply(cwe.edges$Related_Weakness,
+                    function(x) {
+                      k <- RJSONIO::fromJSON(x)
+                      if (length(k) == 1) {
+                        k <- as.data.frame.array(t(k[[1]]))
+                      } else {
+                        k <- dplyr::bind_rows(lapply(k, function(x) as.data.frame(t(x))))
+                        # names(k) <- c("nature", "cwe_id", "view_id", "ordinal")
+                      }
+                      k
+                    })
+  names(cwe2cwe) <- cwe.edges$Code_Standard
+  cwe.edges <- dplyr::bind_rows(cwe2cwe, .id = "from_std")
+  cwe.edges$to_std <- paste0("CWE-", cwe.edges$cwe_id)
+  cwe.edges$from <- rep(NA, nrow(cwe.edges))
+  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$nature[is.na(cwe.edges$nature)] <- "include"
+  cwe.edges$title <- cwe.edges$nature
+  cwe.edges$value <- rep(1, nrow(cwe.edges))
+  cwe.edges$label <- rep("include", nrow(cwe.edges))
+  cwe.edges$arrows <- rep("to", nrow(cwe.edges))
+  cwe.edges$dashes <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$hidden <- rep(FALSE, nrow(cwe.edges))
+  cwe.edges$color <- rep("blue", nrow(cwe.edges))
+
+  edges <- dplyr::bind_rows(edges, cwe.edges)
+
+  ### CAPEC multiple relations
+  capec.edges <- capec.relations
+  # XXX: Workarrond for empty relations to CWEs
+  capec.edges <- capec.edges[!grepl(pattern = "^CWE-$", x = capec.edges$to), ]
+  names(capec.edges) <- c("from_std", "label", "to_std", "title")
+  capec.edges$from <- rep(NA, nrow(capec.edges))
+  capec.edges$to <- rep(NA, nrow(capec.edges))
+  capec.edges$value <- rep(1, nrow(capec.edges))
+  capec.edges$arrows <- rep("to", nrow(capec.edges))
+  capec.edges$dashes <- rep(FALSE, nrow(capec.edges))
+  capec.edges$hidden <- rep(FALSE, nrow(capec.edges))
+  capec.edges$color <- rep("orange", nrow(capec.edges))
+
+  edges <- dplyr::bind_rows(edges, capec.edges)
+
+
+  return(edges)
 }
 
 #' Create an empty node
