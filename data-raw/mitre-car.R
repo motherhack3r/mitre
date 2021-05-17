@@ -1,5 +1,8 @@
-# library(jsonlite)
+library(yaml)
+library(httr)
 library(usethis)
+if(any(grepl("package:dplyr", search()))) detach("package:dplyr") else message("dplyr not loaded")
+library(plyr, warn.conflicts = FALSE)
 library(tidyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 
@@ -102,6 +105,8 @@ implementations$data_mode <- unlist(implementations$data_mode)
 
 implementations <- dplyr::mutate(implementations, data_model = paste0(data_model, data_mode))
 implementations$data_mode <- NULL
+implementations$id <- sapply(sample(100:999, nrow(implementations), replace=TRUE),
+                             function(x) paste0("CAR-IMPL-", x))
 analytics$implementations <- NULL
 
 # Coverage relations
@@ -196,7 +201,6 @@ sensnet <- plyr::ldply(sensnet,
 names(sensnet) <- c("to", "from")
 
 relations <- dplyr::bind_rows(modelnet, sensnet)
-rm(modelnet, sensnet)
 
 #####
 ## Save data sets
@@ -224,3 +228,4 @@ car.relations <- relations
 usethis::use_data(car.relations, compress = "xz", overwrite = TRUE)
 jsonlite::write_json(relations, "data-raw/car-relations.json")
 
+rm(modelnet, sensnet, model, sensors, analytics, relations, implementations)

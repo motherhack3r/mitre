@@ -1,7 +1,7 @@
 library(jsonlite)
 library(usethis)
-library(dplyr, warn.conflicts = FALSE)
 library(tidyr, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -122,10 +122,4 @@ usethis::use_data(attck.software, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.relations, compress = "xz", overwrite = TRUE)
 
 
-# ATTACK MOBILE
-
-# mob.url <- "https://github.com/mitre/cti/raw/master/mobile-attack/mobile-attack.json"
-
-
-# write_json(tact, "data-raw/attck-tactics.json")
-# usethis::use_data(attck.tactics, compress = "xz", overwrite = TRUE)
+rm(attck.ent, grup, miti, rels, tact, tech, soft)

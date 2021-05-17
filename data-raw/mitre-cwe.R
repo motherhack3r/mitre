@@ -2,6 +2,7 @@ library(usethis)
 library(dplyr, warn.conflicts = FALSE)
 library(rvest, warn.conflicts = FALSE)
 library(xml2, warn.conflicts = FALSE)
+if(any(grepl("package:jsonlite", search()))) detach("package:jsonlite") else message("jsonlite not loaded")
 library(RJSONIO, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")

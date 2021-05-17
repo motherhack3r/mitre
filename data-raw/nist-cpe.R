@@ -1,4 +1,10 @@
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
+library(jsonlite)
+library(stringr)
 library(usethis)
+library(tidyr, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
+library(xml2)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -42,5 +48,5 @@ cpes$target_hw <- as.factor(cpes$target_hw)
 
 cpe.nist <- cpes
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
-rm(nodes, coes, new.cols, doc, cpe.nist)
+rm(nodes, cpes, new.cols, doc, cpe.nist)
 

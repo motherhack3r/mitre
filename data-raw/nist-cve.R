@@ -1,3 +1,4 @@
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
 library(jsonlite)
 library(usethis)
 library(dplyr, warn.conflicts = FALSE)
@@ -132,3 +133,5 @@ cves$last.modified <- as.POSIXct.POSIXlt(strptime(cves$last.modified, "%Y-%m-%dT
 
 cve.nist <- cves
 usethis::use_data(cve.nist, compress = "xz", overwrite = TRUE)
+
+rm(cves, year)
