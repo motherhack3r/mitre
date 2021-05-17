@@ -5,6 +5,7 @@ library(usethis)
 library(tidyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 library(xml2)
+library(mitre)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -39,14 +40,21 @@ new.cols <- c("std", "std.v", "part", "vendor", "product",
 cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
 cpes <- tidyr::separate(data = cpes, col = "cpe.23", into = new.cols, sep = ":", remove = F)
 cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
-cpes$vendor <- as.factor(cpes$vendor)
-cpes$product <- as.factor(cpes$product)
-cpes$language <- as.factor(cpes$language)
-cpes$sw_edition <- as.factor(cpes$sw_edition)
-cpes$target_sw <- as.factor(cpes$target_sw)
-cpes$target_hw <- as.factor(cpes$target_hw)
+# cpes$vendor <- as.factor(cpes$vendor)
+# cpes$product <- as.factor(cpes$product)
+# cpes$language <- as.factor(cpes$language)
+# cpes$sw_edition <- as.factor(cpes$sw_edition)
+# cpes$target_sw <- as.factor(cpes$target_sw)
+# cpes$target_hw <- as.factor(cpes$target_hw)
 
 cpe.nist <- cpes
+
+# Sample data... it's so huge
+nodes <- mitre::build_network(as_igraph = F)[["nodes"]]
+cpe.nist <- cpe.nist[cpe.nist$cpe.23 %in% nodes$standard,]
+cpe.nist <- dplyr::sample_n(cpe.nist, 1000)
+cpe.nist <- dplyr::select(cpe.nist, cpe.23, title, part, vendor, product, version, refs, deprecated)
+
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
 rm(nodes, cpes, new.cols, doc, cpe.nist)
 
