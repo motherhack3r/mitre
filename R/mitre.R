@@ -1,17 +1,37 @@
 #' Create a list of nodes and edges related to all standards in data folder.
 #'
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
+#' @param as_igraph logical, TRUE by default. Change it to get list of nodes and edges.
 #'
 #' @return list, containing nodes and edges as data frames
 #' @export
-build_network <- function(verbose = FALSE) {
+build_network <- function(verbose = FALSE, as_igraph = TRUE) {
   if (verbose) print(paste0("[NET] Building nodes ..."))
   nodes <- build_nodes(verbose)
   if (verbose) print(paste0("[NET] Building edges ..."))
   edges <- build_edges(verbose)
 
-  return(list(nodes = nodes, edges = edges))
+  if (verbose) print(paste0("[NET] Cleaning network ..."))
+  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")], by = c("from_std"="standard"))
+  edges$from <- edges$id
+  edges$id <- NULL
+  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")], by = c("to_std"="standard"))
+  edges$to <- edges$id
+  edges$id <- NULL
+
+  # Select complete edges and its nodes
+  edges <- edges[!(is.na(edges$to) | is.na(edges$from)),]
+  nodes <- nodes[nodes$id %in% unique(c(edges$from, edges$to)), ]
+
+
+  if (as_igraph) {
+    mitrenet <- igraph::graph_from_data_frame(edges, directed = T, vertices = nodes)
+  } else {
+    mitrenet <- list(nodes = nodes, edges = edges)
+  }
+  return(mitrenet)
 }
+
 
 #' Transform all standards as nodes in a data frame.
 #'
