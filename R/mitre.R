@@ -1,10 +1,14 @@
 #' Create a list of nodes and edges related to all standards in data folder.
 #'
+#' @param verbose logical, FALSE by default. Change it to see the process messages.
+#'
 #' @return list, containing nodes and edges as data frames
 #' @export
-build_network <- function() {
-  nodes <- build_nodes()
-  edges <- build_edges()
+build_network <- function(verbose = FALSE) {
+  if (verbose) print(paste0("[NET] Building nodes ..."))
+  nodes <- build_nodes(verbose)
+  if (verbose) print(paste0("[NET] Building edges ..."))
+  edges <- build_edges(verbose)
 
   return(list(nodes = nodes, edges = edges))
 }
@@ -24,11 +28,14 @@ build_network <- function() {
 #' \code{mass} : Default to 1. The barnesHut physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
 #' \code{description} : Description could include extra information or nested data which include other columns from original data frame observation.
 #'
+#' @param verbose logical, FALSE by default. Change it to see the process messages.
+#'
 #' @return data.frame
-build_nodes <- function() {
+build_nodes <- function(verbose = FALSE) {
   nodes <- newNode()
 
   ### CPE
+  if (verbose) print(paste0("[NET][CPE] extracting nodes ..."))
   cpe.nodes <- cpe.nist[, c("title", "cpe.23", "deprecated")]
   names(cpe.nodes) <- c("label", "title", "hidden")
   cpe.nodes$id <- rep(NA, nrow(cpe.nodes))
@@ -44,6 +51,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, cpe.nodes)
 
   ### CVE
+  if (verbose) print(paste0("[NET][CVE] extracting nodes ..."))
   cve.nodes <- cve.nist[, c("cve.id", "description", "cvss3.score", "cvss2.score", "references")]
   cve.nodes$id <- rep(NA, nrow(cve.nodes))
   cve.nodes$label <- cve.nodes$cve.id
@@ -64,6 +72,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, cve.nodes)
 
   ### CWE
+  if (verbose) print(paste0("[NET][CWE] extracting nodes ..."))
   cwe.nodes <- dplyr::bind_rows(cwe.weaknesses, cwe.categories, cwe.views)
   cwe.nodes$id <- rep(NA, nrow(cwe.nodes))
   cwe.nodes$label <- cwe.nodes$Code_Standard
@@ -83,6 +92,7 @@ build_nodes <- function() {
 
   ## ATT&CK MITRE
   ### Tactics
+  if (verbose) print(paste0("[NET][ATTCK] extracting tactic nodes ..."))
   attck.nodes <- attck.tactics
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
@@ -101,6 +111,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ### Techniques
+  if (verbose) print(paste0("[NET][ATTCK] extracting technique nodes ..."))
   attck.nodes <- attck.techniques
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
@@ -119,6 +130,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ### Mitigations
+  if (verbose) print(paste0("[NET][ATTCK] extracting mitigation nodes ..."))
   attck.nodes <- attck.mitigations
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
@@ -137,6 +149,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ### Software
+  if (verbose) print(paste0("[NET][ATTCK] extracting software nodes ..."))
   attck.nodes <- attck.software
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
@@ -156,6 +169,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ### Groups
+  if (verbose) print(paste0("[NET][ATTCK] extracting groups nodes ..."))
   attck.nodes <- attck.groups
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
@@ -174,6 +188,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ## CAPEC MITRE
+  if (verbose) print(paste0("[NET][CAPEC] extracting nodes ..."))
   capec.p <- capec.patterns
   capec.p$type <- rep("pattern", nrow(capec.p))
   capec.c <- capec.categories
@@ -200,6 +215,7 @@ build_nodes <- function() {
 
   ## SHIELD MITRE
   ### Tactics
+  if (verbose) print(paste0("[NET][SHIELD] extracting tactic nodes ..."))
   shield.nodes <- shield.tactics
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
@@ -218,6 +234,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ### Techniques
+  if (verbose) print(paste0("[NET][SHIELD] extracting technique nodes ..."))
   shield.nodes <- shield.techniques
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
@@ -236,6 +253,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ### Use Cases
+  if (verbose) print(paste0("[NET][SHIELD] extracting use case nodes ..."))
   shield.nodes <- shield.use_cases
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
@@ -254,6 +272,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ### Opportunities
+  if (verbose) print(paste0("[NET][SHIELD] extracting opportunity nodes ..."))
   shield.nodes <- shield.opportunities
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
@@ -272,6 +291,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ### Procedures
+  if (verbose) print(paste0("[NET][SHIELD] extracting procedure nodes ..."))
   shield.nodes <- shield.procedures
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
@@ -291,6 +311,7 @@ build_nodes <- function() {
 
   ## CAR MITRE
   ### Analytics
+  if (verbose) print(paste0("[NET][CAR] extracting analytic nodes ..."))
   car.nodes <- car.analytics
   car.nodes$label <- car.nodes$id
   car.nodes$group <- rep("car", nrow(car.nodes))
@@ -309,6 +330,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, car.nodes)
 
   ### Data Model
+  if (verbose) print(paste0("[NET][CAR] extracting data model nodes ..."))
   car.nodes <- car.model
   car.nodes$label <- car.nodes$model.id
   car.nodes$group <- rep("car", nrow(car.nodes))
@@ -329,6 +351,7 @@ build_nodes <- function() {
   nodes <- dplyr::bind_rows(nodes, car.nodes)
 
   ### Sensors
+  if (verbose) print(paste0("[NET][CAR] extracting sensor nodes ..."))
   car.nodes <- car.sensors
   car.nodes <- dplyr::mutate(car.nodes, label = paste(sensor_name, sensor_version, sep = "_"))
   car.nodes$group <- rep("car", nrow(car.nodes))
@@ -363,8 +386,10 @@ build_nodes <- function() {
 #' \code{color} : Color for the node.
 #' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
 #'
+#' @param verbose logical, FALSE by default. Change it to see the process messages.
+#'
 #' @return data.frame
-build_edges <- function() {
+build_edges <- function(verbose = FALSE) {
   edges <- newEdge()
 
   ### CPE -> CVE
