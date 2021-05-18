@@ -232,7 +232,8 @@ usethis::use_data(capec.categories, compress = "xz", overwrite = TRUE)
 usethis::use_data(capec.patterns, compress = "xz", overwrite = TRUE)
 usethis::use_data(capec.relations, compress = "xz", overwrite = TRUE)
 
+
 rm(views, categories, selected, att.abstraction, att.alernate_terms, att.consequences,
    att.descr, att.examples, att.flow, att.id, att.indicators, att.likelihoodatt,
    att.mitigations, att.name, att.prerequisites, att.reqsrcs, att.severity, att.skills,
-   att.status)
+   att.status, capec.atcks, df, doc)

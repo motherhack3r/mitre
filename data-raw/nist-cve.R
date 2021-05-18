@@ -5,7 +5,7 @@ library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
 
-from_year <-  2019
+from_year <-  2002
 
 # Download Raw
 if (!as.logical(length(list.files(path = "data-raw", pattern = "^cve-\\d+\\.json.gz$")))) {
@@ -137,7 +137,6 @@ cves$published.date <- as.POSIXct.POSIXlt(strptime(cves$published.date, "%Y-%m-%
 cves$last.modified <- as.POSIXct.POSIXlt(strptime(cves$last.modified, "%Y-%m-%dT%H:%MZ"))
 
 cve.nist <- cves
-cve.nist <- dplyr::sample_n(cve.nist, 1000)
 usethis::use_data(cve.nist, compress = "xz", overwrite = TRUE)
 
-rm(cves, year, from_year)
+rm(cves, year, from_year, GetNISTvulnsByYear, NewNISTEntry)

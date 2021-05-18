@@ -228,4 +228,5 @@ car.relations <- relations
 usethis::use_data(car.relations, compress = "xz", overwrite = TRUE)
 jsonlite::write_json(relations, "data-raw/car-relations.json")
 
-rm(modelnet, sensnet, model, sensors, analytics, relations, implementations)
+rm(modelnet, sensnet, model, sensors, analytics, relations, implementations,
+   raw.analytics, raw.model, raw.sensors, filelist, coverage, uniq.subtypes)

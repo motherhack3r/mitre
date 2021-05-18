@@ -5,7 +5,7 @@ library(usethis)
 library(tidyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 library(xml2)
-library(mitre)
+# library(mitre)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -48,13 +48,7 @@ cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
 # cpes$target_hw <- as.factor(cpes$target_hw)
 
 cpe.nist <- cpes
-
-# Sample data... it's so huge
-nodes <- mitre::build_network(as_igraph = F)[["nodes"]]
-cpe.nist <- cpe.nist[cpe.nist$cpe.23 %in% nodes$standard,]
-cpe.nist <- dplyr::sample_n(cpe.nist, 1000)
-cpe.nist <- dplyr::select(cpe.nist, cpe.23, title, part, vendor, product, version, refs, deprecated)
-
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
-rm(nodes, cpes, new.cols, doc, cpe.nist)
+
+rm(cpes, new.cols, doc, nodes)
 

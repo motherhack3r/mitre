@@ -1,3 +1,4 @@
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
 library(jsonlite)
 library(usethis)
 library(tidyr, warn.conflicts = FALSE)
@@ -121,5 +122,4 @@ usethis::use_data(attck.groups, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.software, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.relations, compress = "xz", overwrite = TRUE)
 
-
-rm(attck.ent, grup, miti, rels, tact, tech, soft)
+rm(attck.ent, grup, miti, rels, tact, tech, soft, df)
