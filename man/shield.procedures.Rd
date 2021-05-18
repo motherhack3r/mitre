@@ -5,7 +5,7 @@
 \alias{shield.procedures}
 \title{SHIELD procedures Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 2 variables.
 }
 \usage{
 shield.procedures

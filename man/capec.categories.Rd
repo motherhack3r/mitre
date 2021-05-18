@@ -5,7 +5,7 @@
 \alias{capec.categories}
 \title{CAPEC categories Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 4 variables.
 }
 \usage{
 capec.categories

@@ -5,7 +5,7 @@
 \alias{capec.patterns}
 \title{CAPEC patterns Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 16 variables.
 }
 \usage{
 capec.patterns

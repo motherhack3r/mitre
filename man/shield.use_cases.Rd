@@ -5,7 +5,7 @@
 \alias{shield.use_cases}
 \title{SHIELD use cases Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 2 variables.
 }
 \usage{
 shield.use_cases

@@ -5,7 +5,7 @@
 \alias{attck.techniques}
 \title{ATT&CK techniques Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 15 variables.
 }
 \usage{
 attck.techniques

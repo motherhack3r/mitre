@@ -5,7 +5,7 @@
 \alias{attck.relations}
 \title{ATT&CK relations Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 13 variables.
 }
 \usage{
 attck.relations

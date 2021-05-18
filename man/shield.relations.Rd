@@ -5,7 +5,7 @@
 \alias{shield.relations}
 \title{SHIELD relations Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 3 variables.
 }
 \usage{
 shield.relations

@@ -5,7 +5,7 @@
 \alias{shield.techniques}
 \title{SHIELD techniques Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 4 variables.
 }
 \usage{
 shield.techniques

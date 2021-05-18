@@ -5,7 +5,7 @@
 \alias{car.analytics}
 \title{CAR analytics Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 17 variables.
 }
 \usage{
 car.analytics

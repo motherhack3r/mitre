@@ -5,7 +5,7 @@
 \alias{capec.views}
 \title{CAPEC views Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 5 variables.
 }
 \usage{
 capec.views

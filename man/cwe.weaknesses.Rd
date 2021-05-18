@@ -5,7 +5,7 @@
 \alias{cwe.weaknesses}
 \title{CWE Weaknesses Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 24 variables.
 }
 \usage{
 cwe.weaknesses

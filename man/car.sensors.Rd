@@ -5,7 +5,7 @@
 \alias{car.sensors}
 \title{CAR sensors Objects.}
 \format{
-A data frame with 11 variables.
+A data frame with 5 variables.
 }
 \usage{
 car.sensors
