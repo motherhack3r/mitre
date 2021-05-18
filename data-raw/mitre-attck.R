@@ -1,4 +1,4 @@
-if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO")
 library(jsonlite)
 library(usethis)
 library(tidyr, warn.conflicts = FALSE)
@@ -10,9 +10,10 @@ if (!dir.exists("data")) dir.create("data")
 # Ref: https://github.com/mitre/cti/blob/master/USAGE.md#the-attck-data-model
 
 # Tactics
-if (!file.exists("data-raw/attack-enterprise.json"))
+if (!file.exists("data-raw/attack-enterprise.json")) {
   download.file(url = "https://github.com/mitre/cti/raw/master/enterprise-attack/enterprise-attack.json",
                 destfile = "data-raw/attack-enterprise.json")
+}
 attck.ent <- fromJSON("data-raw/attack-enterprise.json")
 
 

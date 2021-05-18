@@ -2,30 +2,22 @@ library(usethis)
 library(dplyr, warn.conflicts = FALSE)
 library(rvest, warn.conflicts = FALSE)
 library(xml2, warn.conflicts = FALSE)
-if(any(grepl("package:jsonlite", search()))) detach("package:jsonlite") else message("jsonlite not loaded")
+if(any(grepl("package:jsonlite", search()))) detach("package:jsonlite") # else message("jsonlite not loaded")
 library(RJSONIO, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
 
 # Latest XML definition
-if (!as.logical(length(list.files(path = "data-raw", pattern = "^cwec_v\\d+\\..*\\.xml$")))) {
+cwes.file <- "data-raw/cwe-latest.xml.zip"
+if (!file.exists(cwes.file)) {
   download.file(url = "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip",
-                destfile = "data-raw/cwe-latest.xml.zip")
-  utils::unzip(zipfile = paste0("data-raw/cwe-latest.xml.zip"),
-               exdir = paste0("data-raw"),
-               overwrite = T)
-  unlink("data-raw/cwe-latest.xml.zip")
+                destfile = cwes.file)
 }
-
-cwes.file <- file.path("data-raw",
-                       list.files(path = "data-raw", pattern = "^cwec_v\\d+\\..*\\.xml$")[1])
-
-doc <- read_html(cwes.file)
 
 #####
 # PARSE WEAKNESSES
 #
-
+doc <- read_html(cwes.file)
 raw.cwes <- html_nodes(doc, "weakness")
 # Extract Weakness node attributes
 cwes <- as.data.frame(t(sapply(raw.cwes, rvest::html_attrs)), stringsAsFactors = F)

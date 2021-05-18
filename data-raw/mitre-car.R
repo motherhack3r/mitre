@@ -205,28 +205,18 @@ relations <- dplyr::bind_rows(modelnet, sensnet)
 #####
 ## Save data sets
 car.analytics <- analytics
-usethis::use_data(car.analytics, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(car.analytics, "data-raw/car-analytics.json")
-
 car.model <- model
-usethis::use_data(car.model, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(model, "data-raw/car-model.json")
-
 car.sensors <- sensors
-usethis::use_data(car.sensors, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(sensors, "data-raw/car-sensors.json")
-
 car.implementations <- implementations
-usethis::use_data(car.implementations, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(implementations, "data-raw/car-implementations.json")
-
 car.coverage <- coverage
-usethis::use_data(car.coverage, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(coverage, "data-raw/car-coverage.json")
-
 car.relations <- relations
+
+usethis::use_data(car.analytics, compress = "xz", overwrite = TRUE)
+usethis::use_data(car.model, compress = "xz", overwrite = TRUE)
+usethis::use_data(car.sensors, compress = "xz", overwrite = TRUE)
+usethis::use_data(car.implementations, compress = "xz", overwrite = TRUE)
+usethis::use_data(car.coverage, compress = "xz", overwrite = TRUE)
 usethis::use_data(car.relations, compress = "xz", overwrite = TRUE)
-jsonlite::write_json(relations, "data-raw/car-relations.json")
 
 rm(modelnet, sensnet, model, sensors, analytics, relations, implementations,
    raw.analytics, raw.model, raw.sensors, filelist, coverage, uniq.subtypes)

@@ -11,7 +11,6 @@ if (!dir.exists("data")) dir.create("data")
 if (!file.exists("data-raw/shield-tactics.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json",
                 destfile = "data-raw/shield-tactics.json")
-  # write_json(shield.tactics, "data-raw/shield-tactics.json")
 }
 shield.tactics <- fromJSON("data-raw/shield-tactics.json")
 
@@ -19,7 +18,6 @@ shield.tactics <- fromJSON("data-raw/shield-tactics.json")
 if (!file.exists("data-raw/shield-techniques.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json",
                 destfile = "data-raw/shield-techniques.json")
-  # write_json(shield.techniques, "data-raw/shield-techniques.json")
 }
 shield.techniques <- fromJSON("data-raw/shield-techniques.json")
 
@@ -27,7 +25,6 @@ shield.techniques <- fromJSON("data-raw/shield-techniques.json")
 if (!file.exists("data-raw/shield-procedures.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json",
                 destfile = "data-raw/shield-procedures.json")
-  # write_json(shield.procedures, "data-raw/shield-procedures.json")
 }
 shield.procedures <- fromJSON("data-raw/shield-procedures.json")
 
@@ -35,7 +32,6 @@ shield.procedures <- fromJSON("data-raw/shield-procedures.json")
 if (!file.exists("data-raw/shield-use_cases.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json",
                 destfile = "data-raw/shield-use_cases.json")
-  # write_json(shield.use_cases, "data-raw/shield-use_cases.json")
 }
 
 shield.use_cases <- fromJSON("data-raw/shield-use_cases.json")
@@ -44,7 +40,6 @@ shield.use_cases <- fromJSON("data-raw/shield-use_cases.json")
 if (!file.exists("data-raw/shield-opportunities.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json",
                 destfile = "data-raw/shield-opportunities.json")
-  # write_json(shield.opportunities, "data-raw/shield-opportunities.json")
 }
 shield.opportunities <- fromJSON("data-raw/shield-opportunities.json")
 
@@ -52,14 +47,11 @@ shield.opportunities <- fromJSON("data-raw/shield-opportunities.json")
 if (!file.exists("data-raw/shield-tactic_details.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json",
                 destfile = "data-raw/shield-tactic_details.json")
-  # write_json(tact_det, "data-raw/shield-tactic_details.json")
-
 }
 
 if (!file.exists("data-raw/shield-technique_details.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json",
                 destfile = "data-raw/shield-technique_details.json")
-  # write_json(tech_det, "data-raw/shield-technique_details.json")
 }
 
 

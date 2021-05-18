@@ -6,10 +6,10 @@ library(dplyr, warn.conflicts = FALSE)
 # CAPEC
 # Ref: https://capec.mitre.org/data/index.html
 
-if (!file.exists("data-raw/capec-latest.xml"))
-  download.file(url = "https://capec.mitre.org/data/xml/capec_latest.xml",
-                destfile = "data-raw/capec-latest.xml")
-doc <- read_xml("data-raw/capec-latest.xml")
+if (!file.exists("data-raw/capec_latest.zip"))
+  download.file(url = "https://capec.mitre.org/data/archive/capec_latest.zip",
+                destfile = "data-raw/capec_latest.xml.zip")
+doc <- read_xml("data-raw/capec_latest.xml.zip")
 
 # CAPEC VIEWs
 views <-

@@ -1,11 +1,10 @@
-if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO")
 library(jsonlite)
 library(stringr)
 library(usethis)
 library(tidyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 library(xml2)
-# library(mitre)
 
 if (!dir.exists("data")) dir.create("data")
 
@@ -40,14 +39,9 @@ new.cols <- c("std", "std.v", "part", "vendor", "product",
 cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
 cpes <- tidyr::separate(data = cpes, col = "cpe.23", into = new.cols, sep = ":", remove = F)
 cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
-# cpes$vendor <- as.factor(cpes$vendor)
-# cpes$product <- as.factor(cpes$product)
-# cpes$language <- as.factor(cpes$language)
-# cpes$sw_edition <- as.factor(cpes$sw_edition)
-# cpes$target_sw <- as.factor(cpes$target_sw)
-# cpes$target_hw <- as.factor(cpes$target_hw)
 
 cpe.nist <- cpes
+
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
 
 rm(cpes, new.cols, doc, nodes)
