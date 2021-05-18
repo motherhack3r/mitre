@@ -4,7 +4,10 @@
 \alias{build_nodes}
 \title{Transform all standards as nodes in a data frame.}
 \usage{
-build_nodes()
+build_nodes(verbose = FALSE)
+}
+\arguments{
+\item{verbose}{logical, FALSE by default. Change it to see the process messages.}
 }
 \value{
 data.frame

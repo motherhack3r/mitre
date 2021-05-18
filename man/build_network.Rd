@@ -4,7 +4,12 @@
 \alias{build_network}
 \title{Create a list of nodes and edges related to all standards in data folder.}
 \usage{
-build_network()
+build_network(verbose = FALSE, as_igraph = TRUE)
+}
+\arguments{
+\item{verbose}{logical, FALSE by default. Change it to see the process messages.}
+
+\item{as_igraph}{logical, TRUE by default. Change it to get list of nodes and edges.}
 }
 \value{
 list, containing nodes and edges as data frames
