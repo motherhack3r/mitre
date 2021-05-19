@@ -9,9 +9,9 @@ from_year <-  2002
 
 # Download Raw
 if (!as.logical(length(list.files(path = "data-raw", pattern = "^cve-\\d+\\.json.gz$")))) {
-  for (from_year in 2002:strftime(Sys.Date(), "%Y")) {
-    utils::download.file(url = paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", from_year,".json.gz"),
-                         destfile = paste0("data-raw/cve-", from_year,".json.gz"), quiet = T)
+  for (year in 2002:strftime(Sys.Date(), "%Y")) {
+    utils::download.file(url = paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", year,".json.gz"),
+                         destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = T)
   }
 }
 

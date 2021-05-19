@@ -25,7 +25,7 @@ build_network <- function(verbose = FALSE, as_igraph = TRUE) {
 
 
   if (as_igraph) {
-    mitrenet$nodes$shape[mitrenet$nodes$shape %in% c("triangle", "box")] <- "circle"
+    nodes$shape[nodes$shape %in% c("triangle", "box")] <- "circle"
     mitrenet <- igraph::graph_from_data_frame(edges, directed = T, vertices = nodes)
   } else {
     mitrenet <- list(nodes = nodes, edges = edges)
