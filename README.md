@@ -64,16 +64,49 @@ hist(mitre::cve.nist$cvss3.score,
 
 <img src="man/figures/README-example2-1.png" width="100%" />
 
-## Network visualization
+## Standards network
 
-This is a example which shows you how to visualize shield network:
+This code shows you the type of nodes for each standard:
 
 ``` r
-# library(visNetwork)
-# mitrenet <- mitre::build_network(as_igraph = FALSE)
-# g <- visNetwork::visNetwork(nodes = mitrenet$nodes,
-#                             edges = mitrenet$edges)
-# g
+mitrenet <- mitre::build_network(as_igraph = FALSE)
+table(mitrenet$nodes$type, mitrenet$nodes$group)
+#>                   
+#>                    attck capec  car  cpe  cve  cwe shield
+#>   analytic             0     0   84    0    0    0      0
+#>   category             0     1    0    0    0  319      0
+#>   cpe                  0     0    0 1369    0    0      0
+#>   cve                  0     0    0    0 4059    0      0
+#>   data_model           0     0   33    0    0    0      0
+#>   group              120     0    0    0    0    0      0
+#>   mitigation          42     0    0    0    0    0      0
+#>   opportunity          0     0    0    0    0    0     81
+#>   pattern              0   525    0    0    0    0      0
+#>   procedure            0     0    0    0    0    0     65
+#>   software-malware   423     0    0    0    0    0      0
+#>   software-tool       70     0    0    0    0    0      0
+#>   tactic              14     0    0    0    0    0      8
+#>   technique          552     0    0    0    0    0     33
+#>   use_case             0     0    0    0    0    0    197
+#>   view                 0     0    0    0    0   28      0
+#>   weakness             0     0    0    0    0  918      0
+```
+
+And the type of relationships:
+
+``` r
+table(mitrenet$edges$label)
+#> 
+#>            ATTACK         CanAlsoBe        CanPrecede           ChildOf 
+#>               155                 3               101               497 
+#>             cover            defend               has         implement 
+#>               528               258               108               219 
+#>           include     is_vulnerable          leverage         mitigates 
+#>              4817              1984              1245              1026 
+#>            PeerOf      problem_type   subtechnique-of take advantage of 
+#>                10              3916               367              1178 
+#>               use              uses 
+#>               202              8758
 ```
 
 ## Code of conduct

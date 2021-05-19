@@ -60,17 +60,20 @@ hist(mitre::cve.nist$cvss3.score,
 ```
 
 
-## Network visualization
+## Standards network
 
-This is a example which shows you how to visualize shield network:
+This code shows you the type of nodes for each standard:
 
 ```{r example3}
-# library(visNetwork)
-# mitrenet <- mitre::build_network(as_igraph = FALSE)
-# g <- visNetwork::visNetwork(nodes = mitrenet$nodes,
-#                             edges = mitrenet$edges)
-# g
+mitrenet <- mitre::build_network(as_igraph = FALSE)
+table(mitrenet$nodes$type, mitrenet$nodes$group)
 ```
+
+And the type of relationships:
+```{r example4}
+table(mitrenet$edges$label)
+```
+
 
 ## Code of conduct
 
