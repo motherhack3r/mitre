@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(mitre)
+# library(mitre)
 ```
 
 # Cyber security data sets
@@ -25,15 +25,14 @@ library(mitre)
 This is a basic example which shows you how to view shield tactics ids and names:
 
 ```{r example}
-shield <- mitre::shield.tactics
-shield[, c("id", "name")]
+# shield.tactics[, c("id", "name")]
 ```
 
 This example shows the distribution of vulnerability risk:
 
 ```{r example2}
-hist(mitre::cve.nist$cvss3.score, 
-     main = "CVE risk distribution", xlab = "cvss3")
+# hist(cve.nist$cvss3.score, 
+#      main = "CVE risk distribution", xlab = "cvss3")
 ```
 
 
@@ -42,11 +41,11 @@ hist(mitre::cve.nist$cvss3.score,
 This code shows you the type of nodes for each standard:
 
 ```{r example3}
-mitrenet <- mitre::build_network(as_igraph = FALSE)
-table(mitrenet$nodes$type, mitrenet$nodes$group)
+# mitrenet <- build_network(as_igraph = FALSE)
+# table(mitrenet$nodes$type, mitrenet$nodes$group)
 ```
 
 And the type of relationships:
 ```{r example4}
-table(mitrenet$edges$label)
+# table(mitrenet$edges$label)
 ```
