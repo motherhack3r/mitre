@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: Cybersecurity MITRE Standards Data and Digraphs
-Version: 0.6.0.9007
+Version: 0.6.0.9015
 Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
@@ -18,29 +18,18 @@ Encoding: UTF-8
 LazyData: true
 LazyDataCompression: xz
 Imports: 
-    dplyr,
+    rlang,
     plyr,
-    tidyr,
-    xml2,
-    rvest,
+    dplyr,
+    igraph,
+    stringr,
     jsonlite,
     RJSONIO,
-    stringr,
-    httr,
-    yaml,
-    rlang,
-    igraph,
-    usethis
+    tidyr
 RoxygenNote: 7.1.1
 Suggests: 
-    visNetwork,
     knitr,
-    rmarkdown,
-    utils,
-    shiny,
-    curl,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
-Config/testthat/edition: 3

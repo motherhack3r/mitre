@@ -50,6 +50,8 @@ build_network <- function(verbose = FALSE, as_igraph = TRUE) {
 #'
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
 #'
+#' @importFrom rlang .data
+#'
 #' @return data.frame
 build_nodes <- function(verbose = FALSE) {
   nodes <- newNode()
@@ -363,8 +365,8 @@ build_nodes <- function(verbose = FALSE) {
   car.nodes$hidden <- rep(FALSE, nrow(car.nodes))
   car.nodes$mass <- car.nodes$value
   car.nodes <- dplyr::mutate(car.nodes,
-                             description = paste(description, action.description,
-                                                 "Example: ", field.example, sep = "\n\n"))
+                             description = paste(.data$description, .data$action.description,
+                                                 "Example: ", .data$field.example, sep = "\n\n"))
   car.nodes$id <- rep(NA, nrow(car.nodes))
   car.nodes <- car.nodes[, names(nodes)]
 
@@ -373,7 +375,7 @@ build_nodes <- function(verbose = FALSE) {
   ### Sensors
   if (verbose) print(paste0("[NET][CAR] extracting sensor nodes ..."))
   car.nodes <- car.sensors
-  car.nodes <- dplyr::mutate(car.nodes, label = paste(sensor_name, sensor_version, sep = "_"))
+  car.nodes <- dplyr::mutate(car.nodes, label = paste(.data$sensor_name, .data$sensor_version, sep = "_"))
   car.nodes$group <- rep("car", nrow(car.nodes))
   car.nodes$type <- rep("sensor", nrow(car.nodes))
   car.nodes$value <- rep(1, nrow(car.nodes))
@@ -417,8 +419,9 @@ build_edges <- function(verbose = FALSE) {
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
   cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
-  cpe.edges$from <- rep(NA, nrow(cpe.edges))
-  cpe.edges$to <- rep(NA, nrow(cpe.edges))
+  cpe.edges$to_std <- as.character(cpe.edges$to_std)
+  cpe.edges$from <- as.character(rep(NA, nrow(cpe.edges)))
+  cpe.edges$to <- as.character(rep(NA, nrow(cpe.edges)))
   cpe.edges$title <- rep("is_vulnerable", nrow(cpe.edges))
   cpe.edges$value <- rep(1, nrow(cpe.edges))
   cpe.edges$label <- rep("is_vulnerable", nrow(cpe.edges))
@@ -436,8 +439,8 @@ build_edges <- function(verbose = FALSE) {
   cve.edges$problem.type <- lapply(cve.edges$problem.type, jsonlite::fromJSON)
   cve.edges <- tidyr::unnest(cve.edges, cols = c("problem.type"))
   names(cve.edges) <- c("from_std", "to_std")
-  cve.edges$from <- rep(NA, nrow(cve.edges))
-  cve.edges$to <- rep(NA, nrow(cve.edges))
+  cve.edges$from <- as.character(rep(NA, nrow(cve.edges)))
+  cve.edges$to <- as.character(rep(NA, nrow(cve.edges)))
   cve.edges$title <- rep("takes_advantage_of", nrow(cve.edges))
   cve.edges$value <- rep(1, nrow(cve.edges))
   cve.edges$label <- rep("problem_type", nrow(cve.edges))
@@ -474,8 +477,8 @@ build_edges <- function(verbose = FALSE) {
   cve.edges <- tidyr::unnest(cve.edges, cols = c("to_std"))
   cve.edges$vulnerable.configuration <- NULL
   cve.edges$from_std <- cve.edges$cve.id
-  cve.edges$from <- rep(NA, nrow(cve.edges))
-  cve.edges$to <- rep(NA, nrow(cve.edges))
+  cve.edges$from <- as.character(rep(NA, nrow(cve.edges)))
+  cve.edges$to <- as.character(rep(NA, nrow(cve.edges)))
   cve.edges$title <- rep("vulnerable_configuration", nrow(cve.edges))
   cve.edges$value <- rep(1, nrow(cve.edges))
   cve.edges$label <- rep("is_vulnerable", nrow(cve.edges))
@@ -498,8 +501,8 @@ build_edges <- function(verbose = FALSE) {
   cwe.edges <- plyr::ldply(cwe.edges, rbind)
   names(cwe.edges) <- c("from_std", "to_std")
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
-  cwe.edges$from <- rep(NA, nrow(cwe.edges))
-  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$from <- as.character(rep(NA, nrow(cwe.edges)))
+  cwe.edges$to <- as.character(rep(NA, nrow(cwe.edges)))
   cwe.edges$title <- rep("vulnerability_example", nrow(cwe.edges))
   cwe.edges$value <- rep(1, nrow(cwe.edges))
   cwe.edges$label <- rep("example", nrow(cwe.edges))
@@ -521,8 +524,8 @@ build_edges <- function(verbose = FALSE) {
   names(cwe2capec) <- cwe.edges$Code_Standard
   cwe.edges <- dplyr::bind_rows(cwe2capec, .id = "from_std")
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
-  cwe.edges$from <- rep(NA, nrow(cwe.edges))
-  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$from <- as.character(rep(NA, nrow(cwe.edges)))
+  cwe.edges$to <- as.character(rep(NA, nrow(cwe.edges)))
   cwe.edges$title <- rep("leverage_attack", nrow(cwe.edges))
   cwe.edges$value <- rep(1, nrow(cwe.edges))
   cwe.edges$label <- rep("leverage", nrow(cwe.edges))
@@ -553,8 +556,8 @@ build_edges <- function(verbose = FALSE) {
   names(cwe2cwe) <- cwe.edges$Code_Standard
   cwe.edges <- dplyr::bind_rows(cwe2cwe, .id = "from_std")
   cwe.edges$to_std <- paste0("CWE-", cwe.edges$cwe_id)
-  cwe.edges$from <- rep(NA, nrow(cwe.edges))
-  cwe.edges$to <- rep(NA, nrow(cwe.edges))
+  cwe.edges$from <- as.character(rep(NA, nrow(cwe.edges)))
+  cwe.edges$to <- as.character(rep(NA, nrow(cwe.edges)))
   cwe.edges$nature[is.na(cwe.edges$nature)] <- "include"
   cwe.edges$title <- cwe.edges$nature
   cwe.edges$value <- rep(1, nrow(cwe.edges))
@@ -573,8 +576,8 @@ build_edges <- function(verbose = FALSE) {
   # XXX: Workaround for empty relations to CWEs
   capec.edges <- capec.edges[!grepl(pattern = "^CWE-$", x = capec.edges$to), ]
   names(capec.edges) <- c("from_std", "label", "to_std", "title")
-  capec.edges$from <- rep(NA, nrow(capec.edges))
-  capec.edges$to <- rep(NA, nrow(capec.edges))
+  capec.edges$from <- as.character(rep(NA, nrow(capec.edges)))
+  capec.edges$to <- as.character(rep(NA, nrow(capec.edges)))
   capec.edges$value <- rep(1, nrow(capec.edges))
   capec.edges$arrows <- rep("to", nrow(capec.edges))
   capec.edges$dashes <- rep(FALSE, nrow(capec.edges))
@@ -588,8 +591,8 @@ build_edges <- function(verbose = FALSE) {
   attck.edges <- attck.relations
   attck.edges <- attck.edges[, c("from", "to", "description", "relationship_type")]
   names(attck.edges) <- c("from_std", "to_std", "title", "label")
-  attck.edges$from <- rep(NA, nrow(attck.edges))
-  attck.edges$to <- rep(NA, nrow(attck.edges))
+  attck.edges$from <- as.character(rep(NA, nrow(attck.edges)))
+  attck.edges$to <- as.character(rep(NA, nrow(attck.edges)))
   attck.edges$value <- rep(1, nrow(attck.edges))
   attck.edges$arrows <- rep("to", nrow(attck.edges))
   attck.edges$dashes <- rep(FALSE, nrow(attck.edges))
@@ -603,8 +606,8 @@ build_edges <- function(verbose = FALSE) {
   shield.edges <- shield.relations
   names(shield.edges) <- c("from_std", "to_std", "label")
   shield.edges$title <- shield.edges$label
-  shield.edges$from <- rep(NA, nrow(shield.edges))
-  shield.edges$to <- rep(NA, nrow(shield.edges))
+  shield.edges$from <- as.character(rep(NA, nrow(shield.edges)))
+  shield.edges$to <- as.character(rep(NA, nrow(shield.edges)))
   shield.edges$value <- rep(1, nrow(shield.edges))
   shield.edges$arrows <- rep("to", nrow(shield.edges))
   shield.edges$dashes <- rep(FALSE, nrow(shield.edges))
@@ -619,8 +622,8 @@ build_edges <- function(verbose = FALSE) {
   car.edges <- car.coverage
   names(car.edges) <- c("from_std", "to_std", "title", "value")
   car.edges$label <- rep("cover", nrow(car.edges))
-  car.edges$from <- rep(NA, nrow(car.edges))
-  car.edges$to <- rep(NA, nrow(car.edges))
+  car.edges$from <- as.character(rep(NA, nrow(car.edges)))
+  car.edges$to <- as.character(rep(NA, nrow(car.edges)))
   car.edges$arrows <- rep("to", nrow(car.edges))
   car.edges$dashes <- rep(FALSE, nrow(car.edges))
   car.edges$hidden <- rep(FALSE, nrow(car.edges))
@@ -635,8 +638,8 @@ build_edges <- function(verbose = FALSE) {
   names(car.edges) <- c("from_std", "to_std")
   car.edges$label <- rep("implement", nrow(car.edges))
   car.edges$title <- car.edges$label
-  car.edges$from <- rep(NA, nrow(car.edges))
-  car.edges$to <- rep(NA, nrow(car.edges))
+  car.edges$from <- as.character(rep(NA, nrow(car.edges)))
+  car.edges$to <- as.character(rep(NA, nrow(car.edges)))
   car.edges$value <- rep(1, nrow(car.edges))
   car.edges$arrows <- rep("to", nrow(car.edges))
   car.edges$dashes <- rep(FALSE, nrow(car.edges))
