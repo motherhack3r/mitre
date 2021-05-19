@@ -5,6 +5,9 @@
 #'
 #' @return list, containing nodes and edges as data frames
 #' @export
+#'
+#' @examples
+#' mitrenet <- mitre::build_network(as_igraph = FALSE)
 build_network <- function(verbose = FALSE, as_igraph = TRUE) {
   if (verbose) print(paste0("[NET] Building nodes ..."))
   nodes <- build_nodes(verbose)
@@ -665,7 +668,7 @@ build_edges <- function(verbose = FALSE) {
 #' \code{shape} : The shape defines what the node looks like. The types with the label inside of it are: ellipse, circle, database, box, text. The ones with the label outside of it are: image, circularImage, diamond, dot, star, triangle, triangleDown, square and icon.
 #' \code{color} : Color for the node.
 #' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
-#' \code{mass} : Default to 1. The barnesHut physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
+#' \code{mass} : Default to 1. The "barnesHut" physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
 #' \code{description} : Description could include extra information or nested data which include other columns from original data frame observation.
 #'
 #' @return data.frame

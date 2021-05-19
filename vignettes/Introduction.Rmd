@@ -1,0 +1,52 @@
+---
+title: "Introduction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mitre)
+```
+
+# Cyber security data sets
+
+## Explore cybersecurity standards
+
+This is a basic example which shows you how to view shield tactics ids and names:
+
+```{r example}
+shield <- mitre::shield.tactics
+shield[, c("id", "name")]
+```
+
+This example shows the distribution of vulnerability risk:
+
+```{r example2}
+hist(mitre::cve.nist$cvss3.score, 
+     main = "CVE risk distribution", xlab = "cvss3")
+```
+
+
+## Standards network
+
+This code shows you the type of nodes for each standard:
+
+```{r example3}
+mitrenet <- mitre::build_network(as_igraph = FALSE)
+table(mitrenet$nodes$type, mitrenet$nodes$group)
+```
+
+And the type of relationships:
+```{r example4}
+table(mitrenet$edges$label)
+```

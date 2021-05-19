@@ -48,3 +48,4 @@ data-raw/*.json
 data-raw/*.xml
 data-raw/*.gz
 data-raw/*.zip
+inst/doc

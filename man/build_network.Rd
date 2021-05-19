@@ -17,3 +17,6 @@ list, containing nodes and edges as data frames
 \description{
 Create a list of nodes and edges related to all standards in data folder.
 }
+\examples{
+mitrenet <- mitre::build_network(as_igraph = FALSE)
+}

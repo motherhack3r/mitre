@@ -13,13 +13,13 @@ data.frame
 \code{id} : The id of the node unique value for all standard elements.
 \code{label} : The label is the piece of text shown in or under the node, depending on the shape.
 \code{group} : When not undefined, the group of node(s)
-\code{type} : Used as subgroup to classify diferent object from
+\code{type} : Used as subgroup to classify different object from
 \code{value} : When a value is set, the nodes will be scaled using the options in the scaling object defined above.
 \code{title} : Title to be displayed when the user hovers over the node. The title can be an HTML element or a string containing plain text or HTML.
 \code{standard} : The id of the standard
 \code{shape} : The shape defines what the node looks like. The types with the label inside of it are: ellipse, circle, database, box, text. The ones with the label outside of it are: image, circularImage, diamond, dot, star, triangle, triangleDown, square and icon.
 \code{color} : Color for the node.
 \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
-\code{mass} : Default to 1. The barnesHut physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
+\code{mass} : Default to 1. The "barnesHut" physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
 \code{description} : Description could include extra information or nested data which include other columns from original data frame observation.
 }

@@ -28,8 +28,10 @@ Imports:
     tidyr
 RoxygenNote: 7.1.1
 Suggests: 
+    rmarkdown,
     knitr,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Config/testthat/edition: 3
