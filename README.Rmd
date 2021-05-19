@@ -23,9 +23,10 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 mitre package is designed to provide easy access to cybersecurity data standards.
-You can expect functions to get data frames for every standard object.
+You can expect sample data frames for every standard object.
 It provide a directed graph with all relationships for deep exploratory analysis.
-You could avoid full parsing process using the latest public Rdata sets.
+Using scripts in data-raw folder you can build the data sets using the latest 
+public source files.
 
 ## Installation
 
@@ -41,7 +42,7 @@ And the development version from [GitHub](https://github.com/) with:
 # install.packages("devtools")
 devtools::install_github("motherhack3r/mitre")
 ```
-## Basic usage
+## Explore cybersecurity standards
 
 This is a basic example which shows you how to view shield tactics ids and names:
 
@@ -50,10 +51,12 @@ library(mitre)
 shield <- mitre::shield.tactics
 shield[, c("id", "name")]
 ```
-This example shows the number of ATT&CK Techniques by domain:
+
+This example shows the distribution of vulnerability risk:
 
 ```{r example2}
-# table(mitredata$standards$attck$techniques$domain)
+hist(mitre::cve.nist$cvss3.score, 
+     main = "CVE risk distribution", xlab = "cvss3")
 ```
 
 
@@ -63,20 +66,11 @@ This is a example which shows you how to visualize shield network:
 
 ```{r example3}
 # library(visNetwork)
-# g <- visNetwork::visNetwork(nodes = shield$shieldnet$nodes,
-#                             edges = shield$shieldnet$edges)
+# mitrenet <- mitre::build_network(as_igraph = FALSE)
+# g <- visNetwork::visNetwork(nodes = mitrenet$nodes,
+#                             edges = mitrenet$edges)
 # g
 ```
-
-![Shield network zoom in](inst/doc/images/readme_example.png)  
-
-Find some more examples in vignettes to build your own graph like [this](https://security.shinyapps.io/mitreshield/). 
-
-## Advanced exploratory analysis
-Check [this](https://datadrivensecurity-project.web.app/) proof of concept project. It is a Rmarkdown document performing an exploratory analysis with mitre network and [this data set](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat).
-
- - [Exploratory analysis](https://github.com/Barbero95/DataDrivenSecurity-Project): developed by [barbero95](https://github.com/Barbero95) and [Marta](https://github.com/martavilab). 
- - Sample incidents data set from rpackage [attckr](https://github.com/hrbrmstr/attckr/tree/master/inst/extdat) developed by [Bob Rudis](https://github.com/hrbrmstr).
 
 ## Code of conduct
 
