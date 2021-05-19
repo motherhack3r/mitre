@@ -658,7 +658,7 @@ build_edges <- function(verbose = FALSE) {
 #' \code{id} : The id of the node unique value for all standard elements.
 #' \code{label} : The label is the piece of text shown in or under the node, depending on the shape.
 #' \code{group} : When not undefined, the group of node(s)
-#' \code{type} : Used as subgroup to classify diferent object from
+#' \code{type} : Used as subgroup to classify different object from
 #' \code{value} : When a value is set, the nodes will be scaled using the options in the scaling object defined above.
 #' \code{title} : Title to be displayed when the user hovers over the node. The title can be an HTML element or a string containing plain text or HTML.
 #' \code{standard} : The id of the standard
