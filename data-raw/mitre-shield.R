@@ -1,4 +1,4 @@
-if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO") else message("RJSONIO not loaded")
+if(any(grepl("package:RJSONIO", search()))) detach("package:RJSONIO")
 library(jsonlite)
 library(usethis)
 if(any(grepl("package:dplyr", search()))) detach("package:dplyr") else message("dplyr not loaded")
