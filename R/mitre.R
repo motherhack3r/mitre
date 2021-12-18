@@ -419,6 +419,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- newEdge()
 
   ### CPE -> CVE
+  if (verbose) print(paste0("[NET] Adding relationships CPE -> CVE ..."))
   cpe.edges <- lapply(cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
@@ -438,6 +439,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, cpe.edges)
 
   ### CVE -> CWE
+  if (verbose) print(paste0("[NET] Adding relationships CVE -> CWE ..."))
   cve.edges <- dplyr::select(cve.nist, c("cve.id", "problem.type"))
   cve.edges[cve.edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
   cve.edges$problem.type <- lapply(cve.edges$problem.type, jsonlite::fromJSON)
@@ -460,6 +462,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, cve.edges)
 
   ### CVE -> CPE
+  if (verbose) print(paste0("[NET] Adding relationships CVE -> CPE ..."))
   cve.edges <- dplyr::select(cve.nist, c("cve.id", "vulnerable.configuration"))
   cpematch <- lapply(cve.edges$vulnerable.configuration,
                      function(x)
@@ -496,6 +499,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, cve.edges)
 
   ### CWE -> CVE
+  if (verbose) print(paste0("[NET] Adding relationships CWE -> CVE ..."))
   cwe.edges <- lapply(cwe.weaknesses$Observed_Examples,
                       function(x) {
                         cves <- stringr::str_extract_all(x, "CVE-\\d+-\\d+")[[1]]
@@ -519,6 +523,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CAPEC
+  if (verbose) print(paste0("[NET] Adding relationships CWE -> CAPEC ..."))
   cwe.edges <- cwe.weaknesses[, c("Code_Standard", "Related_Attack_Patterns")]
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
   cwe2capec <- lapply(cwe.edges$Related_Attack_Patterns,
@@ -542,6 +547,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CWE
+  if (verbose) print(paste0("[NET] Adding relationships CWE -> CWE ..."))
   cwe.edges <- dplyr::bind_rows(cwe.views[, c("Code_Standard", "Related_Weakness")],
                                 cwe.categories[, c("Code_Standard", "Related_Weakness")],
                                 cwe.weaknesses[, c("Code_Standard", "Related_Weakness")])
@@ -576,6 +582,7 @@ build_edges <- function(verbose = FALSE) {
   rm(cwe2capec, cwe2cwe)
 
   ### CAPEC multiple relations
+  if (verbose) print(paste0("[NET] Adding relationships CAPEC -> ANY ..."))
   capec.edges <- capec.relations
   # XXX: Workaround for empty relations to CWEs
   capec.edges <- capec.edges[!grepl(pattern = "^CWE-$", x = capec.edges$to), ]
@@ -592,6 +599,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, capec.edges)
 
   ### ATTCK multiple relations
+  if (verbose) print(paste0("[NET] Adding relationships ATTCK -> ANY ..."))
   attck.edges <- attck.relations
   attck.edges <- attck.edges[, c("from", "to", "description", "relationship_type")]
   names(attck.edges) <- c("from_std", "to_std", "title", "label")
@@ -607,6 +615,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, attck.edges)
 
   ### SHIELD multiple relations
+  if (verbose) print(paste0("[NET] Adding relationships SHIELD -> ANY ..."))
   shield.edges <- shield.relations
   names(shield.edges) <- c("from_std", "to_std", "label")
   shield.edges$title <- shield.edges$label
@@ -623,6 +632,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CAR multiple relations
   #### CAR -> ATTCK
+  if (verbose) print(paste0("[NET] Adding relationships CAR -> ATTCK ..."))
   car.edges <- car.coverage
   names(car.edges) <- c("from_std", "to_std", "title", "value")
   car.edges$label <- rep("cover", nrow(car.edges))
@@ -637,6 +647,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, car.edges)
 
   #### CAR -> CAR Data Model
+  if (verbose) print(paste0("[NET] Adding relationships CAR -> CAR ..."))
   #### CAR Data Model -> CAR Sensor
   car.edges <- car.relations
   names(car.edges) <- c("from_std", "to_std")
