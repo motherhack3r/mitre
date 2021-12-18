@@ -55,7 +55,8 @@ miti <- miti[, apply(miti, 2, function(x) !is.null(unlist(x)))]
 miti$x_mitre_deprecated[is.na(miti$x_mitre_deprecated)] <- FALSE
 miti <- miti %>% filter(!x_mitre_deprecated) %>% select(-x_mitre_deprecated)
 
-attck.mitigations <- bind_cols(bind_rows(miti$external_references),
+## TODO: Remove head and improve nested references
+attck.mitigations <- bind_cols(bind_rows(sapply(miti$external_references, function(x) head(x,1))) %>% select(-description),
                            miti %>% select(-object_marking_refs, -external_references))
 
 ## Group (intrusion-set)
