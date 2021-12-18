@@ -10,20 +10,20 @@ if (!dir.exists("data")) dir.create("data")
 
 # Download
 if (length(list.files(path = "data-raw", pattern = "^car-.*\\.yaml$")) != 3) {
-  req <- httr::GET("https://api.github.com/repos/mitre-attack/car/git/trees/master?recursive=1")
+  req <- httr::GET("https://api.github.com/repos/humbertcostas/car/git/trees/CAR-2020-11-001?recursive=1")
   httr::stop_for_status(req)
   filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
   rm(req)
 
-  raw.analytics <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
+  raw.analytics <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/humbertcostas/car/CAR-2020-11-001/",
                                                   grep("analytics/CAR.*yaml", filelist,
                                                        value = TRUE, perl = TRUE)),
                                            yaml::read_yaml))
-  raw.model <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
+  raw.model <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/humbertcostas/car/CAR-2020-11-001/",
                                               grep("data_model/.*yaml", filelist,
                                                    value = TRUE, perl = TRUE)),
                                        yaml::read_yaml))
-  raw.sensors <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/mitre-attack/car/master/",
+  raw.sensors <- suppressWarnings(lapply(paste0("https://raw.githubusercontent.com/humbertcostas/car/CAR-2020-11-001/",
                                                 grep("^sensors/.*yaml$", filelist,
                                                      value = TRUE, perl = TRUE)),
                                          yaml::read_yaml))
@@ -45,6 +45,7 @@ analytics <- lapply(raw.analytics,
                       x[["references"]] <- jsonlite::toJSON(x[["references"]])
                       x[["true_positives"]] <- jsonlite::toJSON(x[["true_positives"]])
                       x[["data_model_references"]] <- NULL
+                      x[["d3fend_mappings"]] <- NULL
                       x
                     })
 analytics <- dplyr::bind_rows(analytics)
