@@ -1,3 +1,5 @@
+# mitre (development version)
+
 # mitre 1.0.0
 * Provide sample data sets pre-parsed using data-raw scripts
 * Included standards: CPE, CVE, CWE, CAPEC, CAR, ATT&CK and SHIELD
