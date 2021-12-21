@@ -396,6 +396,11 @@ build_nodes <- function(verbose = FALSE) {
   nodes <- dplyr::bind_rows(nodes, car.nodes)
   nodes$id <- 1:nrow(nodes)
 
+  nodes$standard <- gsub('"',"",nodes$standard)
+  nodes$label <- gsub('"',"",nodes$label)
+  nodes$group <- gsub('-',"_",nodes$group)
+  nodes$type <- gsub('-',"_",nodes$type)
+
   return(nodes)
 }
 
@@ -425,6 +430,7 @@ build_edges <- function(verbose = FALSE) {
   cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
   cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
   cpe.edges$to_std <- as.character(cpe.edges$to_std)
+  cpe.edges$to_std <- stringr::str_replace_all(cpe.edges$to_std,"'","")
   cpe.edges$from <- as.character(rep(NA, nrow(cpe.edges)))
   cpe.edges$to <- as.character(rep(NA, nrow(cpe.edges)))
   cpe.edges$title <- rep("is_vulnerable", nrow(cpe.edges))
@@ -663,6 +669,12 @@ build_edges <- function(verbose = FALSE) {
 
   car.edges <- car.edges[, names(edges)]
   edges <- dplyr::bind_rows(edges, car.edges)
+
+  edges$label <- gsub(pattern = "(\\s|-)", "_", edges$label)
+  edges$title <- gsub(pattern = "(\\s|-)", "_", edges$title)
+  edges$title <- stringr::str_replace_all(edges$title,"'","")
+  edges$title <- stringr::str_replace_all(edges$title,'"',"")
+  edges$title[is.na(edges$title)] <- "unknown"
 
   return(edges)
 }
