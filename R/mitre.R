@@ -22,7 +22,7 @@ getLatestDataSet <- function(verbose = FALSE) {
                      function(x) {
                        t <- tempfile(fileext = ".rda")
                        download.file(x, t, quiet = !verbose)
-                       load(t)
+                       load(t, envir = .GlobalEnv)
                        file.remove(t)
                      })
   return(mitre.data)
