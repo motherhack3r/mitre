@@ -1,3 +1,33 @@
+#' Download latest R data sets from Github previously parsed with this package.
+#'
+#' @param verbose default is FALSE
+#'
+#' @return list of standards and network
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' mitredata <- mitre::getLatestDataSet(TRUE)
+#' }
+getLatestDataSet <- function(verbose = FALSE) {
+  # List files
+  req <- httr::GET("https://api.github.com/repos/motherhack3r/mitre-datasets/git/trees/master?recursive=1")
+  httr::stop_for_status(req)
+  filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
+  rm(req)
+
+  # Load files
+  mitre.data <- lapply(paste0("https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/",
+                            grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
+                     function(x) {
+                       t <- tempfile(fileext = ".rda")
+                       download.file(x, t, quiet = !verbose)
+                       load(t)
+                       file.remove(t)
+                     })
+  return(mitre.data)
+}
+
 #' Create a list of nodes and edges related to all standards in data folder.
 #'
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
@@ -92,7 +122,7 @@ build_nodes <- function(verbose = FALSE) {
   cve.nodes$color <- rep("blue", nrow(cve.nodes))
   cve.nodes$hidden <- rep(FALSE, nrow(cve.nodes))
   cve.nodes$mass <- cve.nodes$value
-  cve.nodes$description <- cve.nodes$references
+  cve.nodes$description <- cve.nodes$description
   cve.nodes <- cve.nodes[, names(nodes)]
 
   nodes <- dplyr::bind_rows(nodes, cve.nodes)

@@ -33,6 +33,8 @@ cpes$deprecated <- !is.na(as.logical(xml2::xml_attr(xml2::xml_find_first(nodes,
                                                                          ".//ancestor::d1:cpe-item"),
                                                     "deprecated")))
 
+rm(nodes)
+
 new.cols <- c("std", "std.v", "part", "vendor", "product",
               "version", "update", "edition", "language", "sw_edition",
               "target_sw", "target_hw", "other")
@@ -44,5 +46,5 @@ cpe.nist <- cpes
 
 usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
 
-rm(cpes, new.cols, doc, nodes)
+rm(cpes, new.cols, doc)
 
