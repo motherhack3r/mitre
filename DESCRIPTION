@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: Cybersecurity MITRE Standards Data and Digraphs
-Version: 0.5.1.9001
+Version: 1.0.0.9005
 Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
@@ -16,27 +16,22 @@ URL: https://github.com/motherhack3r/mitre
 BugReports: https://github.com/motherhack3r/mitre/issues
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Imports: 
-    dplyr,
+    rlang,
     plyr,
-    tidyr,
-    xml2,
-    rvest,
+    dplyr,
+    igraph,
+    stringr,
     jsonlite,
     RJSONIO,
-    stringr,
-    httr,
-    yaml,
-    rlang,
-    igraph
-RoxygenNote: 7.1.1
+    tidyr
+RoxygenNote: 7.1.2
 Suggests: 
-    visNetwork,
-    knitr,
     rmarkdown,
-    utils,
-    shiny,
-    curl
+    knitr,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Config/testthat/edition: 3
