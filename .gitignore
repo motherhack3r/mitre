@@ -39,13 +39,14 @@ vignettes/*.html
 # R Environment Variables
 .Renviron
 inst/temp
+*.Rproj
 
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
 
 # Raw files
-data-raw/*.json
-data-raw/*.xml
-data-raw/*.gz
-data-raw/*.zip
+data-raw/**/*.json
+data-raw/**/*.xml
+data-raw/**/*.gz
+data-raw/**/*.zip
 inst/doc
