@@ -3,13 +3,15 @@ library(rvest)
 library(stringr)
 library(dplyr, warn.conflicts = FALSE)
 
+if (!dir.exists("data-raw/capec")) dir.create("data-raw/capec")
+
 # CAPEC
 # Ref: https://capec.mitre.org/data/index.html
 
-if (!file.exists("data-raw/capec_latest.zip"))
+if (!file.exists("data-raw/capec/capec_latest.zip"))
   download.file(url = "https://capec.mitre.org/data/archive/capec_latest.zip",
-                destfile = "data-raw/capec_latest.xml.zip")
-doc <- read_xml("data-raw/capec_latest.xml.zip")
+                destfile = "data-raw/capec/capec_latest.xml.zip")
+doc <- read_xml("data-raw/capec/capec_latest.xml.zip")
 
 # CAPEC VIEWs
 views <-

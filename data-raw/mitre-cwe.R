@@ -6,9 +6,10 @@ if(any(grepl("package:jsonlite", search()))) detach("package:jsonlite") # else m
 library(RJSONIO, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
+if (!dir.exists("data-raw/cwe")) dir.create("data-raw/cwe")
 
 # Latest XML definition
-cwes.file <- "data-raw/cwe-latest.xml.zip"
+cwes.file <- "data-raw/cwe/cwe-latest.xml.zip"
 if (!file.exists(cwes.file)) {
   download.file(url = "http://cwe.mitre.org/data/xml/cwec_latest.xml.zip",
                 destfile = cwes.file)

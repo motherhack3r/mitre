@@ -6,59 +6,60 @@ library(plyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
+if (!dir.exists("data-raw/shield")) dir.create("data-raw/shield")
 
 # Tactics
 if (!file.exists("data-raw/shield-tactics.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactics.json",
-                destfile = "data-raw/shield-tactics.json")
+                destfile = "data-raw/shield/shield-tactics.json")
 }
-shield.tactics <- fromJSON("data-raw/shield-tactics.json")
+shield.tactics <- fromJSON("data-raw/shield/shield-tactics.json")
 
 # Techniques
-if (!file.exists("data-raw/shield-techniques.json")) {
+if (!file.exists("data-raw/shield/shield-techniques.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/techniques.json",
-                destfile = "data-raw/shield-techniques.json")
+                destfile = "data-raw/shield/shield-techniques.json")
 }
-shield.techniques <- fromJSON("data-raw/shield-techniques.json")
+shield.techniques <- fromJSON("data-raw/shield/shield-techniques.json")
 
 # Procedures
-if (!file.exists("data-raw/shield-procedures.json")) {
+if (!file.exists("data-raw/shield/shield-procedures.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/procedures.json",
-                destfile = "data-raw/shield-procedures.json")
+                destfile = "data-raw/shield/shield-procedures.json")
 }
-shield.procedures <- fromJSON("data-raw/shield-procedures.json")
+shield.procedures <- fromJSON("data-raw/shield/shield-procedures.json")
 
 # Use Cases
-if (!file.exists("data-raw/shield-use_cases.json")) {
+if (!file.exists("data-raw/shield/shield-use_cases.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/use_cases.json",
-                destfile = "data-raw/shield-use_cases.json")
+                destfile = "data-raw/shield/shield-use_cases.json")
 }
 
-shield.use_cases <- fromJSON("data-raw/shield-use_cases.json")
+shield.use_cases <- fromJSON("data-raw/shield/shield-use_cases.json")
 
 # Opportunities
-if (!file.exists("data-raw/shield-opportunities.json")) {
+if (!file.exists("data-raw/shield/shield-opportunities.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/opportunities.json",
-                destfile = "data-raw/shield-opportunities.json")
+                destfile = "data-raw/shield/shield-opportunities.json")
 }
-shield.opportunities <- fromJSON("data-raw/shield-opportunities.json")
+shield.opportunities <- fromJSON("data-raw/shield/shield-opportunities.json")
 
 # Relations
-if (!file.exists("data-raw/shield-tactic_details.json")) {
+if (!file.exists("data-raw/shield/shield-tactic_details.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/tactic_details.json",
-                destfile = "data-raw/shield-tactic_details.json")
+                destfile = "data-raw/shield/shield-tactic_details.json")
 }
 
-if (!file.exists("data-raw/shield-technique_details.json")) {
+if (!file.exists("data-raw/shield/shield-technique_details.json")) {
   download.file(url = "https://raw.githubusercontent.com/MITRECND/mitrecnd.github.io/master/_data/technique_details.json",
-                destfile = "data-raw/shield-technique_details.json")
+                destfile = "data-raw/shield/shield-technique_details.json")
 }
 
 
-tact_det <- fromJSON("data-raw/shield-tactic_details.json")
+tact_det <- fromJSON("data-raw/shield/shield-tactic_details.json")
 tact_det <- ldply(tact_det, function(x) x[["techniques"]])
 names(tact_det)[1:2] <- c("tact_id", "tech_id")
-tech_det <- fromJSON("data-raw/shield-technique_details.json")
+tech_det <- fromJSON("data-raw/shield/shield-technique_details.json")
 
 ## Shield Tactic --> Shield Technique
 relations <- tact_det %>% select(tact_id, tech_id)

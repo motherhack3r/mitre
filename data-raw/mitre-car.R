@@ -7,6 +7,7 @@ library(tidyr, warn.conflicts = FALSE)
 library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
+if (!dir.exists("data-raw/car")) dir.create("data-raw/car")
 
 # Download
 if (length(list.files(path = "data-raw", pattern = "^car-.*\\.yaml$")) != 3) {

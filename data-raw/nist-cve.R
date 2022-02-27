@@ -4,14 +4,15 @@ library(usethis)
 library(dplyr, warn.conflicts = FALSE)
 
 if (!dir.exists("data")) dir.create("data")
+if (!dir.exists("data-raw/cve")) dir.create("data-raw/cve")
 
 from_year <-  2002
 
 # Download Raw
-if (!as.logical(length(list.files(path = "data-raw", pattern = "^cve-\\d+\\.json.gz$")))) {
+if (!as.logical(length(list.files(path = "data-raw/cve", pattern = "^cve-\\d+\\.json.gz$")))) {
   for (year in 2002:strftime(Sys.Date(), "%Y")) {
     utils::download.file(url = paste0("https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-", year,".json.gz"),
-                         destfile = paste0("data-raw/cve-", year,".json.gz"), quiet = T)
+                         destfile = paste0("data-raw/cve/cve-", year,".json.gz"), quiet = T)
   }
 }
 
@@ -20,7 +21,7 @@ if (!as.logical(length(list.files(path = "data-raw", pattern = "^cve-\\d+\\.json
 # PARSER FUNCTIONS
 GetNISTvulnsByYear <- function(year = 2020, verbose = FALSE) {
   if (verbose) print(paste0("[PARSE][CVE] Parsing year ", year))
-  raw.cves <- jsonlite::fromJSON(paste0("data-raw/cve-", year,".json.gz"))
+  raw.cves <- jsonlite::fromJSON(paste0("data-raw/cve/cve-", year,".json.gz"))
 
   raw.cves <- raw.cves$CVE_Items
   cves <- data.frame(cve.id = raw.cves$cve$CVE_data_meta$ID,
