@@ -10,7 +10,7 @@ if (!dir.exists("data-raw/attack")) dir.create("data-raw/attack")
 # ATTACK ENTERPRISE
 # Ref: https://github.com/mitre/cti/blob/master/USAGE.md#the-attck-data-model
 
-# Tactics
+# Download data
 if (!file.exists("data-raw/attack/attack-enterprise.json")) {
   download.file(url = "https://github.com/mitre/cti/raw/master/enterprise-attack/enterprise-attack.json",
                 destfile = "data-raw/attack/attack-enterprise.json")
@@ -29,6 +29,17 @@ attck.tactics <- bind_cols(bind_rows(tact$external_references),
 tech <- attck.ent$objects[attck.ent$objects$type == "attack-pattern", ]
 tech <- tech[, apply(tech, 2, function(x) !all(is.na(x)))]
 tech <- tech[, apply(tech, 2, function(x) !is.null(unlist(x)))]
+
+### Data sources
+dsrc <- attck.ent$objects[attck.ent$objects$type == "x-mitre-data-source", ]
+dsrc <- dsrc[, apply(dsrc, 2, function(x) !all(is.na(x)))]
+dsrc <- dsrc[, apply(dsrc, 2, function(x) !is.null(unlist(x)))]
+dsrl <- tech %>%
+  select(id, x_mitre_data_sources) %>%
+  unnest(x_mitre_data_sources) %>%
+  separate(col = x_mitre_data_sources,
+           into=c("data_component", "data_source"), sep = ": ")
+
 tech <- bind_cols(bind_rows(tech$external_references) %>%
                     filter(source_name == "mitre-attack") %>%
                     select(-description),
