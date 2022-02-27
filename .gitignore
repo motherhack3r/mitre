@@ -40,6 +40,7 @@ vignettes/*.html
 .Renviron
 inst/doc
 inst/temp
+inst/extdata
 
 # Temporary raw files to parse
 data-raw/
