@@ -30,16 +30,6 @@ tech <- attck.ent$objects[attck.ent$objects$type == "attack-pattern", ]
 tech <- tech[, apply(tech, 2, function(x) !all(is.na(x)))]
 tech <- tech[, apply(tech, 2, function(x) !is.null(unlist(x)))]
 
-### Data sources
-dsrc <- attck.ent$objects[attck.ent$objects$type == "x-mitre-data-source", ]
-dsrc <- dsrc[, apply(dsrc, 2, function(x) !all(is.na(x)))]
-dsrc <- dsrc[, apply(dsrc, 2, function(x) !is.null(unlist(x)))]
-dsrl <- tech %>%
-  select(id, x_mitre_data_sources) %>%
-  unnest(x_mitre_data_sources) %>%
-  separate(col = x_mitre_data_sources,
-           into=c("data_component", "data_source"), sep = ": ")
-
 tech <- bind_cols(bind_rows(tech$external_references) %>%
                     filter(source_name == "mitre-attack") %>%
                     select(-description),
@@ -59,6 +49,40 @@ tech$x_mitre_deprecated[is.na(tech$x_mitre_deprecated)] <- FALSE
 attck.techniques <- tech %>%
   filter(!revoked, !x_mitre_deprecated) %>%
   select(-revoked, -x_mitre_deprecated)
+
+### Data sources
+dsrc <- attck.ent$objects[attck.ent$objects$type == "x-mitre-data-source", ]
+dsrc <- dsrc[, apply(dsrc, 2, function(x) !all(is.na(x)))]
+dsrc <- dsrc[, apply(dsrc, 2, function(x) !is.null(unlist(x)))]
+
+dsrc <- bind_cols(dsrc %>% select(-external_references, -x_mitre_contributors),
+                bind_rows(dsrc$external_references) %>%
+                  filter(source_name == "mitre-attack") %>%
+                  select(-description))
+
+dsrc <- unnest(unnest(dsrc, x_mitre_platforms), x_mitre_collection_layers)
+dsrc$x_mitre_platforms <- tolower(dsrc$x_mitre_platforms)
+dsrc$x_mitre_platforms <- gsub(" ", "_", dsrc$x_mitre_platforms)
+dsrc$x_mitre_platforms <- sapply(dsrc$x_mitre_platforms, function(x) paste0("platform_", x))
+dsrc$x_mitre_collection_layers <- tolower(dsrc$x_mitre_collection_layers)
+dsrc$x_mitre_collection_layers <- gsub(" ", "_", dsrc$x_mitre_collection_layers)
+dsrc$x_mitre_collection_layers <- sapply(dsrc$x_mitre_collection_layers, function(x) paste0("collect_", x))
+
+dsrc$object_marking_refs <- as.character(dsrc$object_marking_refs)
+dsrc$val <- rep(T, nrow(dsrc))
+dsrc <- spread(dsrc, key = x_mitre_platforms, value = val, fill = F)
+dsrc$val <- rep(T, nrow(dsrc))
+dsrc <- spread(dsrc, key = x_mitre_collection_layers, value = val, fill = F)
+
+
+### Data Sources relations
+tech <- attck.ent$objects[attck.ent$objects$type == "attack-pattern", ]
+dsrl <- tech %>%
+  select(id, x_mitre_data_sources) %>%
+  unnest(x_mitre_data_sources) %>%
+  separate(col = x_mitre_data_sources,
+           into=c("data_component", "data_source"), sep = ": ")
+
 
 ## Mitigation (course-of-action)
 miti <- attck.ent$objects[attck.ent$objects$type == "course-of-action", ]
