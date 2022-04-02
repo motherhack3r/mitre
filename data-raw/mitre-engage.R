@@ -62,4 +62,9 @@ names(a2eac) <- c("from", "to")
 relations <- dplyr::bind_rows(relations, a2eac)
 engage.relations <- unique(relations)
 
-rm(req, filelist, filepath, i, n, rootpath, atm, g2ap, a2e, a2eac, relations, engage)
+usethis::use_data(engage.activities, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.approaches, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.goals, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.relations, compress = "xz", overwrite = TRUE)
+
+rm(req, filelist, filepath, i, n, atm, g2ap, a2e, a2eac, relations, engage)
