@@ -39,13 +39,18 @@ vignettes/*.html
 # R Environment Variables
 .Renviron
 inst/temp
+inst/extdata
+
+# Temporary raw files to parse
+data-raw/
+*.Rproj
 
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
 
 # Raw files
-data-raw/*.json
-data-raw/*.xml
-data-raw/*.gz
-data-raw/*.zip
+data-raw/**/*.json
+data-raw/**/*.xml
+data-raw/**/*.gz
+data-raw/**/*.zip
 inst/doc

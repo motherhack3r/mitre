@@ -3,28 +3,26 @@ library(plyr, warn.conflicts = F)
 library(dplyr, warn.conflicts = F)
 
 if (!dir.exists("data")) dir.create("data")
-
-rootpath <- "data-raw/engage"
-if (!dir.exists(rootpath)) dir.create(rootpath)
+if (!dir.exists("data-raw/engage")) dir.create("data-raw/engage")
 
 # Download and apply simple parser to raw data
 req <- httr::GET("https://api.github.com/repos/mitre/engage/git/trees/main?recursive=1")
 httr::stop_for_status(req)
 filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
-filepath <- sapply(sapply(strsplit(grep("_data.*.json", filelist, value = T), "/"),
-                          function(x) x[2]),
+filepath <- sapply(sapply(strsplit(grep("Data/json/.*.json", filelist, value = T), "/"),
+                          function(x) x[3]),
                    function(x)
-                     paste0("https://raw.githubusercontent.com/mitre/engage/main/_data/",x))
+                     paste0("https://raw.githubusercontent.com/mitre/engage/main/Data/json/",x))
 filelist <- names(filepath)
 
 engage <- list()
 for (i in 1:length(filelist)) {
   n <- filelist[i]
-  if (!file.exists(paste0(rootpath, "/", n))) {
+  if (!file.exists(paste0("data-raw/engage", "/", n))) {
     download.file(url = filepath[i],
-                  destfile = paste0(rootpath, "/", n))
+                  destfile = paste0("data-raw/engage", "/", n))
   }
-  engage[[n]] <- fromJSON(paste0(rootpath, "/", n))
+  engage[[n]] <- fromJSON(paste0("data-raw/engage", "/", n))
 }
 
 # Approaches
@@ -64,4 +62,9 @@ names(a2eac) <- c("from", "to")
 relations <- dplyr::bind_rows(relations, a2eac)
 engage.relations <- unique(relations)
 
-rm(req, filelist, filepath, i, n, rootpath, atm, g2ap, a2e, a2eac, relations, engage)
+usethis::use_data(engage.activities, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.approaches, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.goals, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.relations, compress = "xz", overwrite = TRUE)
+
+rm(req, filelist, filepath, i, n, atm, g2ap, a2e, a2eac, relations, engage)
