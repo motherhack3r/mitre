@@ -2,12 +2,11 @@
 #'
 #' @param verbose default is FALSE
 #'
-#' @return list of standards and network
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' mitredata <- mitre::getLatestDataSet(TRUE)
+#' mitre::getLatestDataSet(TRUE)
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
   # List files
@@ -17,15 +16,14 @@ getLatestDataSet <- function(verbose = FALSE) {
   rm(req)
 
   # Load files
-  mitre.data <- lapply(paste0("https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/",
-                            grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
-                     function(x) {
-                       t <- tempfile(fileext = ".rda")
-                       download.file(x, t, quiet = !verbose)
-                       load(t, envir = .GlobalEnv)
-                       file.remove(t)
-                     })
-  return(mitre.data)
+  tmp <- lapply(paste0("https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/",
+                       grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
+                function(x) {
+                  t <- tempfile(fileext = ".rda")
+                  download.file(x, t, quiet = !verbose)
+                  load(t, envir = .GlobalEnv)
+                  file.remove(t)
+                })
 }
 
 #' Create a list of nodes and edges related to all standards in data folder.
@@ -45,10 +43,12 @@ build_network <- function(verbose = FALSE, as_igraph = TRUE) {
   edges <- build_edges(verbose)
 
   if (verbose) print(paste0("[NET] Cleaning network ..."))
-  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")], by = c("from_std"="standard"))
+  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")],
+                            by = c("from_std" = "standard"))
   edges$from <- edges$id
   edges$id <- NULL
-  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")], by = c("to_std"="standard"))
+  edges <- dplyr::left_join(edges, nodes[, c("id", "standard")],
+                            by = c("to_std" = "standard"))
   edges$to <- edges$id
   edges$id <- NULL
 
@@ -91,7 +91,7 @@ build_nodes <- function(verbose = FALSE) {
   nodes <- newNode()
 
   ### CPE
-  if (verbose) print(paste0("[NET][CPE] extracting nodes ..."))
+  if (verbose) print(paste0("[+][CPE] extracting nodes ..."))
   cpe.nodes <- cpe.nist[, c("title", "cpe.23", "deprecated")]
   names(cpe.nodes) <- c("label", "title", "hidden")
   cpe.nodes$id <- rep(NA, nrow(cpe.nodes))
@@ -103,6 +103,9 @@ build_nodes <- function(verbose = FALSE) {
   cpe.nodes$color <- rep("blue", nrow(cpe.nodes))
   cpe.nodes$mass <- rep(1, nrow(cpe.nodes))
   cpe.nodes$description <- cpe.nodes$label
+  if (verbose) print("[+][CPE] Node label cleansing ...")
+  # cpe.nodes$label <- janitor::make_clean_names(cpe.nodes$label)
+  cpe.nodes$label <- stringr::str_replace_all(cpe.nodes$label, "[^[:print:]]|@|\\$", "")
 
   nodes <- dplyr::bind_rows(nodes, cpe.nodes)
 

@@ -25,7 +25,8 @@ Imports:
     stringr,
     jsonlite,
     RJSONIO,
-    tidyr
+    tidyr,
+    janitor
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
