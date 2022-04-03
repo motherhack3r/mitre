@@ -82,6 +82,25 @@ dsrl <- tech %>%
   unnest(x_mitre_data_sources) %>%
   separate(col = x_mitre_data_sources,
            into=c("data_component", "data_source"), sep = ": ")
+dsrl$data_source <- stringr::str_trim(
+  stringr::str_remove_all(string = dsrl$data_source,
+                          pattern = paste0(sort(unique(dsrl$data_component),
+                                                decreasing = T),
+                                           collapse = "|")))
+dscomp <- dsrl %>%
+  select(data_component, data_source) %>%
+  unique() %>%
+  group_by(data_component) %>%
+  nest() %>%
+  mutate(data_source = paste0(unlist(data), collapse = ", ")) %>%
+  select(-data) %>%
+  ungroup()
+
+attck.data_component <- dplyr::left_join(dsrc, dscomp, by = c("name"="data_component"))
+
+
+attck.data_relations <- dsrl #%>% select(id, data_component) %>% unique()
+names(attck.data_relations) <- c("source_ref", "target_ref", "label")
 
 
 ## Mitigation (course-of-action)
@@ -160,4 +179,4 @@ usethis::use_data(attck.groups, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.software, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.relations, compress = "xz", overwrite = TRUE)
 
-rm(attck.ent, grup, miti, rels, tact, tech, soft, df)
+rm(attck.ent, grup, miti, rels, tact, tech, soft, df, dscomp, dsrl, dsrc)

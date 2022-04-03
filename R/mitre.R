@@ -116,8 +116,8 @@ build_nodes <- function(verbose = FALSE) {
   cve.nodes$label <- cve.nodes$cve.id
   cve.nodes$group <- rep("cve", nrow(cve.nodes))
   cve.nodes$type <- rep("cve", nrow(cve.nodes))
-  cve.nodes$cvss3.score[is.na(cve.nodes$cvss3.score)] <- 0
-  cve.nodes$cvss2.score[is.na(cve.nodes$cvss2.score)] <- 0
+  cve.nodes$cvss3.score[is.na(cve.nodes$cvss3.score)] <- -1
+  cve.nodes$cvss2.score[is.na(cve.nodes$cvss2.score)] <- -1
   cve.nodes$value <- as.numeric(apply(cve.nodes, 1, function(x) max(x["cvss2.score"], x["cvss3.score"])))
   cve.nodes$title <- cve.nodes$cve.id
   cve.nodes$standard <- cve.nodes$cve.id
@@ -239,6 +239,25 @@ build_nodes <- function(verbose = FALSE) {
   attck.nodes$standard <- attck.nodes$external_id
   attck.nodes$shape <- rep("circle", nrow(attck.nodes))
   attck.nodes$color <- rep("red", nrow(attck.nodes))
+  attck.nodes$hidden <- rep(FALSE, nrow(attck.nodes))
+  attck.nodes$mass <- attck.nodes$value
+  attck.nodes$description <- attck.nodes$description
+  attck.nodes <- attck.nodes[, names(nodes)]
+
+  nodes <- dplyr::bind_rows(nodes, attck.nodes)
+
+  ### Data Sources&Components
+  if (verbose) print(paste0("[NET][ATTCK] extracting sources and components nodes ..."))
+  attck.nodes <- attck.data_component
+  attck.nodes$id <- rep(NA, nrow(attck.nodes))
+  attck.nodes$label <- attck.nodes$external_id
+  attck.nodes$group <- rep("attck", nrow(attck.nodes))
+  attck.nodes$type <- rep("data_source", nrow(attck.nodes))
+  attck.nodes$value <- rep(1, nrow(attck.nodes))
+  attck.nodes$title <- attck.nodes$name
+  attck.nodes$standard <- attck.nodes$external_id
+  attck.nodes$shape <- rep("circle", nrow(attck.nodes))
+  attck.nodes$color <- rep("blue", nrow(attck.nodes))
   attck.nodes$hidden <- rep(FALSE, nrow(attck.nodes))
   attck.nodes$mass <- attck.nodes$value
   attck.nodes$description <- attck.nodes$description
