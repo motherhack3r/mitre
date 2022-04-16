@@ -1,11 +1,29 @@
-source("data-raw/mitre-cwe.R")
-source("data-raw/mitre-attck.R")
-source("data-raw/mitre-capec.R")
-source("data-raw/mitre-car.R")
-source("data-raw/mitre-shield.R")
-source("data-raw/mitre-engage.R")
-source("data-raw/nist-cpe.R")
-source("data-raw/nist-cve.R")
+source("data-raw/build_data.R")
+
+for(f in list.files(path = "data", pattern = "*.rda", full.names = T)) load(f)
+rm(f)
+
+
+# Build sample data sets
+set.seed(42)
+cpe.nist <- dplyr::sample_frac(cpe.nist, 0.0002)
+cve.nist <- dplyr::sample_frac(cve.nist, 0.002)
+cwe.weaknesses <- cwe.weaknesses[cwe.weaknesses$Status != "Deprecated", ]
+cwe.weaknesses <- dplyr::sample_frac(cwe.weaknesses, 0.3)
+cwe.categories <- cwe.weaknesses[cwe.categories$Status != "Deprecated", ]
+cwe.categories <- dplyr::sample_frac(cwe.categories, 0.3)
+capec.patterns <- dplyr::sample_frac(capec.patterns, 0.3)
+capec.relations <- dplyr::sample_frac(capec.relations, 0.2)
+attck.relations <- dplyr::sample_frac(attck.relations, 0.2)
+attck.techniques <- dplyr::sample_frac(attck.techniques, 0.3)
+attck.groups <- dplyr::sample_frac(attck.groups, 0.3)
+attck.software <- dplyr::sample_frac(attck.software, 0.3)
+attck.data_relations <- dplyr::sample_frac(attck.data_relations, 0.3)
+car.analytics <- dplyr::sample_frac(car.analytics, 0.3)
+car.model <- dplyr::sample_frac(car.model, 0.3)
+car.coverage <- dplyr::sample_frac(car.coverage, 0.3)
+shield.relations <- dplyr::sample_frac(shield.relations, 0.3)
+engage.relations <- dplyr::sample_frac(engage.relations, 0.3)
 
 standards <- list(cpe = list(cpe.nist = cpe.nist),
                   cve = list(cve.nist = cve.nist),
@@ -41,7 +59,7 @@ standards <- list(cpe = list(cpe.nist = cpe.nist),
                              car.implementations = car.implementations,
                              car.coverage = car.coverage,
                              car.relations = car.relations)
-                  )
+)
 
 rm(cve.nist, cpe.nist, cwe.views, cwe.categories, cwe.weaknesses,
    capec.views, capec.categories, capec.patterns, capec.relations,
@@ -52,6 +70,5 @@ rm(cve.nist, cpe.nist, cwe.views, cwe.categories, cwe.weaknesses,
    attck.groups, attck.software, attck.data_component,
    attck.data_relations, attck.relations, engage.activities,
    engage.approaches, engage.goals, engage.relations)
-
 
 usethis::use_data(standards, compress = "xz", overwrite = TRUE, internal = TRUE)
