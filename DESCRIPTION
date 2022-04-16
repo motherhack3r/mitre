@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: Cybersecurity MITRE Standards Data and Digraphs
-Version: 1.0.0.9005
+Version: 1.0.0.9007
 Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
@@ -26,7 +26,8 @@ Imports:
     jsonlite,
     RJSONIO,
     tidyr,
-    janitor
+    janitor,
+    httr
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
@@ -34,5 +35,5 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 Config/testthat/edition: 3

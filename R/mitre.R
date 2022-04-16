@@ -35,7 +35,9 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' mitrenet <- mitre::build_network(as_igraph = FALSE)
+#' }
 build_network <- function(verbose = FALSE, as_igraph = TRUE) {
   if (verbose) print(paste0("[NET] Building nodes ..."))
   nodes <- build_nodes(verbose)
@@ -271,9 +273,9 @@ build_nodes <- function(verbose = FALSE) {
   if (verbose) print(paste0("[NET][CAPEC] extracting nodes ..."))
   capec.p <- standards$capec$capec.patterns
   capec.p$type <- rep("pattern", nrow(capec.p))
-  capec.c <- capec.categories
+  capec.c <- standards$capec$capec.categories
   capec.c$type <- rep("category", nrow(capec.c))
-  capec.v <- capec.views
+  capec.v <- standards$capec$capec.views
   capec.v$type <- rep("view", nrow(capec.v))
   capec.nodes <- dplyr::bind_rows(capec.p, capec.c, capec.v)
   rm(capec.p, capec.c, capec.v)
@@ -558,7 +560,7 @@ build_edges <- function(verbose = FALSE) {
   if (verbose) print(paste0("[NET] Adding relationships CPE -> CVE ..."))
   cpe.edges <- lapply(standards$cpe$cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
-  cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
+  cpe.edges <- data.frame(from_std = standards$cpe$cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
   cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
   cpe.edges$to_std <- as.character(cpe.edges$to_std)
   cpe.edges$to_std <- stringr::str_replace_all(cpe.edges$to_std,"'","")
