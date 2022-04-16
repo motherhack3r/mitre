@@ -387,6 +387,64 @@ build_nodes <- function(verbose = FALSE) {
 
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
+  ## MITRE ENGAGE
+  ### Activities
+  if (verbose) print(paste0("[NET][ENGAGE] extracting activities nodes ..."))
+  engage.nodes <- engage.activities
+  engage.nodes$label <- engage.nodes$.id
+  engage.nodes$group <- rep("engage", nrow(engage.nodes))
+  engage.nodes$type <- rep("activities", nrow(engage.nodes))
+  engage.nodes$value <- rep(1, nrow(engage.nodes))
+  engage.nodes$title <- engage.nodes$name
+  engage.nodes$standard <- engage.nodes$label
+  engage.nodes$shape <- rep("triangle", nrow(engage.nodes))
+  engage.nodes$color <- rep("green", nrow(engage.nodes))
+  engage.nodes$hidden <- rep(FALSE, nrow(engage.nodes))
+  engage.nodes$mass <- engage.nodes$value
+  engage.nodes$description <- engage.nodes$description
+  engage.nodes$id <- rep(NA, nrow(engage.nodes))
+  engage.nodes <- engage.nodes[, names(nodes)]
+
+  nodes <- dplyr::bind_rows(nodes, engage.nodes)
+
+  ### Approaches
+  if (verbose) print(paste0("[NET][ENGAGE] extracting approaches nodes ..."))
+  engage.nodes <- engage.approaches
+  engage.nodes$label <- engage.nodes$.id
+  engage.nodes$group <- rep("engage", nrow(engage.nodes))
+  engage.nodes$type <- rep("approaches", nrow(engage.nodes))
+  engage.nodes$value <- rep(1, nrow(engage.nodes))
+  engage.nodes$title <- engage.nodes$name
+  engage.nodes$standard <- engage.nodes$label
+  engage.nodes$shape <- rep("triangle", nrow(engage.nodes))
+  engage.nodes$color <- rep("green", nrow(engage.nodes))
+  engage.nodes$hidden <- rep(FALSE, nrow(engage.nodes))
+  engage.nodes$mass <- engage.nodes$value
+  engage.nodes$description <- engage.nodes$description
+  engage.nodes$id <- rep(NA, nrow(engage.nodes))
+  engage.nodes <- engage.nodes[, names(nodes)]
+
+  nodes <- dplyr::bind_rows(nodes, engage.nodes)
+
+  ### Goals
+  if (verbose) print(paste0("[NET][ENGAGE] extracting goals nodes ..."))
+  engage.nodes <- engage.goals
+  engage.nodes$label <- engage.nodes$.id
+  engage.nodes$group <- rep("engage", nrow(engage.nodes))
+  engage.nodes$type <- rep("goals", nrow(engage.nodes))
+  engage.nodes$value <- rep(1, nrow(engage.nodes))
+  engage.nodes$title <- engage.nodes$name
+  engage.nodes$standard <- engage.nodes$label
+  engage.nodes$shape <- rep("triangle", nrow(engage.nodes))
+  engage.nodes$color <- rep("green", nrow(engage.nodes))
+  engage.nodes$hidden <- rep(FALSE, nrow(engage.nodes))
+  engage.nodes$mass <- engage.nodes$value
+  engage.nodes$description <- engage.nodes$description
+  engage.nodes$id <- rep(NA, nrow(engage.nodes))
+  engage.nodes <- engage.nodes[, names(nodes)]
+
+  nodes <- dplyr::bind_rows(nodes, engage.nodes)
+
   ## CAR MITRE
   ### Analytics
   if (verbose) print(paste0("[NET][CAR] extracting analytic nodes ..."))
@@ -661,6 +719,20 @@ build_edges <- function(verbose = FALSE) {
   attck.edges <- attck.relations
   attck.edges <- attck.edges[, c("from", "to", "description", "relationship_type")]
   names(attck.edges) <- c("from_std", "to_std", "title", "label")
+  attck.edges$from <- as.character(rep(NA, nrow(attck.edges)))
+  attck.edges$to <- as.character(rep(NA, nrow(attck.edges)))
+  attck.edges$value <- rep(1, nrow(attck.edges))
+  attck.edges$arrows <- rep("to", nrow(attck.edges))
+  attck.edges$dashes <- rep(FALSE, nrow(attck.edges))
+  attck.edges$hidden <- rep(FALSE, nrow(attck.edges))
+  attck.edges$color <- rep("red", nrow(attck.edges))
+
+  attck.edges <- attck.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, attck.edges)
+
+  if (verbose) print(paste0("[NET] Adding relationships ATTCK -> Data component ..."))
+  attck.edges <- attck.data_relations
+  attck.edges$title <- attck.edges$label
   attck.edges$from <- as.character(rep(NA, nrow(attck.edges)))
   attck.edges$to <- as.character(rep(NA, nrow(attck.edges)))
   attck.edges$value <- rep(1, nrow(attck.edges))

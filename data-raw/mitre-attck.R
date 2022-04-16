@@ -98,10 +98,15 @@ dscomp <- dsrl %>%
 
 attck.data_component <- dplyr::left_join(dsrc, dscomp, by = c("name"="data_component"))
 
-
-attck.data_relations <- dsrl #%>% select(id, data_component) %>% unique()
-names(attck.data_relations) <- c("source_ref", "target_ref", "label")
-
+attck.data_relations <- dsrl %>%
+  left_join(y = attck.techniques %>%
+              select(id, external_id),
+            by = c("id"="id")) %>%
+  left_join(y = attck.data_component %>%
+              select(name, external_id),
+            by = c("data_component"="name"))
+names(attck.data_relations) <- c("source_ref", "target_ref", "label", "from_std", "to_std")
+attck.data_relations <- attck.data_relations[, c("label", "from_std", "to_std")]
 
 ## Mitigation (course-of-action)
 miti <- attck.ent$objects[attck.ent$objects$type == "course-of-action", ]

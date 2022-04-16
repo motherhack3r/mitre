@@ -33,6 +33,7 @@ usethis::use_data(cve.nist, cpe.nist, cwe.views, cwe.categories, cwe.weaknesses,
                   car.coverage, car.relations, shield.tactics, shield.techniques,
                   shield.procedures, shield.use_cases, shield.opportunities,
                   shield.relations, attck.tactics, attck.techniques, attck.mitigations,
-                  attck.groups, attck.software, attck.relations, engage.activities,
+                  attck.groups, attck.software, attck.data_component,
+                  attck.data_relations, attck.relations, engage.activities,
                   engage.approaches, engage.goals, engage.relations,
-                  compress = "xz", overwrite = TRUE, internal = FALSE)
+                  compress = "xz", overwrite = TRUE, internal = TRUE)
