@@ -18,5 +18,7 @@ list, containing nodes and edges as data frames
 Create a list of nodes and edges related to all standards in data folder.
 }
 \examples{
+\dontrun{
 mitrenet <- mitre::build_network(as_igraph = FALSE)
+}
 }
