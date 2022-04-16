@@ -20,7 +20,7 @@ getLatestDataSet <- function(verbose = FALSE) {
                        grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
                 function(x) {
                   t <- tempfile(fileext = ".rda")
-                  download.file(x, t, quiet = !verbose)
+                  utils::download.file(x, t, quiet = !verbose)
                   load(t, envir = .GlobalEnv)
                   file.remove(t)
                 })
