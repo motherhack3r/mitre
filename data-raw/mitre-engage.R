@@ -44,27 +44,42 @@ engage.activities <- plyr::ldply(engage$activity_details.json,
                        as.data.frame(x[c("name", "type",
                                          "description", "long_description")]))
 
+# Adversary vulnerabilities
+engage.av <- engage$attack_mapping.json %>% select(eav_id, eav) %>% unique()
 
 relations <- engage$approach_activity_mappings.json
 names(relations) <- c("from", "to")
+relations$from_type <- rep("engage approach", nrow(relations))
+relations$to_type <- rep("engage activity", nrow(relations))
+relations$label <- rep("can_include", nrow(relations))
 
 g2ap <- engage$goal_approach_mappings.json
 names(g2ap) <- c("from", "to")
+g2ap$from_type <- rep("engage goal", nrow(g2ap))
+g2ap$to_type <- rep("engage approach", nrow(g2ap))
+g2ap$label <- rep("can_try", nrow(g2ap))
 relations <- dplyr::bind_rows(relations, g2ap)
 
 atm <- engage$attack_mapping.json
-a2e <- atm[, c("attack_id", "eav_id")]
+a2e <- atm[, c("attack_id", "eav_id")] %>% unique()
 names(a2e) <- c("from", "to")
+a2e$from_type <- rep("attack technique", nrow(a2e))
+a2e$to_type <- rep("engage adversary_vulnerability", nrow(a2e))
+a2e$label <- rep("may_show", nrow(a2e))
 relations <- dplyr::bind_rows(relations, a2e)
 
-a2eac <- atm[, c("attack_id", "eac_id")]
-names(a2eac) <- c("from", "to")
-relations <- dplyr::bind_rows(relations, a2eac)
+eav2eac <- atm[, c("eav_id", "eac_id")] %>% unique()
+names(eav2eac) <- c("from", "to")
+eav2eac$from_type <- rep("engage adversary_vulnerability", nrow(eav2eac))
+eav2eac$to_type <- rep("engage activity", nrow(eav2eac))
+eav2eac$label <- rep("defend_with", nrow(eav2eac))
+relations <- dplyr::bind_rows(relations, eav2eac)
 engage.relations <- unique(relations)
 
 usethis::use_data(engage.activities, compress = "xz", overwrite = TRUE)
 usethis::use_data(engage.approaches, compress = "xz", overwrite = TRUE)
 usethis::use_data(engage.goals, compress = "xz", overwrite = TRUE)
+usethis::use_data(engage.av, compress = "xz", overwrite = TRUE)
 usethis::use_data(engage.relations, compress = "xz", overwrite = TRUE)
 
-rm(req, filelist, filepath, i, n, atm, g2ap, a2e, a2eac, relations, engage)
+rm(req, filelist, filepath, i, n, atm, g2ap, a2e, eav2eac, relations, engage)

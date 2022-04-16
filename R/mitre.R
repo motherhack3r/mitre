@@ -388,12 +388,12 @@ build_nodes <- function(verbose = FALSE) {
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ## MITRE ENGAGE
-  ### Activities
-  if (verbose) print(paste0("[NET][ENGAGE] extracting activities nodes ..."))
-  engage.nodes <- engage.activities
+  ### Goals
+  if (verbose) print(paste0("[NET][ENGAGE] extracting goals nodes ..."))
+  engage.nodes <- engage.goals
   engage.nodes$label <- engage.nodes$.id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
-  engage.nodes$type <- rep("activities", nrow(engage.nodes))
+  engage.nodes$type <- rep("goals", nrow(engage.nodes))
   engage.nodes$value <- rep(1, nrow(engage.nodes))
   engage.nodes$title <- engage.nodes$name
   engage.nodes$standard <- engage.nodes$label
@@ -426,12 +426,12 @@ build_nodes <- function(verbose = FALSE) {
 
   nodes <- dplyr::bind_rows(nodes, engage.nodes)
 
-  ### Goals
-  if (verbose) print(paste0("[NET][ENGAGE] extracting goals nodes ..."))
-  engage.nodes <- engage.goals
+  ### Activities
+  if (verbose) print(paste0("[NET][ENGAGE] extracting activities nodes ..."))
+  engage.nodes <- engage.activities
   engage.nodes$label <- engage.nodes$.id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
-  engage.nodes$type <- rep("goals", nrow(engage.nodes))
+  engage.nodes$type <- rep("activities", nrow(engage.nodes))
   engage.nodes$value <- rep(1, nrow(engage.nodes))
   engage.nodes$title <- engage.nodes$name
   engage.nodes$standard <- engage.nodes$label
@@ -440,6 +440,25 @@ build_nodes <- function(verbose = FALSE) {
   engage.nodes$hidden <- rep(FALSE, nrow(engage.nodes))
   engage.nodes$mass <- engage.nodes$value
   engage.nodes$description <- engage.nodes$description
+  engage.nodes$id <- rep(NA, nrow(engage.nodes))
+  engage.nodes <- engage.nodes[, names(nodes)]
+
+  nodes <- dplyr::bind_rows(nodes, engage.nodes)
+
+  ### Adversary vulnerabilities
+  if (verbose) print(paste0("[NET][ENGAGE] extracting adversary vulnerabilities nodes ..."))
+  engage.nodes <- engage.av
+  engage.nodes$label <- engage.nodes$eav_id
+  engage.nodes$group <- rep("engage", nrow(engage.nodes))
+  engage.nodes$type <- rep("adversary_vulnerability", nrow(engage.nodes))
+  engage.nodes$value <- rep(1, nrow(engage.nodes))
+  engage.nodes$title <- engage.nodes$eav_id
+  engage.nodes$standard <- engage.nodes$label
+  engage.nodes$shape <- rep("star", nrow(engage.nodes))
+  engage.nodes$color <- rep("purple", nrow(engage.nodes))
+  engage.nodes$hidden <- rep(FALSE, nrow(engage.nodes))
+  engage.nodes$mass <- engage.nodes$value
+  engage.nodes$description <- engage.nodes$eav
   engage.nodes$id <- rep(NA, nrow(engage.nodes))
   engage.nodes <- engage.nodes[, names(nodes)]
 
@@ -746,6 +765,22 @@ build_edges <- function(verbose = FALSE) {
 
   ### SHIELD multiple relations
   if (verbose) print(paste0("[NET] Adding relationships SHIELD -> ANY ..."))
+  shield.edges <- shield.relations
+  names(shield.edges) <- c("from_std", "to_std", "label")
+  shield.edges$title <- shield.edges$label
+  shield.edges$from <- as.character(rep(NA, nrow(shield.edges)))
+  shield.edges$to <- as.character(rep(NA, nrow(shield.edges)))
+  shield.edges$value <- rep(1, nrow(shield.edges))
+  shield.edges$arrows <- rep("to", nrow(shield.edges))
+  shield.edges$dashes <- rep(FALSE, nrow(shield.edges))
+  shield.edges$hidden <- rep(FALSE, nrow(shield.edges))
+  shield.edges$color <- rep("blue", nrow(shield.edges))
+
+  shield.edges <- shield.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, shield.edges)
+
+  ### ENGAGE multiple relations
+  if (verbose) print(paste0("[NET] Adding relationships ENGAGE -> ANY ..."))
   shield.edges <- shield.relations
   names(shield.edges) <- c("from_std", "to_std", "label")
   shield.edges$title <- shield.edges$label

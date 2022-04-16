@@ -192,4 +192,39 @@ NULL
 #' @format A data frame with 2 variables.
 "shield.use_cases"
 
+#' ENGAGE Goals Objects.
+#'
+#' Full data set provided by MITRE
+#'
+#' @format A data frame with 3 variables.
+"engage.goals"
+
+#' ENGAGE Approaches Objects.
+#'
+#' Full data set provided by MITRE
+#'
+#' @format A data frame with 3 variables.
+"engage.approaches"
+
+#' ENGAGE Activities Objects.
+#'
+#' Full data set provided by MITRE
+#'
+#' @format A data frame with 3 variables.
+"engage.activities"
+
+#' ENGAGE Adversary vulnerability Objects.
+#'
+#' Full data set provided by MITRE
+#'
+#' @format A data frame with 3 variables.
+"engage.av"
+
+#' ENGAGE relations Objects.
+#'
+#' Full data set provided by MITRE
+#'
+#' @format A data frame with 3 variables.
+"engage.relations"
+
 
