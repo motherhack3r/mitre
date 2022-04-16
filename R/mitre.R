@@ -92,7 +92,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### CPE
   if (verbose) print(paste0("[+][CPE] extracting nodes ..."))
-  cpe.nodes <- cpe.nist[, c("title", "cpe.23", "deprecated")]
+  cpe.nodes <- standards$cpe$cpe.nist[, c("title", "cpe.23", "deprecated")]
   names(cpe.nodes) <- c("label", "title", "hidden")
   cpe.nodes$id <- rep(NA, nrow(cpe.nodes))
   cpe.nodes$group <- rep("cpe", nrow(cpe.nodes))
@@ -111,7 +111,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### CVE
   if (verbose) print(paste0("[NET][CVE] extracting nodes ..."))
-  cve.nodes <- cve.nist[, c("cve.id", "description", "cvss3.score", "cvss2.score", "references")]
+  cve.nodes <- standards$cve$cve.nist[, c("cve.id", "description", "cvss3.score", "cvss2.score", "references")]
   cve.nodes$id <- rep(NA, nrow(cve.nodes))
   cve.nodes$label <- cve.nodes$cve.id
   cve.nodes$group <- rep("cve", nrow(cve.nodes))
@@ -132,7 +132,9 @@ build_nodes <- function(verbose = FALSE) {
 
   ### CWE
   if (verbose) print(paste0("[NET][CWE] extracting nodes ..."))
-  cwe.nodes <- dplyr::bind_rows(cwe.weaknesses, cwe.categories, cwe.views)
+  cwe.nodes <- dplyr::bind_rows(standards$cwe$cwe.weaknesses,
+                                standards$cwe$cwe.categories,
+                                standards$cwe$cwe.views)
   cwe.nodes$id <- rep(NA, nrow(cwe.nodes))
   cwe.nodes$label <- cwe.nodes$Code_Standard
   cwe.nodes$group <- rep("cwe", nrow(cwe.nodes))
@@ -152,7 +154,7 @@ build_nodes <- function(verbose = FALSE) {
   ## ATT&CK MITRE
   ### Tactics
   if (verbose) print(paste0("[NET][ATTCK] extracting tactic nodes ..."))
-  attck.nodes <- attck.tactics
+  attck.nodes <- standards$attck$attck.tactics
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -171,7 +173,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Techniques
   if (verbose) print(paste0("[NET][ATTCK] extracting technique nodes ..."))
-  attck.nodes <- attck.techniques
+  attck.nodes <- standards$attck$attck.techniques
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -190,7 +192,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Mitigations
   if (verbose) print(paste0("[NET][ATTCK] extracting mitigation nodes ..."))
-  attck.nodes <- attck.mitigations
+  attck.nodes <- standards$attck$attck.mitigations
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -209,7 +211,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Software
   if (verbose) print(paste0("[NET][ATTCK] extracting software nodes ..."))
-  attck.nodes <- attck.software
+  attck.nodes <- standards$attck$attck.software
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -229,7 +231,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Groups
   if (verbose) print(paste0("[NET][ATTCK] extracting groups nodes ..."))
-  attck.nodes <- attck.groups
+  attck.nodes <- standards$attck$attck.groups
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -248,7 +250,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Data Sources&Components
   if (verbose) print(paste0("[NET][ATTCK] extracting sources and components nodes ..."))
-  attck.nodes <- attck.data_component
+  attck.nodes <- standards$attck$attck.data_component
   attck.nodes$id <- rep(NA, nrow(attck.nodes))
   attck.nodes$label <- attck.nodes$external_id
   attck.nodes$group <- rep("attck", nrow(attck.nodes))
@@ -267,7 +269,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ## CAPEC MITRE
   if (verbose) print(paste0("[NET][CAPEC] extracting nodes ..."))
-  capec.p <- capec.patterns
+  capec.p <- standards$capec$capec.patterns
   capec.p$type <- rep("pattern", nrow(capec.p))
   capec.c <- capec.categories
   capec.c$type <- rep("category", nrow(capec.c))
@@ -294,7 +296,7 @@ build_nodes <- function(verbose = FALSE) {
   ## SHIELD MITRE
   ### Tactics
   if (verbose) print(paste0("[NET][SHIELD] extracting tactic nodes ..."))
-  shield.nodes <- shield.tactics
+  shield.nodes <- standards$shield$shield.tactics
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
@@ -313,7 +315,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Techniques
   if (verbose) print(paste0("[NET][SHIELD] extracting technique nodes ..."))
-  shield.nodes <- shield.techniques
+  shield.nodes <- standards$shield$shield.techniques
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
@@ -332,7 +334,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Use Cases
   if (verbose) print(paste0("[NET][SHIELD] extracting use case nodes ..."))
-  shield.nodes <- shield.use_cases
+  shield.nodes <- standards$shield$shield.use_cases
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
@@ -351,7 +353,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Opportunities
   if (verbose) print(paste0("[NET][SHIELD] extracting opportunity nodes ..."))
-  shield.nodes <- shield.opportunities
+  shield.nodes <- standards$shield$shield.opportunities
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
@@ -370,7 +372,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Procedures
   if (verbose) print(paste0("[NET][SHIELD] extracting procedure nodes ..."))
-  shield.nodes <- shield.procedures
+  shield.nodes <- standards$shield$shield.procedures
   shield.nodes$label <- shield.nodes$id
   shield.nodes$id <- rep(NA, nrow(shield.nodes))
   shield.nodes$group <- rep("shield", nrow(shield.nodes))
@@ -390,7 +392,7 @@ build_nodes <- function(verbose = FALSE) {
   ## MITRE ENGAGE
   ### Goals
   if (verbose) print(paste0("[NET][ENGAGE] extracting goals nodes ..."))
-  engage.nodes <- engage.goals
+  engage.nodes <- standards$engage$engage.goals
   engage.nodes$label <- engage.nodes$.id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
   engage.nodes$type <- rep("goals", nrow(engage.nodes))
@@ -409,7 +411,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Approaches
   if (verbose) print(paste0("[NET][ENGAGE] extracting approaches nodes ..."))
-  engage.nodes <- engage.approaches
+  engage.nodes <- standards$engage$engage.approaches
   engage.nodes$label <- engage.nodes$.id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
   engage.nodes$type <- rep("approaches", nrow(engage.nodes))
@@ -428,7 +430,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Activities
   if (verbose) print(paste0("[NET][ENGAGE] extracting activities nodes ..."))
-  engage.nodes <- engage.activities
+  engage.nodes <- standards$engage$engage.activities
   engage.nodes$label <- engage.nodes$.id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
   engage.nodes$type <- rep("activities", nrow(engage.nodes))
@@ -447,7 +449,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Adversary vulnerabilities
   if (verbose) print(paste0("[NET][ENGAGE] extracting adversary vulnerabilities nodes ..."))
-  engage.nodes <- engage.av
+  engage.nodes <- standards$engage$engage.av
   engage.nodes$label <- engage.nodes$eav_id
   engage.nodes$group <- rep("engage", nrow(engage.nodes))
   engage.nodes$type <- rep("adversary_vulnerability", nrow(engage.nodes))
@@ -467,7 +469,7 @@ build_nodes <- function(verbose = FALSE) {
   ## CAR MITRE
   ### Analytics
   if (verbose) print(paste0("[NET][CAR] extracting analytic nodes ..."))
-  car.nodes <- car.analytics
+  car.nodes <- standards$car$car.analytics
   car.nodes$label <- car.nodes$id
   car.nodes$group <- rep("car", nrow(car.nodes))
   car.nodes$type <- rep("analytic", nrow(car.nodes))
@@ -486,7 +488,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Data Model
   if (verbose) print(paste0("[NET][CAR] extracting data model nodes ..."))
-  car.nodes <- car.model
+  car.nodes <- standards$car$car.model
   car.nodes$label <- car.nodes$model.id
   car.nodes$group <- rep("car", nrow(car.nodes))
   car.nodes$type <- rep("data_model", nrow(car.nodes))
@@ -507,7 +509,7 @@ build_nodes <- function(verbose = FALSE) {
 
   ### Sensors
   if (verbose) print(paste0("[NET][CAR] extracting sensor nodes ..."))
-  car.nodes <- car.sensors
+  car.nodes <- standards$car$car.sensors
   car.nodes <- dplyr::mutate(car.nodes, label = paste(.data$sensor_name, .data$sensor_version, sep = "_"))
   car.nodes$group <- rep("car", nrow(car.nodes))
   car.nodes$type <- rep("sensor", nrow(car.nodes))
@@ -554,7 +556,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CPE -> CVE
   if (verbose) print(paste0("[NET] Adding relationships CPE -> CVE ..."))
-  cpe.edges <- lapply(cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
+  cpe.edges <- lapply(standards$cpe$cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
   cpe.edges <- data.frame(from_std = cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
   cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
@@ -575,7 +577,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CVE -> CWE
   if (verbose) print(paste0("[NET] Adding relationships CVE -> CWE ..."))
-  cve.edges <- dplyr::select(cve.nist, c("cve.id", "problem.type"))
+  cve.edges <- dplyr::select(standards$cve$cve.nist, c("cve.id", "problem.type"))
   cve.edges[cve.edges$problem.type == "{}", "problem.type"] <- "[\"NVD-CWE-noinfo\"]"
   cve.edges$problem.type <- lapply(cve.edges$problem.type, jsonlite::fromJSON)
   cve.edges <- tidyr::unnest(cve.edges, cols = c("problem.type"))
@@ -598,7 +600,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CVE -> CPE
   if (verbose) print(paste0("[NET] Adding relationships CVE -> CPE ..."))
-  cve.edges <- dplyr::select(cve.nist, c("cve.id", "vulnerable.configuration"))
+  cve.edges <- dplyr::select(standards$cve$cve.nist, c("cve.id", "vulnerable.configuration"))
   cpematch <- lapply(cve.edges$vulnerable.configuration,
                      function(x)
                        unique(jsonlite::fromJSON(x)$cpe_match[[1]]$cpe23Uri))
@@ -635,12 +637,12 @@ build_edges <- function(verbose = FALSE) {
 
   ### CWE -> CVE
   if (verbose) print(paste0("[NET] Adding relationships CWE -> CVE ..."))
-  cwe.edges <- lapply(cwe.weaknesses$Observed_Examples,
+  cwe.edges <- lapply(standards$cwe$cwe.weaknesses$Observed_Examples,
                       function(x) {
                         cves <- stringr::str_extract_all(x, "CVE-\\d+-\\d+")[[1]]
                         data.frame(to_std = cves, stringsAsFactors = FALSE)
                       })
-  names(cwe.edges) <- cwe.weaknesses$Code_Standard
+  names(cwe.edges) <- standards$cwe$cwe.weaknesses$Code_Standard
   cwe.edges <- plyr::ldply(cwe.edges, rbind)
   names(cwe.edges) <- c("from_std", "to_std")
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
@@ -659,7 +661,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CWE -> CAPEC
   if (verbose) print(paste0("[NET] Adding relationships CWE -> CAPEC ..."))
-  cwe.edges <- cwe.weaknesses[, c("Code_Standard", "Related_Attack_Patterns")]
+  cwe.edges <- standards$cwe$cwe.weaknesses[, c("Code_Standard", "Related_Attack_Patterns")]
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
   cwe2capec <- lapply(cwe.edges$Related_Attack_Patterns,
                       function(x)
@@ -683,9 +685,9 @@ build_edges <- function(verbose = FALSE) {
 
   ### CWE -> CWE
   if (verbose) print(paste0("[NET] Adding relationships CWE -> CWE ..."))
-  cwe.edges <- dplyr::bind_rows(cwe.views[, c("Code_Standard", "Related_Weakness")],
-                                cwe.categories[, c("Code_Standard", "Related_Weakness")],
-                                cwe.weaknesses[, c("Code_Standard", "Related_Weakness")])
+  cwe.edges <- dplyr::bind_rows(standards$cwe$cwe.views[, c("Code_Standard", "Related_Weakness")],
+                                standards$cwe$cwe.categories[, c("Code_Standard", "Related_Weakness")],
+                                standards$cwe$cwe.weaknesses[, c("Code_Standard", "Related_Weakness")])
   cwe.edges <- cwe.edges[stats::complete.cases(cwe.edges), ]
   cwe2cwe <- lapply(cwe.edges$Related_Weakness,
                     function(x) {
@@ -718,7 +720,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### CAPEC multiple relations
   if (verbose) print(paste0("[NET] Adding relationships CAPEC -> ANY ..."))
-  capec.edges <- capec.relations
+  capec.edges <- standards$capec$capec.relations
   # XXX: Workaround for empty relations to CWEs
   capec.edges <- capec.edges[!grepl(pattern = "^CWE-$", x = capec.edges$to), ]
   names(capec.edges) <- c("from_std", "label", "to_std", "title")
@@ -735,7 +737,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### ATTCK multiple relations
   if (verbose) print(paste0("[NET] Adding relationships ATTCK -> ANY ..."))
-  attck.edges <- attck.relations
+  attck.edges <- standards$attck$attck.relations
   attck.edges <- attck.edges[, c("from", "to", "description", "relationship_type")]
   names(attck.edges) <- c("from_std", "to_std", "title", "label")
   attck.edges$from <- as.character(rep(NA, nrow(attck.edges)))
@@ -750,7 +752,7 @@ build_edges <- function(verbose = FALSE) {
   edges <- dplyr::bind_rows(edges, attck.edges)
 
   if (verbose) print(paste0("[NET] Adding relationships ATTCK -> Data component ..."))
-  attck.edges <- attck.data_relations
+  attck.edges <- standards$attck$attck.data_relations
   attck.edges$title <- attck.edges$label
   attck.edges$from <- as.character(rep(NA, nrow(attck.edges)))
   attck.edges$to <- as.character(rep(NA, nrow(attck.edges)))
@@ -765,7 +767,7 @@ build_edges <- function(verbose = FALSE) {
 
   ### SHIELD multiple relations
   if (verbose) print(paste0("[NET] Adding relationships SHIELD -> ANY ..."))
-  shield.edges <- shield.relations
+  shield.edges <- standards$shield$shield.relations
   names(shield.edges) <- c("from_std", "to_std", "label")
   shield.edges$title <- shield.edges$label
   shield.edges$from <- as.character(rep(NA, nrow(shield.edges)))
@@ -781,24 +783,24 @@ build_edges <- function(verbose = FALSE) {
 
   ### ENGAGE multiple relations
   if (verbose) print(paste0("[NET] Adding relationships ENGAGE -> ANY ..."))
-  shield.edges <- shield.relations
-  names(shield.edges) <- c("from_std", "to_std", "label")
-  shield.edges$title <- shield.edges$label
-  shield.edges$from <- as.character(rep(NA, nrow(shield.edges)))
-  shield.edges$to <- as.character(rep(NA, nrow(shield.edges)))
-  shield.edges$value <- rep(1, nrow(shield.edges))
-  shield.edges$arrows <- rep("to", nrow(shield.edges))
-  shield.edges$dashes <- rep(FALSE, nrow(shield.edges))
-  shield.edges$hidden <- rep(FALSE, nrow(shield.edges))
-  shield.edges$color <- rep("blue", nrow(shield.edges))
+  engage.edges <- standards$engage$engage.relations
+  names(engage.edges) <- c("from_std", "to_std", "from_type", "to_type", "label")
+  engage.edges$title <- engage.edges$label
+  engage.edges$from <- as.character(rep(NA, nrow(engage.edges)))
+  engage.edges$to <- as.character(rep(NA, nrow(engage.edges)))
+  engage.edges$value <- rep(1, nrow(engage.edges))
+  engage.edges$arrows <- rep("to", nrow(engage.edges))
+  engage.edges$dashes <- rep(FALSE, nrow(engage.edges))
+  engage.edges$hidden <- rep(FALSE, nrow(engage.edges))
+  engage.edges$color <- rep("blue", nrow(engage.edges))
 
-  shield.edges <- shield.edges[, names(edges)]
-  edges <- dplyr::bind_rows(edges, shield.edges)
+  engage.edges <- engage.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, engage.edges)
 
   ### CAR multiple relations
   #### CAR -> ATTCK
   if (verbose) print(paste0("[NET] Adding relationships CAR -> ATTCK ..."))
-  car.edges <- car.coverage
+  car.edges <- standards$car$car.coverage
   names(car.edges) <- c("from_std", "to_std", "title", "value")
   car.edges$label <- rep("cover", nrow(car.edges))
   car.edges$from <- as.character(rep(NA, nrow(car.edges)))
@@ -814,7 +816,7 @@ build_edges <- function(verbose = FALSE) {
   #### CAR -> CAR Data Model
   if (verbose) print(paste0("[NET] Adding relationships CAR -> CAR ..."))
   #### CAR Data Model -> CAR Sensor
-  car.edges <- car.relations
+  car.edges <- standards$car$car.relations
   names(car.edges) <- c("from_std", "to_std")
   car.edges$label <- rep("implement", nrow(car.edges))
   car.edges$title <- car.edges$label
