@@ -112,3 +112,97 @@ getInventary <- function(){
   print("Only tested on Windows 10 and Debian. Sorry.")
   return(NA)
 }
+
+
+matchCPE <- function(name = "", version = "", vendor = "") {
+
+  # Match part and product
+  if (nchar(name) > 0) {
+    name2title <- stringdist::stringdist(tolower(name), tolower(cpe.nist$title), method = "lv")
+    score <- round(min(name2title)/nchar(name),2)
+    if (score >= 0.1) {
+      candidates <- cpe.nist[name2title <= min(name2title), ]
+      product <- names(sort(table(candidates$product), T)[1])
+      part <- names(sort(table(cpe.nist$part[cpe.nist$product == product]), T)[1])
+    } else {
+      # name2product <- stringdist::stringdist(tolower(name), tolower(cpe.nist$product), method = "lv")
+      # score2 <- round((min(name2product) + 1)/nchar(name),2)
+      # candidates2 <- cpe.nist[name2product <= min(name2product) + 1, ]
+      #
+      # name2vendor <- stringdist::stringdist(tolower(name), tolower(cpe.nist$vendor), method = "lv")
+      # score3 <- round((min(name2vendor) + 1)/nchar(name),2)
+      # candidates3 <- cpe.nist[name2vendor <= min(name2vendor) + 1, ]
+      product <- janitor::make_clean_names(name)
+      part <- "a"
+    }
+  } else {
+    product <- "*"
+    part <- "*"
+  }
+
+  # Match version
+  # Ref: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+  if (nchar(version) > 0) {
+    svs <- '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))*(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$'
+    versvs <- stringr::str_extract(string = version, pattern = svs)
+    if (!is.na(versvs)) {
+      version <- versvs
+    } else {
+      version <- janitor::make_clean_names(version)
+    }
+  } else {
+    version <- "*"
+  }
+
+  # Match vendor
+  if (nchar(vendor) > 0 ) {
+    if (product != janitor::make_clean_names(name)) {
+      vendor <- names(sort(table(cpe.nist$vendor[cpe.nist$product == product]), T)[1])
+    } else {
+      vendor <- janitor::make_clean_names(vendor)
+    }
+  } else {
+    if (product != janitor::make_clean_names(name)) {
+      ven <- names(sort(table(cpe.nist$vendor[cpe.nist$product == product]), T)[1])
+      if (!is.na(ven)) {
+        vendor <- ven
+      }
+    } else {
+      vendor <- "*"
+    }
+  }
+
+  wfn <- newWFN(part = part, product = product, vendor = vendor, version = version)
+
+  return(wfn)
+}
+
+newWFN <- function(part = "*", vendor = "*", product = "*", version = "*",
+                   update = "*", edition = "*", language = "*", sw_edition = "*",
+                   target_sw = "*", target_hw = "*", other = "*") {
+  cpe <- data.frame(part = part,
+                    vendor = vendor,
+                    product = product,
+                    version = version,
+                    update = update,
+                    edition = edition,
+                    language = language,
+                    sw_edition = sw_edition,
+                    target_sw = target_sw,
+                    target_hw = target_hw,
+                    other = other)
+  wfn <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
+  return(wfn)
+}
+
+# k <- apply(dplyr::sample_n(df, 10), 1,
+#       function(x) {
+#         print(x)
+#         matchCPE(x["name"], x["version"], x["vendor"])
+#       })
+#
+# df$cpe2 <- apply(df, 1,
+#            function(x) {
+#              print(x)
+#              matchCPE(x["name"], x["version"], x["vendor"])
+#            })
