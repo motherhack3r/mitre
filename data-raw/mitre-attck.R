@@ -79,7 +79,7 @@ dsrc <- spread(dsrc, key = x_mitre_collection_layers, value = val, fill = F)
 tech <- attck.ent$objects[attck.ent$objects$type == "attack-pattern", ]
 dsrl <- tech %>%
   select(id, x_mitre_data_sources) %>%
-  unnest(x_mitre_data_sources) %>%
+  unnest(x_mitre_data_sources, ptype = character()) %>%
   separate(col = x_mitre_data_sources,
            into=c("data_component", "data_source"), sep = ": ")
 dsrl$data_source <- stringr::str_trim(

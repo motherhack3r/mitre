@@ -9,21 +9,25 @@
 #' mitre::getLatestDataSet(TRUE)
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
-  # List files
-  req <- httr::GET("https://api.github.com/repos/motherhack3r/mitre-datasets/git/trees/master?recursive=1")
-  httr::stop_for_status(req)
-  filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
-  rm(req)
-
-  # Load files
-  tmp <- lapply(paste0("https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/",
-                       grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
-                function(x) {
-                  t <- tempfile(fileext = ".rda")
-                  utils::download.file(x, t, quiet = !verbose)
-                  load(t, envir = .GlobalEnv)
-                  file.remove(t)
-                })
+  # # List files
+  # req <- httr::GET("https://api.github.com/repos/motherhack3r/mitre-datasets/git/trees/master?recursive=1")
+  # httr::stop_for_status(req)
+  # filelist <- unlist(lapply(httr::content(req)$tree, "[", "path"), use.names = F)
+  # rm(req)
+  #
+  # # Load files
+  # tmp <- lapply(paste0("https://raw.githubusercontent.com/motherhack3r/mitre-datasets/master/",
+  #                      grep("data/.*rda", filelist, value = TRUE, perl = TRUE)),
+  #               function(x) {
+  #                 t <- tempfile(fileext = ".rda")
+  #                 utils::download.file(x, t, quiet = !verbose)
+  #                 load(t, envir = .GlobalEnv)
+  #                 file.remove(t)
+  #               })
+  rawurl <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/standards.rds"
+  rawfile <- tempfile(fileext = ".rds")
+  utils::download.file(url = rawurl, destfile = rawfile, quiet = !verbose)
+  standards <- readRDS(rawfile)
 }
 
 #' Create a list of nodes and edges related to all standards in data folder.
