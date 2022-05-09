@@ -23,6 +23,7 @@ Imports:
     dplyr,
     igraph,
     stringr,
+    stringi,
     jsonlite,
     RJSONIO,
     tidyr,

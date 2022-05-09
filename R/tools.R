@@ -12,6 +12,10 @@ getInventory <- function(){
     sw2 <- system("powershell.exe \"Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Format-List\"", intern = T)
     sw3 <- system("powershell.exe \"Get-WmiObject Win32_Product | Sort-Object Name | Format-List Name, Version, Vendor\"", intern = T)
 
+    sw1 <- stringi::stri_conv(sw1, from = "CP850", to = "UTF-8")
+    sw2 <- stringi::stri_conv(sw2, from = "CP850", to = "UTF-8")
+    sw3 <- stringi::stri_conv(sw3, from = "CP850", to = "UTF-8")
+
     NewSWEntry <- function(name = "", version = "", vendor = ""){return(data.frame(name = name, version = version, vendor = vendor, stringsAsFactors = F))}
 
     # SW1
@@ -200,6 +204,7 @@ newWFN <- function(part = "*", vendor = "*", product = "*", version = "*",
   return(wfn)
 }
 
+
 # k <- apply(dplyr::sample_n(df, 10), 1,
 #       function(x) {
 #         print(x)
@@ -211,3 +216,4 @@ newWFN <- function(part = "*", vendor = "*", product = "*", version = "*",
 #              print(x)
 #              matchCPE(x["name"], x["version"], x["vendor"])
 #            })
+
