@@ -4,8 +4,8 @@
 #' @export
 #'
 #' @examples
-#' inventory <- getInventary()
-getInventary <- function(){
+#' inventory <- getInventory()
+getInventory <- function(){
   if (.Platform$OS.type == "windows") {
     # Windows with powershell
     sw1 <- system("powershell.exe \"Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Format-List\"", intern = T)
@@ -97,6 +97,8 @@ getInventary <- function(){
     df.sw <- df.sw[!duplicated(df.sw),]
     df.sw <- dplyr::arrange(df.sw, "name")
 
+    df.sw$name <- stringr::str_conv(df.sw$name, "UTF-8")
+
     return(df.sw)
   }
 
@@ -106,6 +108,9 @@ getInventary <- function(){
     df.sw <- utils::read.csv(text = sw, sep = ";", header = F,
                       col.names = c("name", "architecture", "version", "mantainer"))
     df.sw$name <- sapply(df.sw$name, function(x) stringr::str_split(x, ":")[[1]][1])
+
+    df.sw$name <- stringr::str_conv(df.sw$name, "UTF-8")
+
     return(df.sw)
   }
 
