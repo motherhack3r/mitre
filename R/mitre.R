@@ -2,11 +2,12 @@
 #'
 #' @param verbose default is FALSE
 #'
+#' @return list, containing standards as data frames
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' mitre::getLatestDataSet(TRUE)
+#' standards <- mitre::getLatestDataSet(TRUE)
 #' }
 getLatestDataSet <- function(verbose = FALSE) {
   # # List files
@@ -28,6 +29,8 @@ getLatestDataSet <- function(verbose = FALSE) {
   rawfile <- tempfile(fileext = ".rds")
   utils::download.file(url = rawurl, destfile = rawfile, quiet = !verbose)
   standards <- readRDS(rawfile)
+
+  return(standards)
 }
 
 #' Create a list of nodes and edges related to all standards in data folder.

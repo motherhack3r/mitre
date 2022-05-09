@@ -9,11 +9,14 @@ getLatestDataSet(verbose = FALSE)
 \arguments{
 \item{verbose}{default is FALSE}
 }
+\value{
+list, containing standards as data frames
+}
 \description{
 Download latest R data sets from Github previously parsed with this package.
 }
 \examples{
 \dontrun{
-mitre::getLatestDataSet(TRUE)
+standards <- mitre::getLatestDataSet(TRUE)
 }
 }
