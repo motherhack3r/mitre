@@ -123,6 +123,82 @@ getInventory <- function(){
 }
 
 
+
+
+str2wfn_encode <- function(s = "Notepad++ v8.50") {
+  s <- tolower(s)
+  result <- ""
+  idx <- 1
+  while (idx <= nchar(s)) {
+    thischar <- stringi::stri_sub(s, idx, idx)
+    if (grepl(pattern = "[[:alnum:]]", x = thischar)) {
+      result <- paste0(result, thischar)
+      idx <- idx + 1
+      next
+    }
+    if (grepl(pattern = "\\\\", x = thischar)) {
+      idx <- idx + 1
+      nxtchar <- stringi::stri_sub(s, idx, idx)
+      result <- paste0(result, pct_encode(nxtchar))
+      idx <- idx + 1
+      next
+    }
+    if (thischar == " ") {
+      thischar <- "_"
+    }
+    if (grepl(pattern = "\\?", x = thischar)) {
+      thischar <- "%01"
+    }
+    if (grepl(pattern = "\\*", x = thischar)) {
+      thischar <- "%02"
+    }
+
+    result <- paste0(result, thischar)
+    idx <- idx + 1
+  }
+
+  return(result)
+}
+
+pct_encode <- function(ch = character()) {
+  if (ch == "!") return("%21")
+  if (ch == '"') return("%22")
+  if (ch == "#") return("%23")
+  if (ch == "$") return("%24")
+  if (ch == "%") return("%25")
+  if (ch == "&") return("%26")
+  if (ch == "'") return("%27")
+  if (ch == "(") return("%28")
+  if (ch == ")") return("%29")
+  if (ch == "*") return("%2a")
+  if (ch == "+") return("%2b")
+  if (ch == ",") return("%2c")
+  if (ch == "-") return(ch)
+  if (ch == ".") return(ch)
+  if (ch == "/") return("%2f")
+  if (ch == ":") return("%3a")
+  if (ch == ";") return("%3b")
+  if (ch == "<") return("%3c")
+  if (ch == "=") return("%3d")
+  if (ch == ">") return("%3e")
+  if (ch == "?") return("%3f")
+  if (ch == "@") return("%40")
+  if (ch == "[") return("%5b")
+  if (ch == "\\") return("%5c")
+  if (ch == "]") return("%5d")
+  if (ch == "^") return("%5e")
+  if (ch == "`") return("%60")
+  if (ch == "{") return("%7b")
+  if (ch == "|") return("%7c")
+  if (ch == "}") return("%7d")
+  if (ch == "~") return("%7e")
+
+  return(ch)
+}
+
+
+############## OLD VERSION
+
 matchCPE <- function(name = "", version = "", vendor = "") {
 
   # Match part and product
