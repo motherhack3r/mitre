@@ -1,55 +1,42 @@
 # History files
 .Rhistory
 .Rapp.history
-
 # Session Data files
 .RData
 #inst/scripts/
-
 # User-specific files
 .Ruserdata
-
 # Example code in package build process
 *-Ex.R
-
 # Output files from R CMD build
 /*.tar.gz
-
 # Output files from R CMD check
 /*.Rcheck/
-
 # RStudio files
 .Rproj.user/
 *.Rproj
-
 # produced vignettes
 vignettes/*.html
-
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
-
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
-
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
-
 # R Environment Variables
 .Renviron
 inst/temp
 inst/extdata
-
 # Temporary raw files to parse
 *.Rproj
-
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
-
 # Raw files
 data-raw/**/*.json
 data-raw/**/*.xml
 data-raw/**/*.gz
 data-raw/**/*.zip
 inst/doc
+data
