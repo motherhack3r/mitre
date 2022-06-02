@@ -10,13 +10,13 @@ getLatestDataSet(verbose = FALSE)
 \item{verbose}{default is FALSE}
 }
 \value{
-list of standards and network
+list, containing standards as data frames
 }
 \description{
 Download latest R data sets from Github previously parsed with this package.
 }
 \examples{
 \dontrun{
-mitredata <- mitre::getLatestDataSet(TRUE)
+standards <- mitre::getLatestDataSet(TRUE)
 }
 }
