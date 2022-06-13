@@ -117,6 +117,7 @@ cpe_chars[order(cpe_chars$char, decreasing = F), ] %>%
 #### Deep cleansing
 
 -   There is the possibility of titles with not valid characters
+
 ```{r}
 selected_rows <- which(!(cpe_chars$char %in% avs_chars$char))
 cpe_chars$dec[selected_rows] <- sapply(cpe_chars$char[selected_rows], DescTools::CharToAsc)
@@ -130,6 +131,7 @@ kable(cpes[selected_rows, ] ) %>%
   kable_paper() %>%
   scroll_box(width = "800px", height = "460px")
 ```
+
 ```{r}
 cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "^[\\x09]", "")
 selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
@@ -142,9 +144,11 @@ selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
 ```
 
 -   We need to check titles using the escape character `\\`
+
 ```{r}
 cpe_chars[which(cpe_chars$dec == CharToAsc("\\")), ]
 ```
+
 ```{r}
 selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
 cpes[selected_rows, ] %>% 
@@ -154,7 +158,6 @@ cpes[selected_rows, ] %>%
   scroll_box(width = "800px", height = "460px")
 
 ```
-
 
 ```{r}
 cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]\\(", "(")
@@ -174,7 +177,6 @@ selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
 ```
 
 -   We can cluster titles by the character occurrences, uncased, only alphanumeric...
-
 
 ```{r re_tokenize_chars, cache=TRUE}
 cpe_token_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
