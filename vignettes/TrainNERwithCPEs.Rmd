@@ -1,0 +1,245 @@
+---
+title: "Untitled"
+author: "Humbert Costas"
+date: '2022-06-12'
+output: 
+  html_document: 
+    smart: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(tokenizers))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(DescTools))
+suppressPackageStartupMessages(library(htmltools))
+suppressPackageStartupMessages(library(textutils))
+
+```
+
+## CPE exploratory for training NER
+
+Load full standard as data.frame `cpes`, remove deprecated and select name, vendor, product and version.
+
+```{r cpes, cache=TRUE}
+cpes <- mitre::cpe.nist
+cpes <- cpes %>% filter(!deprecated) %>% select(title, vendor, product, version)
+
+```
+
+## Formatted String Binding definition
+
+Check the definition of `avstring` in [NISTIR 7695](https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nistir7695.pdf). We need to know valid characters, which can be defined by ASCII codes [ref](https://stackoverflow.com/a/50398057/4598052).
+
+I only added the `Space` character in `avstring` definition.
+
+```{r avstring, cache=TRUE, paged.print=TRUE}
+
+# Chars accepted by avstring
+avs_chars <- data.frame(char = sapply(c(32:126), DescTools::AscToChar),
+                        dec = c(32:126),
+                        hex = as.character(DescTools::DecToHex(c(32:126))),
+                        stringsAsFactors = FALSE)
+
+avs_chars$html <- textutils::HTMLencode(avs_chars$char, T)
+
+temptab <- avs_chars
+temptab$char[temptab$char == "|"] <- "\\|"
+temptab$char[temptab$char == "-"] <- "\\-"
+temptab$html[temptab$html == "-"] <- "\\-"
+temptab$char[temptab$char == "*"] <- "\\*"
+temptab$char[temptab$char == "+"] <- "\\+"
+
+temptab %>% 
+  kable(format = "html", escape = TRUE) %>% 
+  kable_paper()
+```
+
+Let's check how many invalid characters exists in CPE titles...
+
+```{r cpes_non_ascii, cache=TRUE}
+cpe_titles <- cpes$title
+
+# Encoded chars as regex with hexadecimals
+chars_enc <- "[\x20-\x7E]"
+
+cpes_non_ascii <- cpes[which(sapply(tokenizers::tokenize_characters(cpe_titles), 
+                                    function(x) 
+                                      any(stringr::str_detect(string = x, 
+                                                              pattern = chars_enc, 
+                                                              negate = TRUE)))), ]
+
+temptab <- cpes_non_ascii %>% sample_n(10)
+temptab %>% 
+  kable(format = "html", escape = TRUE) %>% 
+  kable_paper()
+```
+
+We can use [ASCII/TRANSLIT](https://stackoverflow.com/questions/20495598/replace-accented-characters-in-r-with-non-accented-counterpart-utf-8-encoding) to replace accented and other characters.
+
+```{r translit}
+cpe_titles <- iconv(cpe_titles, to = 'ASCII//TRANSLIT')
+
+```
+
+Let's see how many characters are used...
+
+```{r tokenize_chars, cache=TRUE}
+cpe_token_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
+                                                   strip_non_alphanum = FALSE)
+cpe_token_chars_uncase <- tokenizers::tokenize_characters(cpe_titles, 
+                                                          lowercase = TRUE, 
+                                                          strip_non_alphanum = FALSE)
+cpe_token_chars_alphanum <- tokenizers::tokenize_characters(cpe_titles, 
+                                                            lowercase = TRUE, 
+                                                            strip_non_alphanum = TRUE)
+```
+
+```{r charstats, cache=TRUE}
+cpe_chars <- as.data.frame(table(unlist(cpe_token_chars)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_chars) <- c("char", "occur")
+```
+
+```{r charstats_table, results='asis'}
+cpe_chars <- cpe_chars %>% left_join(avs_chars, by = "char")
+cpe_chars[order(cpe_chars$char, decreasing = F), ] %>% 
+  kable(format = "html", escape = TRUE) %>% 
+  kable_paper() %>%
+  scroll_box(width = "300px", height = "450px")
+```
+
+#### Deep cleansing
+
+-   There is the possibility of titles with not valid characters
+```{r}
+selected_rows <- which(!(cpe_chars$char %in% avs_chars$char))
+cpe_chars$dec[selected_rows] <- sapply(cpe_chars$char[selected_rows], DescTools::CharToAsc)
+cpe_chars$hex[selected_rows] <- sapply(cpe_chars$dec[selected_rows], DescTools::DecToHex)
+cpe_chars[selected_rows, ]
+```
+
+```{r}
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
+kable(cpes[selected_rows, ] ) %>% 
+  kable_paper() %>%
+  scroll_box(width = "800px", height = "460px")
+```
+```{r}
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "^[\\x09]", "")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "\\s[\\x09]", " ")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x09]", " ")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
+
+!any(selected_rows)
+```
+
+-   We need to check titles using the escape character `\\`
+```{r}
+cpe_chars[which(cpe_chars$dec == CharToAsc("\\")), ]
+```
+```{r}
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+cpes[selected_rows, ] %>% 
+  sample_n(20) %>%
+  kable() %>% 
+  kable_paper() %>%
+  scroll_box(width = "800px", height = "460px")
+
+```
+
+
+```{r}
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]\\(", "(")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]\\)", ")")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]\\/", "/")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]\\&", "&")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+
+# Maybe its better to remove this samples instead of replacement
+cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], "[\\x5c]", "/")
+selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
+
+!any(selected_rows)
+```
+
+-   We can cluster titles by the character occurrences, uncased, only alphanumeric...
+
+
+```{r re_tokenize_chars, cache=TRUE}
+cpe_token_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
+                                                   strip_non_alphanum = FALSE)
+cpe_token_chars_uncase <- tokenizers::tokenize_characters(cpe_titles, 
+                                                          lowercase = TRUE, 
+                                                          strip_non_alphanum = FALSE)
+cpe_token_chars_alphanum <- tokenizers::tokenize_characters(cpe_titles, 
+                                                            lowercase = TRUE, 
+                                                            strip_non_alphanum = TRUE)
+```
+
+```{r re_charstats, cache=TRUE}
+cpe_chars <- as.data.frame(table(unlist(cpe_token_chars)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_chars) <- c("char", "occur")
+cpe_chars <- cpe_chars %>% left_join(avs_chars, by = "char")
+cpe_chars <- cpe_chars[order(cpe_chars$char, decreasing = F), ]
+
+cpe_chars_uncase <- as.data.frame(table(unlist(cpe_token_chars_uncase)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_chars_uncase) <- c("char", "occur")
+cpe_chars_uncase <- cpe_chars_uncase %>% left_join(avs_chars, by = "char")
+cpe_chars_uncase <- cpe_chars_uncase[order(cpe_chars_uncase$char, decreasing = F), ]
+
+cpe_chars_alphanum <- as.data.frame(table(unlist(cpe_token_chars_alphanum)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_chars_alphanum) <- c("char", "occur")
+cpe_chars_alphanum <- cpe_chars_alphanum %>% left_join(avs_chars, by = "char")
+cpe_chars_alphanum <- cpe_chars_alphanum[order(cpe_chars_alphanum$char, decreasing = F), ]
+
+```
+
+```{css}
+.kable_wrapper > tbody > tr > td {
+    vertical-align: top;
+}
+```
+
+```{r re_charstats_table, results='asis'}
+cpe_chars$html <- textutils::HTMLencode(cpe_chars$char, T)
+cpe_chars_uncase$html <- textutils::HTMLencode(cpe_chars_uncase$char, T)
+cpe_chars_alphanum$html <- textutils::HTMLencode(cpe_chars_alphanum$char, T)
+
+cpe_chars2 <- cpe_chars
+cpe_chars2$char[cpe_chars2$char == "|"] <- "\\|"
+cpe_chars2$char[cpe_chars2$char == "-"] <- "\\-"
+cpe_chars2$html[cpe_chars2$html == "-"] <- "\\-"
+cpe_chars2$char[cpe_chars2$char == "*"] <- "\\*"
+cpe_chars2$char[cpe_chars2$char == "+"] <- "\\+"
+
+cpe_chars_uncase2 <- cpe_chars_uncase
+cpe_chars_uncase2$char[cpe_chars_uncase2$char == "|"] <- "\\|"
+cpe_chars_uncase2$char[cpe_chars_uncase2$char == "-"] <- "\\-"
+cpe_chars_uncase2$html[cpe_chars_uncase2$html == "-"] <- "\\-"
+cpe_chars_uncase2$char[cpe_chars_uncase2$char == "*"] <- "\\*"
+cpe_chars_uncase2$char[cpe_chars_uncase2$char == "+"] <- "\\+"
+
+cpe_chars_alphanum2 <- cpe_chars_alphanum
+cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "|"] <- "\\|"
+cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "-"] <- "\\-"
+cpe_chars_alphanum2$html[cpe_chars_alphanum2$html == "-"] <- "\\-"
+cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "+"] <- "\\+"
+
+kable(list(cpe_chars2, cpe_chars_uncase2, cpe_chars_alphanum2)) %>% 
+  kable_paper() %>%
+  scroll_box(width = "800px", height = "460px")
+```
