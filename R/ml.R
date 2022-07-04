@@ -2,6 +2,37 @@
 #' Title
 #'
 #' @param cpes
+#' @param num_samples
+#'
+#' @return
+#' @export
+cpe_train_set <- function(cpes = mitre::cpe.nist, num_samples = 1000) {
+  suppressPackageStartupMessages(library(dplyr))
+  df <- cpes %>%
+    select(id, title, vendor, product, version) %>%
+    mutate(title_len = nchar(title)) %>%
+    mutate(vendor_len = nchar(vendor)) %>%
+    mutate(product_len = nchar(product)) %>%
+    mutate(version_len = nchar(version))
+
+  sts_t25 <- as.integer(quantile(df$title_len, 0.25))
+  sts_t75 <- as.integer(quantile(df$title_len, 0.75))
+
+  df_25 <- df %>% filter(title_len <= sts_t25)
+  df_50 <- df %>% filter(title_len > sts_t25, title_len < sts_t75)
+  df_75 <- df %>% filter(title_len >= sts_t75)
+  nbias <- num_samples %% 3
+
+  df_sam <- df_25 %>% sample_n(num_samples/3)
+  df_sam <- df_sam %>% bind_rows(df_50 %>% sample_n((num_samples/3) + nbias))
+  df_sam <- df_sam %>% bind_rows(df_75 %>% sample_n(num_samples/3))
+
+  return(df_sam)
+}
+
+#' Title
+#'
+#' @param cpes
 #' @param overlap
 #' @param columns
 #'

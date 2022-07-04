@@ -2,6 +2,7 @@
 
 export(build_network)
 export(cpe_encode_name)
+export(cpe_train_set)
 export(getInventory)
 export(getLatestDataSet)
 export(ml_cpe_valid_chars)
