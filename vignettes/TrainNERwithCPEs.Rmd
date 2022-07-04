@@ -2,10 +2,13 @@
 title: "Untitled"
 author: "Humbert Costas"
 date: '2022-06-12'
-output: 
-  html_document: 
+output:
+  html_document:
     smart: no
+  pdf_document: default
 ---
+
+------------------------------------------------------------------------
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
@@ -19,6 +22,25 @@ suppressPackageStartupMessages(library(knitr))
 suppressPackageStartupMessages(library(DescTools))
 suppressPackageStartupMessages(library(htmltools))
 suppressPackageStartupMessages(library(textutils))
+library(mitre)
+
+catable <- function(df = data.frame()) {
+  df %>% 
+    kable(format = "html", escape = TRUE) %>% 
+    kable_paper() %>%
+    scroll_box(width = "800px", height = "460px")
+}
+
+enc4cat <- function(df = data.frame(char = "")) {
+  df$html <- textutils::HTMLencode(df$char, T)
+  df$char[df$char == "|"] <- "\\|"
+  df$char[df$char == "-"] <- "\\-"
+  df$html[df$html == "-"] <- "\\-"
+  df$char[df$char == "*"] <- "\\*"
+  df$char[df$char == "+"] <- "\\+"
+  
+  return(df)
+}
 
 ```
 
@@ -46,18 +68,7 @@ avs_chars <- data.frame(char = sapply(c(32:126), DescTools::AscToChar),
                         hex = as.character(DescTools::DecToHex(c(32:126))),
                         stringsAsFactors = FALSE)
 
-avs_chars$html <- textutils::HTMLencode(avs_chars$char, T)
-
-temptab <- avs_chars
-temptab$char[temptab$char == "|"] <- "\\|"
-temptab$char[temptab$char == "-"] <- "\\-"
-temptab$html[temptab$html == "-"] <- "\\-"
-temptab$char[temptab$char == "*"] <- "\\*"
-temptab$char[temptab$char == "+"] <- "\\+"
-
-temptab %>% 
-  kable(format = "html", escape = TRUE) %>% 
-  kable_paper()
+catable(enc4cat(avs_chars))
 ```
 
 Let's check how many invalid characters exists in CPE titles...
@@ -74,10 +85,7 @@ cpes_non_ascii <- cpes[which(sapply(tokenizers::tokenize_characters(cpe_titles),
                                                               pattern = chars_enc, 
                                                               negate = TRUE)))), ]
 
-temptab <- cpes_non_ascii %>% sample_n(10)
-temptab %>% 
-  kable(format = "html", escape = TRUE) %>% 
-  kable_paper()
+catable(cpes_non_ascii %>% sample_n(10))
 ```
 
 We can use [ASCII/TRANSLIT](https://stackoverflow.com/questions/20495598/replace-accented-characters-in-r-with-non-accented-counterpart-utf-8-encoding) to replace accented and other characters.
@@ -108,10 +116,8 @@ names(cpe_chars) <- c("char", "occur")
 
 ```{r charstats_table, results='asis'}
 cpe_chars <- cpe_chars %>% left_join(avs_chars, by = "char")
-cpe_chars[order(cpe_chars$char, decreasing = F), ] %>% 
-  kable(format = "html", escape = TRUE) %>% 
-  kable_paper() %>%
-  scroll_box(width = "300px", height = "450px")
+
+catable(enc4cat(cpe_chars[order(cpe_chars$char, decreasing = F), ]))
 ```
 
 #### Deep cleansing
@@ -126,10 +132,10 @@ cpe_chars[selected_rows, ]
 ```
 
 ```{r}
+# Deal with tabs `\t`
 selected_rows <- stringr::str_detect(cpe_titles, "[\\x09]")
-kable(cpes[selected_rows, ] ) %>% 
-  kable_paper() %>%
-  scroll_box(width = "800px", height = "460px")
+
+catable(cpes[selected_rows, ] )
 ```
 
 ```{r}
@@ -151,12 +157,8 @@ cpe_chars[which(cpe_chars$dec == CharToAsc("\\")), ]
 
 ```{r}
 selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
-cpes[selected_rows, ] %>% 
-  sample_n(20) %>%
-  kable() %>% 
-  kable_paper() %>%
-  scroll_box(width = "800px", height = "460px")
 
+catable(cpes[selected_rows, ] %>% sample_n(20))
 ```
 
 ```{r}
@@ -179,30 +181,30 @@ selected_rows <- stringr::str_detect(cpe_titles, "[\\x5c]")
 -   We can cluster titles by the character occurrences, uncased, only alphanumeric...
 
 ```{r re_tokenize_chars, cache=TRUE}
-cpe_token_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
-                                                   strip_non_alphanum = FALSE)
-cpe_token_chars_uncase <- tokenizers::tokenize_characters(cpe_titles, 
-                                                          lowercase = TRUE, 
-                                                          strip_non_alphanum = FALSE)
-cpe_token_chars_alphanum <- tokenizers::tokenize_characters(cpe_titles, 
-                                                            lowercase = TRUE, 
-                                                            strip_non_alphanum = TRUE)
+cpe_tk_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
+                                                strip_non_alphanum = FALSE)
+cpe_tk_chars_uncase <- tokenizers::tokenize_characters(cpe_titles, 
+                                                       lowercase = TRUE, 
+                                                       strip_non_alphanum = FALSE)
+cpe_tk_chars_alphanum <- tokenizers::tokenize_characters(cpe_titles, 
+                                                         lowercase = TRUE, 
+                                                         strip_non_alphanum = TRUE)
 ```
 
 ```{r re_charstats, cache=TRUE}
-cpe_chars <- as.data.frame(table(unlist(cpe_token_chars)), 
+cpe_chars <- as.data.frame(table(unlist(cpe_tk_chars)), 
                            stringsAsFactors = FALSE) 
 names(cpe_chars) <- c("char", "occur")
 cpe_chars <- cpe_chars %>% left_join(avs_chars, by = "char")
 cpe_chars <- cpe_chars[order(cpe_chars$char, decreasing = F), ]
 
-cpe_chars_uncase <- as.data.frame(table(unlist(cpe_token_chars_uncase)), 
+cpe_chars_uncase <- as.data.frame(table(unlist(cpe_tk_chars_uncase)), 
                            stringsAsFactors = FALSE) 
 names(cpe_chars_uncase) <- c("char", "occur")
 cpe_chars_uncase <- cpe_chars_uncase %>% left_join(avs_chars, by = "char")
 cpe_chars_uncase <- cpe_chars_uncase[order(cpe_chars_uncase$char, decreasing = F), ]
 
-cpe_chars_alphanum <- as.data.frame(table(unlist(cpe_token_chars_alphanum)), 
+cpe_chars_alphanum <- as.data.frame(table(unlist(cpe_tk_chars_alphanum)), 
                            stringsAsFactors = FALSE) 
 names(cpe_chars_alphanum) <- c("char", "occur")
 cpe_chars_alphanum <- cpe_chars_alphanum %>% left_join(avs_chars, by = "char")
@@ -217,31 +219,122 @@ cpe_chars_alphanum <- cpe_chars_alphanum[order(cpe_chars_alphanum$char, decreasi
 ```
 
 ```{r re_charstats_table, results='asis'}
-cpe_chars$html <- textutils::HTMLencode(cpe_chars$char, T)
-cpe_chars_uncase$html <- textutils::HTMLencode(cpe_chars_uncase$char, T)
-cpe_chars_alphanum$html <- textutils::HTMLencode(cpe_chars_alphanum$char, T)
+catable(list(enc4cat(cpe_chars), enc4cat(cpe_chars_uncase), enc4cat(cpe_chars_alphanum)))
+```
 
-cpe_chars2 <- cpe_chars
-cpe_chars2$char[cpe_chars2$char == "|"] <- "\\|"
-cpe_chars2$char[cpe_chars2$char == "-"] <- "\\-"
-cpe_chars2$html[cpe_chars2$html == "-"] <- "\\-"
-cpe_chars2$char[cpe_chars2$char == "*"] <- "\\*"
-cpe_chars2$char[cpe_chars2$char == "+"] <- "\\+"
 
-cpe_chars_uncase2 <- cpe_chars_uncase
-cpe_chars_uncase2$char[cpe_chars_uncase2$char == "|"] <- "\\|"
-cpe_chars_uncase2$char[cpe_chars_uncase2$char == "-"] <- "\\-"
-cpe_chars_uncase2$html[cpe_chars_uncase2$html == "-"] <- "\\-"
-cpe_chars_uncase2$char[cpe_chars_uncase2$char == "*"] <- "\\*"
-cpe_chars_uncase2$char[cpe_chars_uncase2$char == "+"] <- "\\+"
+#### Select WFN characters 
 
-cpe_chars_alphanum2 <- cpe_chars_alphanum
-cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "|"] <- "\\|"
-cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "-"] <- "\\-"
-cpe_chars_alphanum2$html[cpe_chars_alphanum2$html == "-"] <- "\\-"
-cpe_chars_alphanum2$char[cpe_chars_alphanum2$char == "+"] <- "\\+"
+We will use tokenize_regex() with WFN characters.
 
-kable(list(cpe_chars2, cpe_chars_uncase2, cpe_chars_alphanum2)) %>% 
-  kable_paper() %>%
-  scroll_box(width = "800px", height = "460px")
+```{r wfn_tokenize_chars, cache=TRUE}
+
+
+
+catable(enc4cat(cpe_chars[order(cpe_chars$occur, decreasing = T), ]))
+```
+There less used characters may be not important, so can be removed below 500 occurrences.
+
+```{r wfn_tokenize_chars2, cache=TRUE}
+
+kk <- cpe_chars[(cpe_chars$occur < 500), ]
+
+for (x in kk$hex) {
+  selected_rows <- stringr::str_detect(cpe_titles, paste0("[\\x", x, "]"))
+  cpe_titles[selected_rows] <- stringr::str_replace_all(cpe_titles[selected_rows], paste0("[\\x", x, "]"), "")
+}
+
+cpe_tkwfn_chars <- tokenizers::tokenize_characters(cpe_titles, lowercase = FALSE, 
+                                                strip_non_alphanum = FALSE)
+
+cpe_wfnchars <- as.data.frame(table(unlist(cpe_tkwfn_chars)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_wfnchars) <- c("char", "occur")
+cpe_wfnchars <- cpe_wfnchars %>% left_join(avs_chars, by = "char")
+cpe_wfnchars <- cpe_wfnchars[order(cpe_wfnchars$char, decreasing = F), ]
+
+catable(enc4cat(cpe_wfnchars))
+```
+That table will be the input characters for models.
+
+The output chars should be the same but lowercase and adding the escape.
+
+```{r}
+cpe_tkwfn_out <- tokenizers::tokenize_characters(cpe_titles, lowercase = TRUE, 
+                                                strip_non_alphanum = FALSE)
+
+cpe_wfncharsout <- as.data.frame(table(unlist(cpe_tkwfn_out)), 
+                           stringsAsFactors = FALSE) 
+names(cpe_wfncharsout) <- c("char", "occur")
+cpe_wfncharsout <- cpe_wfncharsout %>% left_join(avs_chars, by = "char")
+cpe_wfncharsout <- cpe_wfncharsout[order(cpe_wfncharsout$char, decreasing = F), ]
+
+catable(enc4cat(cpe_wfncharsout))
+
+```
+
+Now, we need functions to encode/decode inputs and outputs to fit strings with the model.
+
+## Encode and Decode functions
+
+### Tokencode 
+
+Step by step pseudocode:
+
+- Use ASCII/TRANSLIT encoding
+- Remove tabs
+- Remove escape character
+- Replace not valid chars
+
+
+### Decotoken
+
+
+## Create Training set
+
+```{r}
+# cpesx <- mitre::cpe.nist
+# cpesx$title <- cpe_encode_name(cpesx$title)
+```
+
+### Annotate vendor for custom NER
+```{r}
+# cpesx$vendor <- cpe_encode_name(cpesx$vendor)
+# df_vendor <- ner_offsets_cpe(cpes = cpesx, columns = "vendor")
+# df_vendor <- df_vendor[df_vendor$annotations != "[]", ]
+```
+
+
+### Annotate product for custom NER
+
+```{r}
+# cpesx$product <- cpe_encode_name(cpesx$product)
+# df_product <- ner_offsets_cpe(cpes = cpesx, columns = "product")
+# df_product <- df_product[df_product$annotations != "[]", ]
+```
+
+
+### Annotate version for custom NER
+
+```{r}
+# cpesx$version <- cpe_encode_name(cpesx$version)
+# df_version <- ner_offsets_cpe(cpes = cpesx, columns = "version")
+# df_version <- df_version[df_version$annotations != "[]", ]
+
+```
+
+
+### Save training sets
+
+
+```{r}
+# write.csv(df_vendor[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_vendor.csv",
+#           row.names = FALSE, fileEncoding = "UTF-8")
+# write.csv(df_product[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_product.csv",
+#           row.names = FALSE, fileEncoding = "UTF-8")
+# write.csv(df_version[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_version.csv",
+#           row.names = FALSE, fileEncoding = "UTF-8")
+```
+
+```{r}
 ```
