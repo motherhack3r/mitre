@@ -8,68 +8,41 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(stringr, warn.conflicts = FALSE))
+```
 
-num_samples <- 2000
+```{r params, include=FALSE}
+num_samples <- 800
+```
 
+```{r read_raw, include=FALSE}
 cpes_raw <- mitre::cpe.nist
 cpes_raw$id <- 1:nrow(cpes_raw)
 ```
 
 ## Create Training set
 
-```{r cpe_encoder}
-cpes <- cpes_raw %>% select(id, title, vendor, product, version)
-cpes$title <- mitre::cpe_encode_name(cpes$title)
-cpes$vendor <- mitre::cpe_encode_name(cpes$vendor)
-cpes$product <- mitre::cpe_encode_name(cpes$product)
-cpes$version <- mitre::cpe_encode_name(cpes$version)
-```
-
 ```{r cpe_sampling}
-cpes <- mitre::cpe_train_set(cpes, num_samples)
-df_cpes <- cpes %>% select(id) %>% left_join(cpes_raw, by = "id")
+df <- mitre::createTrainSample(cpes = cpes_raw, num_samples = num_samples)
 ```
 
 
-### Annotate vendor for custom NER
 ```{r}
-# cpesx$vendor <- cpe_encode_name(cpesx$vendor)
-# df_vendor <- ner_offsets_cpe(cpes = cpesx, columns = "vendor")
-# df_vendor <- df_vendor[df_vendor$annotations != "[]", ]
-```
-
-
-### Annotate product for custom NER
-
-```{r}
-# cpesx$product <- cpe_encode_name(cpesx$product)
-# df_product <- ner_offsets_cpe(cpes = cpesx, columns = "product")
-# df_product <- df_product[df_product$annotations != "[]", ]
-```
-
-
-### Annotate version for custom NER
-
-```{r}
-# cpesx$version <- cpe_encode_name(cpesx$version)
-# df_version <- ner_offsets_cpe(cpes = cpesx, columns = "version")
-# df_version <- df_version[df_version$annotations != "[]", ]
+readr::write_csv(x = df, file = "/DEVEL/code/data/train_cpes_ner_800.csv", col_names = FALSE)
 
 ```
 
-
-### Save training sets
-
-
 ```{r}
-# write.csv(df_vendor[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_vendor.csv",
-#           row.names = FALSE, fileEncoding = "UTF-8")
-# write.csv(df_product[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_product.csv",
-#           row.names = FALSE, fileEncoding = "UTF-8")
-# write.csv(df_version[, c("title", "annotations")], "/DEVEL/code/data/cpes_train_version.csv",
-#           row.names = FALSE, fileEncoding = "UTF-8")
+df_inventory <- mitre::getInventory()
+titles <- paste0(df_inventory$vendor, " ", df_inventory$name, " ", df_inventory$version)
 ```
 
 ```{r}
+readr::write_csv(x = data.frame(title = titles), 
+                 file = "/DEVEL/code/data/test_inventory_pc.csv", col_names = FALSE)
+```
+
+```{r}
+
 ```
