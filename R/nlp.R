@@ -1,6 +1,6 @@
 #' Encode strings to only 73 accepted characters for custom WFN.
 #'   - Replace accents, dieresis, etc to simple ASCII chars
-#'   - Replace tabs "\t" to space
+#'   - Replace tabs with spaces
 #'   - Deal with valid escaped symbols
 #'   - Replace not valid characters with "*"
 #'
@@ -137,7 +137,7 @@ str49enc <- function(name = character(), na_replace = "*") {
 #' @param add_underline logical, include "_"
 #' @param type character, returns valid chars for "input" or "output"
 #'
-#' @return
+#' @return character
 #' @export
 enc_valid_chars <- function(taste = c("char", "dec", "hex")[1],
                           add_tab = FALSE, add_enter = FALSE,
@@ -204,6 +204,7 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
 #'
 #' @param df data.frame nlp_cpe_dataset
 #' @param type character, default vpv
+#' @param kind character, default RASA
 #'
 #' @return data.frame
 #' @export
@@ -212,10 +213,14 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
                              kind = c("RASA", "entities", "BILUO")[1]) {
   df_ner <- df[, c("id", "title", "vendor", "product", "version")]
 
-  # Remove row without version for types: vpv, pv, vv and version
+  # Add tags
+  df_ner$annotated <- df_ner$title
+
+  # Remove rows without version for types: vpv, pv, vv and version
   if (type %in% c("vpv", "pv", "vv", "version")) {
     df_ner <- df_ner[stringr::str_detect(string = df$version, pattern = "^\\-$", negate = T), ]
   }
+
 
   # Check overlapping vendor-product
   if (type %in% c("vpv", "vp")) {
@@ -223,40 +228,66 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     df_ner <- df_ner[!stringr::str_detect(df_ner$product, stringr::fixed(df_ner$vendor)), ]
   }
 
-
   if (type == "vpv") {
-    if (kind = "RASA") {
-      pos_vend <- stringr::str_locate_all(df_ner$title, stringr::fixed(df_ner$vendor))
+    if (kind == "RASA") {
+      # remove rows with escaped chars because of tagging regex
+      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
+      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
+      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
+      # replace WFN _ to space
+      df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
+      df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
+      # remove titles with equal vendor and product
+      df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
+      # lowercase title
+      df_ner$title <- tolower(df_ner$title)
+      # vendor entities candidates
+      df_ner$train_v <- rep(F, nrow(df_ner))
+      df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor))
+      # product entities candidates
+      df_ner$train_p <- rep(F, nrow(df_ner))
+      df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product))
+      # version entities candidates
+      df_ner$train_r <- rep(F, nrow(df_ner))
+      df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version))
+      # Keep only titles with all entities
+      df_ner <- df_ner %>% filter(train_v & train_p & train_r) %>% select(-train_v, -train_p, -train_r)
 
+      ## vendor + product + version
+      df_ner$annotated <- stringr::str_replace_all(string = df_ner$annotated,
+                                          pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
+                                          replacement = "\\1\\\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7\\")
+
+      df_ner <- df_ner[which(grepl(pattern = ".*\\]\\(cpe_vendor\\).*\\]\\(cpe_product\\).*\\]\\(cpe_version\\).*", df_ner$annotated)), ]
     }
   }
-  if (type == "vend") {
-    df_vendor <- df[, c("id", "title", "vendor")]
-    df_vendor$title <- tolower(df_vendor$title)
-    df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "\\\\", "")
-    df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "_",  " ")
-    tit2vend <- apply(df_vendor, 1,
-                      function(x)
-                        as.data.frame.list(stringdist::afind(x[2], x[3])))
-    tit2vend <- dplyr::bind_rows(tit2vend)
-    df_vendor <- dplyr::bind_cols(df_vendor, tit2vend)
+  # if (type == "vend") {
+  #   df_vendor <- df[, c("id", "title", "vendor")]
+  #   df_vendor$title <- tolower(df_vendor$title)
+  #   df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "\\\\", "")
+  #   df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "_",  " ")
+  #   tit2vend <- apply(df_vendor, 1,
+  #                     function(x)
+  #                       as.data.frame.list(stringdist::afind(x[2], x[3])))
+  #   tit2vend <- dplyr::bind_rows(tit2vend)
+  #   df_vendor <- dplyr::bind_cols(df_vendor, tit2vend)
+  #
+  #   # vendor entities candidates
+  #   df_vendor$train_v <- rep(F, nrow(df_vendor))
+  #   df_vendor$train_v <- stringr::str_detect(df_vendor$title, stringr::fixed(df_vendor$vendor))
+  #
+  #   df_vendor <- df_vendor[df_vendor$distance < 2, ]
+  #   df_vendor$annotation <- paste0(substr(df_vendor$title, 1, df_vendor$location - 1),
+  #                                  "[", df_vendor$match, "](cpe_vendor)",
+  #                                  substr(df_vendor$title,
+  #                                         df_vendor$location + nchar(df_vendor$match),
+  #                                         nchar(df_vendor$title)))
+  #   df_vendor <- df_vendor[, c("id", "title", "annotation")]
+  #   df_vendor$title <- iconv(df_vendor$title, to = 'ASCII//TRANSLIT')
+  #   df_vendor$annotation <- iconv(df_vendor$annotation, to = 'ASCII//TRANSLIT')
+  # }
 
-    # vendor entities candidates
-    df_vendor$train_v <- rep(F, nrow(df_vendor))
-    df_vendor$train_v <- stringr::str_detect(df_vendor$title, stringr::fixed(df_vendor$vendor))
-
-    df_vendor <- df_vendor[df_vendor$distance < 2, ]
-    df_vendor$annotation <- paste0(substr(df_vendor$title, 1, df_vendor$location - 1),
-                                   "[", df_vendor$match, "](cpe_vendor)",
-                                   substr(df_vendor$title,
-                                          df_vendor$location + nchar(df_vendor$match),
-                                          nchar(df_vendor$title)))
-    df_vendor <- df_vendor[, c("id", "title", "annotation")]
-    df_vendor$title <- iconv(df_vendor$title, to = 'ASCII//TRANSLIT')
-    df_vendor$annotation <- iconv(df_vendor$annotation, to = 'ASCII//TRANSLIT')
-  }
 
 
-
-  return(df)
+  return(df_ner)
 }

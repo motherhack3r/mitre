@@ -7,7 +7,14 @@
 ner_offsets_cpe(cpes = mitre::cpe.nist, overlap = TRUE, columns = "all")
 }
 \arguments{
-\item{columns}{}
+\item{cpes}{data.frame}
+
+\item{overlap}{logical}
+
+\item{columns}{character}
+}
+\value{
+data.frame
 }
 \description{
 Title

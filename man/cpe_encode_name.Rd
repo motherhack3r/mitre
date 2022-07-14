@@ -7,7 +7,10 @@
 cpe_encode_name(name = "", lower = TRUE)
 }
 \arguments{
-\item{name}{}
+\item{name}{character}
+}
+\value{
+character
 }
 \description{
 Title

@@ -2,11 +2,11 @@
 
 #' Title
 #'
-#' @param cpes
-#' @param num_samples
-#' @param samples_mix
+#' @param cpes data.frame
+#' @param num_samples integer
+#' @param samples_mix numeric
 #'
-#' @return
+#' @return data.frame
 #' @export
 createTrainSample <- function(cpes = data.frame(), num_samples = 5000,
                               samples_mix = c(min = 0.6,
@@ -14,7 +14,7 @@ createTrainSample <- function(cpes = data.frame(), num_samples = 5000,
                                               max = 0.15)) {
   # part is not included in title
   df_ner <- cpes %>% select(id, title, vendor, product, version)
-  # remove rows with escaped chars due to regex for tagging
+  # remove rows with escaped chars because of tagging regex
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
@@ -135,10 +135,10 @@ createTrainSample <- function(cpes = data.frame(), num_samples = 5000,
 
 #' Title
 #'
-#' @param cpes
-#' @param num_samples
+#' @param cpes data.frame
+#' @param num_samples integer
 #'
-#' @return
+#' @return data.frame
 #' @export
 cpe_train_set <- function(cpes = mitre::cpe.nist, num_samples = 1000) {
   df <- cpes %>%
@@ -165,11 +165,11 @@ cpe_train_set <- function(cpes = mitre::cpe.nist, num_samples = 1000) {
 
 #' Title
 #'
-#' @param cpes
-#' @param overlap
-#' @param columns
+#' @param cpes data.frame
+#' @param overlap logical, default TRUE
+#' @param columns character
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -257,11 +257,11 @@ ner_tags_cpe <- function(cpes = mitre::cpe.nist, overlap = TRUE, columns = "all"
 
 #' Title
 #'
-#' @param cpes
-#' @param overlap
-#' @param columns
+#' @param cpes data.frame
+#' @param overlap logical
+#' @param columns character
 #'
-#' @return
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -351,9 +351,10 @@ ner_offsets_cpe <- function(cpes = mitre::cpe.nist, overlap = TRUE, columns = "a
 
 #' Title
 #'
-#' @param name
+#' @param name character
+#' @param lower logical
 #'
-#' @return
+#' @return character
 #' @export
 cpe_encode_name <- function(name = "", lower = TRUE) {
   encname <- iconv(name, to = 'ASCII//TRANSLIT')

@@ -7,7 +7,14 @@
 ner_tags_cpe(cpes = mitre::cpe.nist, overlap = TRUE, columns = "all")
 }
 \arguments{
-\item{columns}{}
+\item{cpes}{data.frame}
+
+\item{overlap}{logical, default TRUE}
+
+\item{columns}{character}
+}
+\value{
+data.frame
 }
 \description{
 Title
