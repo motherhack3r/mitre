@@ -218,7 +218,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
 
   # Remove rows without version for types: vpv, pv, vv and version
   if (type %in% c("vpv", "pv", "vv", "version")) {
-    df_ner <- df_ner[stringr::str_detect(string = df$version, pattern = "^\\-$", negate = T), ]
+    df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
   }
 
 
@@ -254,11 +254,11 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
       df_ner <- df_ner %>% filter(train_v & train_p & train_r) %>% select(-train_v, -train_p, -train_r)
 
       ## vendor + product + version
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$annotated,
+      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
                                           pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
-                                          replacement = "\\1\\\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7\\")
+                                          replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
 
-      df_ner <- df_ner[which(grepl(pattern = ".*\\]\\(cpe_vendor\\).*\\]\\(cpe_product\\).*\\]\\(cpe_version\\).*", df_ner$annotated)), ]
+      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
     }
   }
   # if (type == "vend") {

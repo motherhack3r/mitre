@@ -8,6 +8,8 @@ cpe_encode_name(name = "", lower = TRUE)
 }
 \arguments{
 \item{name}{character}
+
+\item{lower}{logical}
 }
 \value{
 character
