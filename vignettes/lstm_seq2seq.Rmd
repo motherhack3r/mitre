@@ -79,7 +79,7 @@ Select the column to be predicted by the model: vendor, product or version
 cpe_colmod <- "version"
 
 cpes$title <- mitre::cpe_encode_name(cpes$title, lower = FALSE)
-cpes[[cpe_colmod]] <- mitre::cpe_encode_name(cpes[[cpe_colmod]])
+cpes[[all_of(cpe_colmod)]] <- mitre::cpe_encode_name(cpes[[all_of(cpe_colmod)]])
 
 cpes <- cpes %>% 
   select("title", cpe_colmod) %>%
@@ -187,9 +187,9 @@ model %>% compile(optimizer='rmsprop', loss='categorical_crossentropy')
 
 ```{r }
 model %>% fit( list(encoder_input_data, decoder_input_data), decoder_target_data,
-               batch_size=batch_size,
-               epochs=epochs,
-               validation_split=0.2)
+               batch_size = batch_size,
+               epochs = epochs,
+               validation_split = 0.2)
 ```
 
 ## Save model
@@ -306,25 +306,3 @@ for (seq_index in 1:100) {
   cat('Decoded sentence: ', decoded_sentence,'\n')
 }
 ```
-
-```{r }
-
-```
-
-```{r }
-
-```
-
-```{r }
-
-```
-
-```{r }
-
-```
-
-```{r }
-
-```
-
-
