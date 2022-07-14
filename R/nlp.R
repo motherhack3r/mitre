@@ -228,37 +228,49 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     df_ner <- df_ner[!stringr::str_detect(df_ner$product, stringr::fixed(df_ner$vendor)), ]
   }
 
-  if (type == "vpv") {
-    if (kind == "RASA") {
-      # remove rows with escaped chars because of tagging regex
-      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
-      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
-      df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
-      # replace WFN _ to space
-      df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
-      df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
-      # remove titles with equal vendor and product
-      df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
-      # lowercase title
-      df_ner$title <- tolower(df_ner$title)
-      # vendor entities candidates
-      df_ner$train_v <- rep(F, nrow(df_ner))
-      df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor))
-      # product entities candidates
-      df_ner$train_p <- rep(F, nrow(df_ner))
-      df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product))
-      # version entities candidates
-      df_ner$train_r <- rep(F, nrow(df_ner))
-      df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version))
-      # Keep only titles with all entities
-      df_ner <- df_ner %>% filter(train_v & train_p & train_r) %>% select(-train_v, -train_p, -train_r)
+  if (kind == "RASA") {
+    # remove rows with escaped chars because of tagging regex
+    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
+    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
+    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
+    # replace WFN _ to space
+    df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
+    df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
+    # remove titles with equal vendor and product
+    df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
+    # lowercase title
+    df_ner$title <- tolower(df_ner$title)
+    # vendor entities candidates
+    df_ner$train_v <- rep(F, nrow(df_ner))
+    df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor))
+    # product entities candidates
+    df_ner$train_p <- rep(F, nrow(df_ner))
+    df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product))
+    # version entities candidates
+    df_ner$train_r <- rep(F, nrow(df_ner))
+    df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version))
 
+    if (type == "vpv") {
+      # Keep only titles with all entities
+      df_ner <- dplyr::filter(df_ner, train_v & train_p & train_r)
+      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
       ## vendor + product + version
       df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                          pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
-                                          replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
-
+                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
+                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
       df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+    } else if (type == "vp") {
+      # Keep only titles with vendor and product entities
+      df_ner <- dplyr::filter(df_ner, train_v & train_p)
+      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+      ## vendor + product
+      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)"),
+                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5")
+      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*", df_ner$annotated)), ]
+    } else {
+      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+      print("[ERROR] type not valid. Read manual to check allowed values.")
     }
   }
   # if (type == "vend") {
