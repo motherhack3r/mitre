@@ -281,15 +281,3 @@ newWFN <- function(part = "*", vendor = "*", product = "*", version = "*",
 }
 
 
-# k <- apply(dplyr::sample_n(df, 10), 1,
-#       function(x) {
-#         print(x)
-#         matchCPE(x["name"], x["version"], x["vendor"])
-#       })
-#
-# df$cpe2 <- apply(df, 1,
-#            function(x) {
-#              print(x)
-#              matchCPE(x["name"], x["version"], x["vendor"])
-#            })
-

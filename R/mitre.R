@@ -75,7 +75,6 @@ build_network <- function(verbose = FALSE, as_igraph = TRUE) {
   return(mitrenet)
 }
 
-
 #' Transform all standards as nodes in a data frame.
 #'
 #' \code{id} : The id of the node unique value for all standard elements.
