@@ -2,7 +2,7 @@
 % Please edit documentation in R/ml.R
 \name{cpe_train_set}
 \alias{cpe_train_set}
-\title{Title}
+\title{Returns sample data frame with num_samples rows normal distributed by title lenght}
 \usage{
 cpe_train_set(cpes = mitre::cpe.nist, num_samples = 1000)
 }
@@ -15,5 +15,5 @@ cpe_train_set(cpes = mitre::cpe.nist, num_samples = 1000)
 data.frame
 }
 \description{
-Title
+Returns sample data frame with num_samples rows normal distributed by title lenght
 }

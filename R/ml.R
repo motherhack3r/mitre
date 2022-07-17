@@ -133,7 +133,7 @@ createTrainSample <- function(cpes = data.frame(), num_samples = 5000,
   return(train_df)
 }
 
-#' Title
+#' Returns sample data frame with num_samples rows normal distributed by title lenght
 #'
 #' @param cpes data.frame
 #' @param num_samples integer

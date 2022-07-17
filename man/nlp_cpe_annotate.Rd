@@ -12,7 +12,8 @@ The output can be configured with parameters:
 nlp_cpe_annotate(
   df = nlp_cpe_dataset(),
   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
-  kind = c("RASA", "entities", "BILUO")[1]
+  kind = c("RASA", "entities", "BILUO")[1],
+  pydict = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ nlp_cpe_annotate(
 \item{type}{character, default vpv}
 
 \item{kind}{character, default RASA}
+
+\item{pydict}{logical, python offsets begins with 0, otherwise 1}
 }
 \value{
 data.frame
