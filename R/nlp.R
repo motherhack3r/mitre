@@ -416,7 +416,11 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
       print("[ERROR] type not valid. Read manual to check allowed values.")
     }
     df_ner <- dplyr::ungroup(df_ner[, c("id", "title", "vendor", "product", "version", "annotated")])
-    # df_ner <- dplyr::select(df_ner, id, title, vendor, product, version, annotated)
+
+    anno <- lapply(df_ner$annotated, jsonlite::fromJSON)
+    df_ner$annotated <- unlist(lapply(anno,
+                                      function(x)
+                                        jsonlite::toJSON(x[complete.cases(x), c("start", "end", "label")])))
   } else if (kind == "BILUO") {
 
   }
