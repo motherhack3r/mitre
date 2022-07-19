@@ -1,51 +1,123 @@
 ---
 title: "annotate_cpes"
 author: "Humbert Costas"
-date: '2022-07-09'
+date: !r Sys.Date()
 output: html_document
+params:
+  seed: 42
+  data_path: /DEVEL/code/data/annotation
+  path_vers: !r as.character(packageVersion("mitre"))
+  output_kind: all
+  ner_vendor: TRUE
+  ner_product: TRUE
+  ner_version: TRUE
+  num_samples: 10000
+  pct_testing: 0.2
 ---
 
-```{r setup, include=FALSE}
+```{r imports_setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-version <- as.character(packageVersion("mitre"))
-seed <- "100"
-data_path <- "/DEVEL/code/data/annotation"
-num_samples <- 500   # value 0 means all
+# Imports
+suppressPackageStartupMessages(library(mitre, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+
+# Parameters
+p_version <- params$path_vers
+p_seed <- as.character(params$seed)
+p_data_path <- params$data_path
+p_num_samples <- params$num_samples   # value 0 means all
+p_kind <- params$output_kind         # RASA | entities | all
+p_type <- ifelse(test = (params$ner_vendor & params$ner_product & params$ner_version), 
+                 yes = "vpv", 
+                 no = ifelse(test = (params$ner_vendor & params$ner_product & !params$ner_version), 
+                             yes = "vp", 
+                             no = ifelse(test = (!params$ner_vendor & params$ner_product & params$ner_version), 
+                                         yes = "pv", 
+                                         no = ifelse(test = (params$ner_vendor & !params$ner_product & params$ner_version), 
+                                                     yes = "vv", 
+                                                     no = ifelse(test = (params$ner_vendor), 
+                                                                 yes = "vend", 
+                                                                 no = ifelse(test = (params$ner_product), 
+                                                                             yes = "prod", 
+                                                                             no = "vers"))))))
+
+set.seed(p_seed)
 ```
 
-```{r imports}
-suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
-suppressPackageStartupMessages(library(stringr, warn.conflicts = FALSE))
-suppressPackageStartupMessages(library(stringdist, warn.conflicts = FALSE))
+```{r check_paths}
+# root path
+if (!dir.exists(p_data_path))
+  dir.create(p_data_path)
 
-set.seed(seed)
-
-if (!dir.exists(data_path))
-  dir.create(data_path)
-
-name_folder <- file.path(data_path, paste0("v", version))
+# version subpath
+name_folder <- file.path(p_data_path, paste0("v", p_version))
 if (!dir.exists(name_folder))
   dir.create(name_folder)
-name_folder <- file.path(data_path, paste0("v", version), seed)
+
+# seed subpath
+name_folder <- file.path(p_data_path, paste0("v", version), p_seed)
 if (!dir.exists(name_folder))
   dir.create(name_folder)
 ```
 
 ## Annotate CPE standard
 
+```{r load_annotated_cpes}
+# Load CPEs annotated with RASA
+if (file.exists("/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")) {
+  df_rasa <- readRDS("/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
+} else {
+  df_rasa <- mitre::nlp_cpe_annotate(type = "vpv", kind = "RASA")
+  saveRDS(df_rasa, "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
+}
+readr::write_csv(x = df_rasa, 
+                 file = file.path(p_data_path,"cpes_rasa_all.csv"), 
+                 col_names = FALSE)
 
-```{r load_data}
-cpes_rasa_vpv_15k <- nlp.ner_cpe_trainset(kind="RASA", type="vpv", num_samples = 15000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
-cpes_rasa_vpv_10k <- nlp.ner_cpe_trainset(kind="RASA", type="vpv", num_samples = 10000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
-cpes_rasa_vpv_5k <- nlp.ner_cpe_trainset(kind="RASA", type="vpv", num_samples = 5000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
-cpes_rasa_vpv_2k <- nlp.ner_cpe_trainset(kind="RASA", type="vpv", num_samples = 2000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
-cpes_rasa_vpv_1k <- nlp.ner_cpe_trainset(kind="RASA", type="vpv", num_samples = 1000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
+# Load CPEs annotated with ENTITIES
+if (file.exists("/DEVEL/code/data/annotation/cpes_vpv_entities.rds")) {
+  df_enti <- readRDS("/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+} else {
+  df_enti <- mitre::nlp_cpe_annotate(type = "vpv", kind = "entities")
+  saveRDS(df_enti, "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+}
+readr::write_csv(x = df_enti, 
+                 file = file.path(p_data_path,"cpes_entities_all.csv"), 
+                 col_names = FALSE)
+```
+
+```{r create_rasa_sample}
+
+if (kind %in% c("all", "RASA")) {
+  cpes_custom <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", 
+                                      num_samples = num_samples, 
+                                      rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+    select(title, annotated)
+}
+
+if (kind %in% c("all", "entities")) {
+  cpes_custom <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", 
+                                      num_samples = num_samples, 
+                                      rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+    select(title, annotated)
+}
+
+# cpes_rasa_vpv_15k <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", num_samples = 15000, 
+#                                           rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+#   select(title, annotated)
+# cpes_rasa_vpv_10k <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", num_samples = 10000, 
+#                                           rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+#   select(title, annotated)
+# cpes_rasa_vpv_5k <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", num_samples = 5000, 
+#                                           rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+#   select(title, annotated)
+# cpes_rasa_vpv_2k <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", num_samples = 2000, 
+#                                           rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+#   select(title, annotated)
+# cpes_rasa_vpv_1k <- nlp.ner_cpe_trainset(kind = "RASA", type = "vpv", num_samples = 1000, 
+#                                           rdataset = "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds") %>%
+#   select(title, annotated)
 ```
 
 ```{r save, cache=TRUE}
@@ -69,15 +141,22 @@ readr::write_csv(x = cpes_rasa_vpv_1k,
 
 ```{r load_data_ent}
 cpes_enti_vpv_15k <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", num_samples = 15000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+  select(title, annotated)
 cpes_enti_vpv_10k <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", num_samples = 10000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+  select(title, annotated)
 cpes_enti_vpv_5k <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", num_samples = 5000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+  select(title, annotated)
 cpes_enti_vpv_2k <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", num_samples = 2000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+  select(title, annotated)
 cpes_enti_vpv_1k <- nlp.ner_cpe_trainset(kind = "entities", type = "vpv", num_samples = 1000, 
-                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+                                          rdataset = "/DEVEL/code/data/annotation/cpes_vpv_entities.rds") %>%
+  select(title, annotated)
+
+
 ```
 
 ```{r save_ent, cache=TRUE}
