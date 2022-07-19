@@ -371,56 +371,84 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     }
 
     if (type == "vpv") {
-      print(paste0("[+] ", "vpv entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_vpv <- df_ner[!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_vpv), " vpv entities..."))
+      df_vpv <- dplyr::mutate(dplyr::rowwise(df_vpv),
                               annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, prod_ini, vers_ini),
                                                                       end = c(vend_fin, prod_fin, vers_fin),
                                                                       label = c("cpe_vendor", "cpe_product", "cpe_version"))))
-    } else if (type == "vp") {
-      print(paste0("[+] ", "vp entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_vpv <- dplyr::ungroup(df_vpv[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "vp")) {
+      df_vp <- df_ner[!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_vp), " vp entities..."))
+      df_vp <- dplyr::mutate(dplyr::rowwise(df_vp),
                               annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, prod_ini),
                                                                       end = c(vend_fin, prod_fin),
                                                                       label = c("cpe_vendor", "cpe_product"))))
-    } else if (type == "pv") {
-      print(paste0("[+] ", "pv entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_vp <- dplyr::ungroup(df_vp[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "pv")) {
+      df_pv <- df_ner[is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_pv), "pv entities..."))
+      df_pv <- dplyr::mutate(dplyr::rowwise(df_pv),
                               annotated = jsonlite::toJSON(data.frame(start = c(prod_ini, vers_ini),
                                                                       end = c(prod_fin, vers_fin),
                                                                       label = c("cpe_product", "cpe_version"))))
-    } else if (type == "vv") {
-      print(paste0("[+] ", "vv entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_pv <- dplyr::ungroup(df_pv[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "vv")) {
+      df_vv <- df_ner[!is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_vv), " vv entities..."))
+      df_vv <- dplyr::mutate(dplyr::rowwise(df_vv),
                               annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, vers_ini),
                                                                       end = c(vend_fin, vers_fin),
                                                                       label = c("cpe_vendor", "cpe_version"))))
-    } else if (type == "vend") {
-      print(paste0("[+] ", "vendor entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_vv <- dplyr::ungroup(df_vv[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "vp", "vv", "vend")) {
+      df_vend <- df_ner[!is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_vend), " vendor entities..."))
+      df_vend <- dplyr::mutate(dplyr::rowwise(df_vend),
                               annotated = jsonlite::toJSON(data.frame(start = c(vend_ini),
                                                                       end = c(vend_fin),
                                                                       label = c("cpe_vendor"))))
-    } else if (type == "prod") {
-      print(paste0("[+] ", "product entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_vend <- dplyr::ungroup(df_vend[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "vp", "pv", "prod")) {
+      df_prod <- df_ner[is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_prod), " product entities..."))
+      df_prod <- dplyr::mutate(dplyr::rowwise(df_prod),
                               annotated = jsonlite::toJSON(data.frame(start = c(prod_ini),
                                                                       end = c(prod_fin),
                                                                       label = c("cpe_product"))))
-    } else if (type == "vers") {
-      print(paste0("[+] ", "version entities..."))
-      df_ner <- dplyr::mutate(dplyr::rowwise(df_ner),
+      df_prod <- dplyr::ungroup(df_prod[, c("id", "title", "vendor", "product", "version", "annotated")])
+    }
+    if (type %in% c("vpv", "pv", "vv", "vers")) {
+      df_vers <- df_ner[is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
+      print(paste0("[+] ", nrow(df_vers), " version entities..."))
+      df_vers <- dplyr::mutate(dplyr::rowwise(df_vers),
                               annotated = jsonlite::toJSON(data.frame(start = c(vers_ini),
                                                                       end = c(vers_fin),
                                                                       label = c("cpe_version"))))
-    } else {
-      print("[ERROR] type not valid. Read manual to check allowed values.")
+      df_vers <- dplyr::ungroup(df_vers[, c("id", "title", "vendor", "product", "version", "annotated")])
     }
-    df_ner <- dplyr::ungroup(df_ner[, c("id", "title", "vendor", "product", "version", "annotated")])
 
-    anno <- lapply(df_ner$annotated, jsonlite::fromJSON)
-    df_ner$annotated <- unlist(lapply(anno,
-                                      function(x)
-                                        jsonlite::toJSON(x[complete.cases(x), c("start", "end", "label")])))
+    if (type == "vpv") {
+      df_ner <- rbind(df_vpv, df_vp, df_pv, df_vv, df_vend, df_prod, df_vers)
+    } else if (type == "vp") {
+      df_ner <- rbind(df_vp, df_vend, df_prod)
+    } else if (type == "pv") {
+      df_ner <- rbind(df_pv, df_prod, df_vers)
+    } else if (type == "vv") {
+      df_ner <- rbind(df_vv, df_vend, df_vers)
+    } else if (type == "vend") {
+      df_ner <- rbind(df_vend)
+    } else if (type == "prod") {
+      df_ner <- rbind(df_prod)
+    } else if (type == "vers") {
+      df_ner <- rbind(df_vers)
+    }
   } else if (kind == "BILUO") {
 
   }
