@@ -206,13 +206,16 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
 #' @param type character, default vpv
 #' @param kind character, default RASA
 #' @param pydict logical, python offsets begins with 0, otherwise 1
+#' @param seed integer, used for reproducible research
 #'
 #' @return data.frame
 #' @export
 nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
                              type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
                              kind = c("RASA", "entities", "BILUO")[1],
-                             pydict = TRUE) {
+                             pydict = TRUE,
+                             seed = 42) {
+  set.seed(seed)
   df_ner <- df[, c("id", "title", "vendor", "product", "version")]
 
   # Add tags
@@ -489,19 +492,23 @@ getCPEstats <- function(only_vendor = TRUE, as_WFN = TRUE) {
 #' @param kind character, default RASA
 #' @param pydict logical, python offsets begins with 0, otherwise 1
 #' @param rdataset character, path to RDS. nlp_cpe_annotate default if not exists
+#' @param seed integer, used for reproducible research
 #'
 #' @return data.frame
 #' @export
 nlp.ner_cpe_trainset <- function(num_samples = 5000,
-                                 type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
+                                 type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1],
                                  kind = c("RASA", "entities")[1],
                                  pydict = TRUE,
-                                 rdataset = "data-raw/NLP/cpes_vpv_rasa.rds") {
+                                 rdataset = "data-raw/NLP/cpes_vpv_rasa.rds",
+                                 seed = 42) {
+
+  set.seed(seed)
 
   if (file.exists(rdataset)) {
     df <- readRDS(rdataset)
   } else {
-    df <- nlp_cpe_annotate(type = type, kind = kind, pydict = pydict)
+    df <- nlp_cpe_annotate(type = type, kind = kind, pydict = pydict, seed = seed)
   }
 
   # TODO: Review notebook for normalize this kind of distribution

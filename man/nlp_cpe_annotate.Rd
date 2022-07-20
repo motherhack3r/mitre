@@ -13,7 +13,8 @@ nlp_cpe_annotate(
   df = nlp_cpe_dataset(),
   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
   kind = c("RASA", "entities", "BILUO")[1],
-  pydict = TRUE
+  pydict = TRUE,
+  seed = 42
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ nlp_cpe_annotate(
 \item{kind}{character, default RASA}
 
 \item{pydict}{logical, python offsets begins with 0, otherwise 1}
+
+\item{seed}{integer, used for reproducible research}
 }
 \value{
 data.frame

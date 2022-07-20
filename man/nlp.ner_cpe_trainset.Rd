@@ -6,10 +6,11 @@
 \usage{
 nlp.ner_cpe_trainset(
   num_samples = 5000,
-  type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
+  type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1],
   kind = c("RASA", "entities")[1],
   pydict = TRUE,
-  rdataset = "data-raw/NLP/cpes_vpv_rasa.rds"
+  rdataset = "data-raw/NLP/cpes_vpv_rasa.rds",
+  seed = 42
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ nlp.ner_cpe_trainset(
 \item{pydict}{logical, python offsets begins with 0, otherwise 1}
 
 \item{rdataset}{character, path to RDS. nlp_cpe_annotate default if not exists}
+
+\item{seed}{integer, used for reproducible research}
 }
 \value{
 data.frame
