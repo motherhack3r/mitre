@@ -339,7 +339,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
     # lowercase title
     df_ner$title <- tolower(df_ner$title)
-    if (type %in% c("vpv", "vp", "vv","vend")) {
+    # if (type %in% c("vpv", "vp", "vv","vend")) {
       print(paste0("[+] ", "vendor offsets..."))
       pos_vend <- dplyr::bind_rows(
         apply(df_ner, 1,
@@ -349,8 +349,8 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
       )
       names(pos_vend) <- c("vend_ini", "vend_fin")
       df_ner <- dplyr::bind_cols(df_ner, pos_vend - pydict)
-    }
-    if (type %in% c("vpv", "vp", "pv", "prod")) {
+    # }
+    # if (type %in% c("vpv", "vp", "pv", "prod")) {
       print(paste0("[+] ", "product offsets..."))
       pos_prod <- dplyr::bind_rows(
         apply(df_ner, 1,
@@ -360,8 +360,8 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
         )
       names(pos_prod) <- c("prod_ini", "prod_fin")
       df_ner <- dplyr::bind_cols(df_ner, pos_prod - pydict)
-    }
-    if (type %in% c("vpv", "pv", "vv", "vers")) {
+    # }
+    # if (type %in% c("vpv", "pv", "vv", "vers")) {
       print(paste0("[+] ", "version offsets..."))
       pos_vers <- dplyr::bind_rows(
         apply(df_ner, 1,
@@ -371,7 +371,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
       )
       names(pos_vers) <- c("vers_ini", "vers_fin")
       df_ner <- dplyr::ungroup(dplyr::bind_cols(df_ner, pos_vers - pydict))
-    }
+    # }
 
     if (type == "vpv") {
       df_vpv <- df_ner[!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
