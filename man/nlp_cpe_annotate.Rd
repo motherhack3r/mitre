@@ -14,7 +14,8 @@ nlp_cpe_annotate(
   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
   kind = c("RASA", "entities", "BILUO")[1],
   pydict = TRUE,
-  seed = 42
+  seed = 42,
+  strict = TRUE
 )
 }
 \arguments{
@@ -27,6 +28,8 @@ nlp_cpe_annotate(
 \item{pydict}{logical, python offsets begins with 0, otherwise 1}
 
 \item{seed}{integer, used for reproducible research}
+
+\item{strict}{logical, used to include subtypes of selected type}
 }
 \value{
 data.frame

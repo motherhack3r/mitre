@@ -195,6 +195,117 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
   return(df)
 }
 
+
+#' Used by generic annotate cpes function
+#'
+#' @param df_ner data.frame
+#' @param type character
+#'
+#' @return
+nlp_cpe_rasa_notation <- function(df_ner = data.frame(),
+                                  type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1]) {
+
+  # Method: Use specific regex for each case and replace matches with RASA.
+  print(paste0("[*] ", "RASA notation..."))
+  # remove rows with escaped chars because of tagging regex
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
+  # replace WFN _ to space
+  df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
+  df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
+  # remove titles with equal vendor and product
+  df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
+  # lowercase title
+  df_ner$title <- tolower(df_ner$title)
+  # vendor entities candidates
+  df_ner$train_v <- rep(F, nrow(df_ner))
+  df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor))
+  # product entities candidates
+  df_ner$train_p <- rep(F, nrow(df_ner))
+  df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product))
+  # version entities candidates
+  df_ner$train_r <- rep(F, nrow(df_ner))
+  df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version))
+
+  if (type == "vpv") {
+    # Keep only titles with all entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_p & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## vendor + product + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "vp") {
+    # Keep only titles with vendor and product entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_p)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## vendor + product
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "pv") {
+    # Keep only titles with product and version entities
+    df_ner <- dplyr::filter(df_ner, train_p & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## product + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$product,")(\\s.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "vv") {
+    # Keep only titles with vendor and version entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## vendor + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "vend") {
+    # Keep only titles with vendor entity
+    df_ner <- dplyr::filter(df_ner, train_v)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## vendor
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "prod") {
+    # Keep only titles with product entity
+    df_ner <- dplyr::filter(df_ner, train_p)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## product
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$product,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*", df_ner$annotated)), ]
+  }
+  else if (type == "vers") {
+    # Keep only titles with version entity
+    df_ner <- dplyr::filter(df_ner, train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(.*)(", df_ner$version,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_version\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_version\\).*", df_ner$annotated)), ]
+  }
+  else {
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    print("[ERROR] type not valid. Read manual to check allowed values.")
+  }
+
+  return(df_ner)
+}
+
 #' Create annotations for NER into new column `annotation`. By default, it uses
 #' RASA notation and detect vendor, product and version.
 #' Rows with overlapped entities are skipped.
@@ -207,6 +318,7 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
 #' @param kind character, default RASA
 #' @param pydict logical, python offsets begins with 0, otherwise 1
 #' @param seed integer, used for reproducible research
+#' @param strict logical, used to include subtypes of selected type
 #'
 #' @return data.frame
 #' @export
@@ -214,7 +326,8 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
                              type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1],
                              kind = c("RASA", "entities", "BILUO")[1],
                              pydict = TRUE,
-                             seed = 42) {
+                             seed = 42,
+                             strict = TRUE) {
   set.seed(seed)
   df_ner <- df[, c("id", "title", "vendor", "product", "version")]
 
@@ -228,7 +341,6 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
   }
 
-
   # Check overlapping vendor-product
   if (type %in% c("vpv", "vp")) {
     print(paste0("[+] ", "removing overlapping vendor-product..."))
@@ -237,95 +349,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
   }
 
   if (kind == "RASA") {
-    print(paste0("[*] ", "RASA notation..."))
-    # remove rows with escaped chars because of tagging regex
-    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
-    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
-    df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
-    # replace WFN _ to space
-    df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
-    df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
-    # remove titles with equal vendor and product
-    df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
-    # lowercase title
-    df_ner$title <- tolower(df_ner$title)
-    # vendor entities candidates
-    df_ner$train_v <- rep(F, nrow(df_ner))
-    df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor))
-    # product entities candidates
-    df_ner$train_p <- rep(F, nrow(df_ner))
-    df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product))
-    # version entities candidates
-    df_ner$train_r <- rep(F, nrow(df_ner))
-    df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version))
-
-    if (type == "vpv") {
-      # Keep only titles with all entities
-      df_ner <- dplyr::filter(df_ner, train_v & train_p & train_r)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## vendor + product + version
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
-    } else if (type == "vp") {
-      # Keep only titles with vendor and product entities
-      df_ner <- dplyr::filter(df_ner, train_v & train_p)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## vendor + product
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*", df_ner$annotated)), ]
-    } else if (type == "pv") {
-      # Keep only titles with product and version entities
-      df_ner <- dplyr::filter(df_ner, train_p & train_r)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## product + version
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$product,")(\\s.*)(", df_ner$version,")(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
-    } else if (type == "vv") {
-      # Keep only titles with vendor and version entities
-      df_ner <- dplyr::filter(df_ner, train_v & train_r)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## vendor + version
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$version,")(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
-    } else if (type == "vend") {
-      # Keep only titles with vendor entity
-      df_ner <- dplyr::filter(df_ner, train_v)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## vendor
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$vendor,")(\\s.*)(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*", df_ner$annotated)), ]
-    } else if (type == "prod") {
-      # Keep only titles with product entity
-      df_ner <- dplyr::filter(df_ner, train_p)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## product
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$product,")(\\s.*)(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*", df_ner$annotated)), ]
-    } else if (type == "vers") {
-      # Keep only titles with version entity
-      df_ner <- dplyr::filter(df_ner, train_r)
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      ## version
-      df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
-                                                   pattern = paste0("(.*)(", df_ner$version,")(\\s.*)(.*)"),
-                                                   replacement = "\\1\\[\\2\\]\\(cpe_version\\)\\3")
-      df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_version\\).*", df_ner$annotated)), ]
-    } else {
-      df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
-      print("[ERROR] type not valid. Read manual to check allowed values.")
-    }
+    df_ner <- nlp_cpe_rasa_notation(df_ner, type)
   } else if (kind == "entities") {
     print(paste0("[*] ", "Entities notation..."))
     # remove rows with escaped chars because of tagging regex
@@ -339,119 +363,88 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
     df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
     # lowercase title
     df_ner$title <- tolower(df_ner$title)
-    # if (type %in% c("vpv", "vp", "vv","vend")) {
-      print(paste0("[+] ", "vendor offsets..."))
-      pos_vend <- dplyr::bind_rows(
-        apply(df_ner, 1,
-              function(x)
-                as.data.frame.matrix(stringi::stri_locate_first(str = x[2],
-                                                               regex = stringr::fixed(x[3]))))
-      )
-      names(pos_vend) <- c("vend_ini", "vend_fin")
-      df_ner <- dplyr::bind_cols(df_ner, pos_vend - pydict)
-    # }
-    # if (type %in% c("vpv", "vp", "pv", "prod")) {
-      print(paste0("[+] ", "product offsets..."))
-      pos_prod <- dplyr::bind_rows(
-        apply(df_ner, 1,
-              function(x)
-                as.data.frame.matrix(stringi::stri_locate_last(str = x[2],
+
+    # Find offsets for each Entity (vend, prod, vers)
+    print(paste0("[+] ", "vendor offsets..."))
+    pos_vend <- dplyr::bind_rows(
+      apply(df_ner, 1,
+            function(x)
+              as.data.frame.matrix(stringi::stri_locate_first(str = x[2],
+                                                              regex = stringr::fixed(x[3]))))
+    )
+    names(pos_vend) <- c("vend_ini", "vend_fin")
+    df_ner <- dplyr::bind_cols(df_ner, pos_vend - pydict)
+    print(paste0("[+] ", "product offsets..."))
+    pos_prod <- dplyr::bind_rows(
+      apply(df_ner, 1,
+            function(x)
+              as.data.frame.matrix(stringi::stri_locate_last(str = x[2],
                                                              regex = stringr::fixed(x[4]))))
-        )
-      names(pos_prod) <- c("prod_ini", "prod_fin")
-      df_ner <- dplyr::bind_cols(df_ner, pos_prod - pydict)
-    # }
-    # if (type %in% c("vpv", "pv", "vv", "vers")) {
-      print(paste0("[+] ", "version offsets..."))
-      pos_vers <- dplyr::bind_rows(
-        apply(df_ner, 1,
-              function(x)
-                as.data.frame.matrix(stringi::stri_locate_last(str = x[2],
-                                                               regex = stringr::fixed(x[5]))))
-      )
-      names(pos_vers) <- c("vers_ini", "vers_fin")
-      df_ner <- dplyr::ungroup(dplyr::bind_cols(df_ner, pos_vers - pydict))
-    # }
+    )
+    names(pos_prod) <- c("prod_ini", "prod_fin")
+    df_ner <- dplyr::bind_cols(df_ner, pos_prod - pydict)
+    print(paste0("[+] ", "version offsets..."))
+    pos_vers <- dplyr::bind_rows(
+      apply(df_ner, 1,
+            function(x)
+              as.data.frame.matrix(stringi::stri_locate_last(str = x[2],
+                                                             regex = stringr::fixed(x[5]))))
+    )
+    names(pos_vers) <- c("vers_ini", "vers_fin")
+    df_ner <- dplyr::ungroup(dplyr::bind_cols(df_ner, pos_vers - pydict))
 
-    if (type == "vpv") {
-      df_vpv <- df_ner[!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_vpv), " vpv entities..."))
-      df_vpv <- dplyr::mutate(dplyr::rowwise(df_vpv),
-                              annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, prod_ini, vers_ini),
-                                                                      end = c(vend_fin, prod_fin, vers_fin),
-                                                                      label = c("cpe_vendor", "cpe_product", "cpe_version"))))
-      df_vpv <- dplyr::ungroup(df_vpv[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "vp")) {
-      df_vp <- df_ner[!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_vp), " vp entities..."))
-      df_vp <- dplyr::mutate(dplyr::rowwise(df_vp),
-                              annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, prod_ini),
-                                                                      end = c(vend_fin, prod_fin),
-                                                                      label = c("cpe_vendor", "cpe_product"))))
-      df_vp <- dplyr::ungroup(df_vp[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "pv")) {
-      df_pv <- df_ner[is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_pv), "pv entities..."))
-      df_pv <- dplyr::mutate(dplyr::rowwise(df_pv),
-                              annotated = jsonlite::toJSON(data.frame(start = c(prod_ini, vers_ini),
-                                                                      end = c(prod_fin, vers_fin),
-                                                                      label = c("cpe_product", "cpe_version"))))
-      df_pv <- dplyr::ungroup(df_pv[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "vv")) {
-      df_vv <- df_ner[!is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_vv), " vv entities..."))
-      df_vv <- dplyr::mutate(dplyr::rowwise(df_vv),
-                              annotated = jsonlite::toJSON(data.frame(start = c(vend_ini, vers_ini),
-                                                                      end = c(vend_fin, vers_fin),
-                                                                      label = c("cpe_vendor", "cpe_version"))))
-      df_vv <- dplyr::ungroup(df_vv[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "vp", "vv", "vend")) {
-      df_vend <- df_ner[!is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_vend), " vendor entities..."))
-      df_vend <- dplyr::mutate(dplyr::rowwise(df_vend),
-                              annotated = jsonlite::toJSON(data.frame(start = c(vend_ini),
-                                                                      end = c(vend_fin),
-                                                                      label = c("cpe_vendor"))))
-      df_vend <- dplyr::ungroup(df_vend[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "vp", "pv", "prod")) {
-      df_prod <- df_ner[is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_prod), " product entities..."))
-      df_prod <- dplyr::mutate(dplyr::rowwise(df_prod),
-                              annotated = jsonlite::toJSON(data.frame(start = c(prod_ini),
-                                                                      end = c(prod_fin),
-                                                                      label = c("cpe_product"))))
-      df_prod <- dplyr::ungroup(df_prod[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
-    if (type %in% c("vpv", "pv", "vv", "vers")) {
-      df_vers <- df_ner[is.na(df_ner$vend_ini) & is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini), ]
-      print(paste0("[+] ", nrow(df_vers), " version entities..."))
-      df_vers <- dplyr::mutate(dplyr::rowwise(df_vers),
-                              annotated = jsonlite::toJSON(data.frame(start = c(vers_ini),
-                                                                      end = c(vers_fin),
-                                                                      label = c("cpe_version"))))
-      df_vers <- dplyr::ungroup(df_vers[, c("id", "title", "vendor", "product", "version", "annotated")])
-    }
+    df_ner$type_vpv <- (!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini))
+    df_ner$type_vp <- (!is.na(df_ner$vend_ini) & !is.na(df_ner$prod_ini))
+    df_ner$type_pv <- (!is.na(df_ner$prod_ini) & !is.na(df_ner$vers_ini))
+    df_ner$type_vv <- (!is.na(df_ner$vend_ini) & !is.na(df_ner$vers_ini))
+    df_ner$type_vend <- (!is.na(df_ner$vend_ini))
+    df_ner$type_prod <- (!is.na(df_ner$prod_ini))
+    df_ner$type_vers <- (!is.na(df_ner$vers_ini))
 
-    if (type == "vpv") {
-      df_ner <- rbind(df_vpv, df_vp, df_pv, df_vv, df_vend, df_prod, df_vers)
-    } else if (type == "vp") {
-      df_ner <- rbind(df_vp, df_vend, df_prod)
-    } else if (type == "pv") {
-      df_ner <- rbind(df_pv, df_prod, df_vers)
-    } else if (type == "vv") {
-      df_ner <- rbind(df_vv, df_vend, df_vers)
-    } else if (type == "vend") {
-      df_ner <- rbind(df_vend)
-    } else if (type == "prod") {
-      df_ner <- rbind(df_prod)
-    } else if (type == "vers") {
-      df_ner <- rbind(df_vers)
+    # Prepare entities
+    df_ner$annotated <- jsonlite::toJSON(NULL, null = "list")
+    for (i in 1:nrow(df_ner)) {
+      a_vend <- NA
+      a_prod <- NA
+      a_vers <- NA
+      if (df_ner$type_vend[i]) {
+        a_vend <- data.frame(start = df_ner$vend_ini[i],
+                             end = df_ner$vend_fin[i],
+                             label = "cpe_vendor")
+      }
+      if (df_ner$type_prod[i]) {
+        a_prod <- data.frame(start = df_ner$prod_ini[i],
+                             end = df_ner$prod_fin[i],
+                             label = "cpe_product")
+      }
+      if (df_ner$type_vers[i]) {
+        a_vers <- data.frame(start = df_ner$vers_ini[i],
+                             end = df_ner$vers_fin[i],
+                             label = "cpe_version")
+      }
+
+      if (type == "vpv") {
+        ent <- rbind(a_vend, a_prod, a_vers)
+      } else if (type == "vp") {
+        ent <- rbind(a_vend, a_prod)
+      } else if (type == "pv") {
+        ent <- rbind(a_prod, a_vers)
+      } else if (type == "vv") {
+        ent <- rbind(a_vend, a_vers)
+      } else if (type == "vend") {
+        ent <- rbind(a_vend)
+      } else if (type == "prod") {
+        ent <- rbind(a_prod)
+      } else if (type == "vers") {
+        ent <- rbind(a_vers)
+      }
+
+      ent <- ent[complete.cases(ent),]
+      df_ner$annotated[i] <- jsonlite::toJSON(ent, null = "list", na = "null")
+
+      if ((i %% 10000) == 0) print(paste0("[.] ", i, " rows..."))
     }
+    df_ner <- df_ner[(df_enti$annotated != "[]"), c("id", "title", "vendor", "product", "version", "annotated")]
   } else if (kind == "BILUO") {
 
   }

@@ -7,12 +7,11 @@ params:
   seed: 42
   data_path: /DEVEL/code/data/annotation
   path_vers: !r as.character(packageVersion("mitre"))
-  output_kind: entities
-  ner_vendor: TRUE
+  output_kind: all
+  ner_vendor: FALSE
   ner_product: TRUE
-  ner_version: TRUE
+  ner_version: FALSE
   num_samples: 10000
-  pct_testing: 0.2
 ---
 
 ```{r imports_setup, include=FALSE}
@@ -56,65 +55,50 @@ if (!dir.exists(name_folder))
   dir.create(name_folder)
 
 # seed subpath
-name_folder <- file.path(p_data_path, paste0("v", version), p_seed)
+name_folder <- file.path(p_data_path, paste0("v", p_version), p_seed)
 if (!dir.exists(name_folder))
   dir.create(name_folder)
 ```
 
 ## Annotate CPE standard
 
-```{r create_annotated_cpes}
+```{r get_annotated_cpes}
 if (p_kind %in% c("all", "RASA")) {
   # Load CPEs annotated with RASA
-  if (file.exists("/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")) {
-    df_rasa <- readRDS("/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
+  if (file.exists(file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))) {
+    df_rasa <- readRDS(file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))
   } else {
-    df_rasa <- mitre::nlp_cpe_annotate(type = "vpv", kind = "RASA")
-    saveRDS(df_rasa, "/DEVEL/code/data/annotation/cpes_vpv_rasa.rds")
+    df_rasa <- mitre::nlp_cpe_annotate(type = p_type, kind = "RASA")
+    saveRDS(df_rasa, file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))
   }
   readr::write_csv(x = df_rasa,
-                   file = file.path(p_data_path,"cpes_rasa_all.csv"),
+                   file = file.path(p_data_path,paste0("cpes_", p_type,"_rasa.csv")),
                    col_names = FALSE)
 }
 
 if (p_kind %in% c("all", "entities")) {
   # Load CPEs annotated with ENTITIES
-  if (file.exists("/DEVEL/code/data/annotation/cpes_vpv_entities.rds")) {
-    df_enti <- readRDS("/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+  if (file.exists(file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))) {
+    df_enti <- readRDS(file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))
   } else {
-    df_enti <- mitre::nlp_cpe_annotate(type = "vpv", kind = "entities")
-    saveRDS(df_enti, "/DEVEL/code/data/annotation/cpes_vpv_entities.rds")
+    df_enti <- mitre::nlp_cpe_annotate(type = p_type, kind = "entities")
+    saveRDS(df_enti, file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))
   }
   readr::write_csv(x = df_enti,
-                   file = file.path(p_data_path,"cpes_entities_all.csv"),
+                   file = file.path(p_data_path,paste0("cpes_", p_type,"_entities.csv")),
                    col_names = FALSE)
 }
-```
-
-```{r get_annotated_cpes}
-# # Load CPEs annotated with RASA
-# 
-# df_saved <- file.path(p_data_path, paste0("cpes_", p_type,"_", tolower(p_kind),".rds"))
-# if (file.exists(df_saved)) {
-#   df_annotated <- readRDS(df_saved)
-# } else {
-#   df_annotated <- mitre::nlp_cpe_annotate(type = p_type, kind = p_kind)
-#   saveRDS(df_annotated, df_saved)
-# }
-# readr::write_csv(x = df_annotated,
-#                  file = file.path(p_data_path, paste0("cpes_", p_type,"_", tolower(p_kind),".csv")),
-#                  col_names = FALSE)
-
 ```
 
 ## Sampling annotated CPE standard
 
 ```{r create_rasa_sample}
 
-if (kind %in% c("all", "RASA")) {
+if (p_kind %in% c("all", "RASA")) {
   cpes_custom <- nlp.ner_cpe_trainset(kind = "RASA", type = p_type, 
                                       num_samples = p_num_samples, 
-                                      rdataset = file.path(p_data_path, "cpes_vpv_rasa.rds")) %>%
+                                      rdataset = file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")),
+                                      seed = p_seed) %>%
     select(title, annotated)
   readr::write_csv(x = cpes_custom, 
                    file = file.path(name_folder, 
@@ -123,14 +107,15 @@ if (kind %in% c("all", "RASA")) {
                    col_names = FALSE)
 }
 
-if (kind %in% c("all", "entities")) {
+if (p_kind %in% c("all", "entities")) {
   cpes_custom <- nlp.ner_cpe_trainset(kind = "entities", type = p_type, 
                                       num_samples = p_num_samples, 
-                                      rdataset = file.path(p_data_path, "cpes_vpv_entities.rds")) %>%
+                                      rdataset = file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")),
+                                      seed = p_seed) %>%
     select(title, annotated)
   readr::write_csv(x = cpes_custom, 
                    file = file.path(name_folder, 
-                                    paste0("cpes_rasa_", p_type,"_", 
+                                    paste0("cpes_entities_", p_type,"_", 
                                            round(p_num_samples / 1000, 1), "k.csv")), 
                    col_names = FALSE)
 }
