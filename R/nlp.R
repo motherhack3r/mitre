@@ -444,7 +444,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
 
       if ((i %% 10000) == 0) print(paste0("[.] ", i, " rows..."))
     }
-    df_ner <- df_ner[(df_enti$annotated != "[]"), c("id", "title", "vendor", "product", "version", "annotated")]
+    df_ner <- df_ner[(df_ner$annotated != "[]"), c("id", "title", "vendor", "product", "version", "annotated")]
   } else if (kind == "BILUO") {
 
   }
@@ -476,7 +476,45 @@ getCPEstats <- function(only_vendor = TRUE, as_WFN = TRUE) {
   return(sts_cpes)
 }
 
+#' Title
+#'
+#' @param df data.frame
+#' @param num_samples integer
+#' @param seed integer
+#' @param quantiles numeric
+#'
+#' @return data.frame
+#' @export
+nlp_cpe_sample_dataset <- function(df = nlp_cpe_dataset(),
+                                   num_samples = 1000,
+                                   seed = 42,
+                                   quantiles = c(0, 0.8, 0.9, 0.99, 1)) {
 
+  sts_vend <- getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
+  sts_qntl <- quantile(sts_vend$log_n, probs = quantiles)
+
+  df02 <- sts_vend[sts_vend$log_n <= sts_qntl[2], ]
+  df02 <- dplyr::inner_join(df, df02, by = c("vendor" = "vendor"))
+  df25 <- sts_vend[((sts_qntl[2] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[3])), ]
+  df25 <- dplyr::inner_join(df, df25, by = c("vendor" = "vendor"))
+  df57 <- sts_vend[((sts_qntl[3] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[4])), ]
+  df57 <- dplyr::inner_join(df, df57, by = c("vendor" = "vendor"))
+  df70 <- sts_vend[sts_vend$log_n > sts_qntl[4], ]
+  df70 <- dplyr::inner_join(df, df70, by = c("vendor" = "vendor"))
+
+  # Sampling using quantiles to select slices
+  nbias <- num_samples %% 4
+
+  df_sam <- dplyr::sample_n(df02, num_samples/4)
+  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df25, (num_samples/4) + nbias))
+  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df57, (num_samples/4)))
+  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df70, (num_samples/4)))
+
+  df_sam <- dplyr::sample_n(df_sam, nrow(df_sam))
+  df_sam <- df_sam[, c("id", "title", "vendor", "product", "version")]
+
+  return(df_sam)
+}
 
 #' Title
 #'
