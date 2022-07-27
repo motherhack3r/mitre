@@ -568,3 +568,29 @@ nlp.ner_cpe_trainset <- function(num_samples = 5000,
 
   return(df_sam)
 }
+
+nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
+
+  df <- df[, c("title", "part", "vendor", "product", "version")]
+  df$len_title <- stringr::str_length(df$title)
+  df$len_vendor <- stringr::str_length(df$vendor)
+  df$len_product <- stringr::str_length(df$product)
+  df$len_version <- stringr::str_length(df$version)
+
+  df$num_title <- stringr::str_count(df$title, "[0-9]")
+  df$num_vendor <- stringr::str_count(df$vendor, "[0-9]")
+  df$num_product <- stringr::str_count(df$product, "[0-9]")
+  df$num_version <- stringr::str_count(df$version, "[0-9]")
+
+  df$abc_title <- stringr::str_count(df$title, "[a-zA-Z]")
+  df$abc_vendor <- stringr::str_count(df$vendor, "[a-zA-Z]")
+  df$abc_product <- stringr::str_count(df$product, "[a-zA-Z]")
+  df$abc_version <- stringr::str_count(df$version, "[a-zA-Z]")
+
+  df$sym_title <- stringr::str_count(df$title, "[^0-9a-zA-Z]")
+  df$sym_vendor <- stringr::str_count(df$vendor, "[^0-9a-zA-Z]")
+  df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z]")
+  df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z]")
+
+  return(df)
+}
