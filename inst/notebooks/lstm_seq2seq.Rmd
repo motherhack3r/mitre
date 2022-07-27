@@ -54,7 +54,7 @@ test_size <- 0.2
 batch_size <- 96  # Batch size for training.
 epochs <- 300  # Number of epochs to train for.
 latent_dim <- 192  # Latent dimensionality of the encoding space.
-num_samples <- 20000  # Number of samples to train on.
+num_samples <- 15000  # Number of samples to train on.
 
 set.seed(seed)
 ```
@@ -62,11 +62,17 @@ set.seed(seed)
 ## Create Training set
 
 ```{r custom_train_Set}
-getTrain4version <- function() {
+lstm_train_version <- function(cpes = mitre::cpe.nist, num_samples = 1000, seed = 42) {
+  cpes <- cpes %>% 
+    select("title", "version") %>%
+    sample_n(num_samples)
+  cpes$title <- mitre::str73enc(cpes$title)
+  cpes$version <- mitre::str49enc(cpes$version)
   
+  return(cpes)
 }
 
-cpes <- mitre::cpe.nist
+cpes <- lstm_train_version(cpes = mitre::cpe.nist, num_samples = num_samples, seed = seed)
 
 ```
 
@@ -76,14 +82,14 @@ Select the column to be predicted by the model: vendor, product or version
 
 ```{r }
 # load("/DEVEL/code/rpackages/mitre/data/cpe.nist.rda")
-cpe_colmod <- "version"
-
-cpes$title <- mitre::cpe_encode_name(cpes$title, lower = FALSE)
-cpes[[all_of(cpe_colmod)]] <- mitre::cpe_encode_name(cpes[[all_of(cpe_colmod)]])
-
-cpes <- cpes %>% 
-  select("title", cpe_colmod) %>%
-  sample_n(num_samples)
+# cpe_colmod <- "version"
+# 
+# cpes$title <- mitre::cpe_encode_name(cpes$title, lower = FALSE)
+# cpes[[all_of(cpe_colmod)]] <- mitre::cpe_encode_name(cpes[[all_of(cpe_colmod)]])
+# 
+# cpes <- cpes %>% 
+#   select("title", cpe_colmod) %>%
+#   sample_n(num_samples)
 
 ```
 
@@ -110,8 +116,8 @@ target_texts <- lapply( target_texts, function(s) strsplit(s, split = "")[[1]])
 ## Define encoder/decoder tokens
 
 ```{r }
-input_characters  <- sort(unique(ml_cpe_valid_chars()))
-target_characters <- sort(unique(tolower(ml_cpe_valid_chars(add_tab = T, add_enter = T))))
+input_characters  <- sort(unique(enc_valid_chars()))
+target_characters <- sort(unique(tolower(enc_valid_chars(add_tab = T, add_enter = T))))
 num_encoder_tokens <- length(input_characters)
 num_decoder_tokens <- length(target_characters)
 max_encoder_seq_length <- max(sapply(input_texts,length))
@@ -150,8 +156,8 @@ for(i in 1:length(input_texts)) {
 
 ```{r }
 ## Define an input sequence and process it.
-encoder_inputs  <- layer_input(shape=list(NULL,num_encoder_tokens))
-encoder         <- layer_lstm(units=latent_dim, return_state=TRUE)
+encoder_inputs  <- layer_input(shape = list(NULL,num_encoder_tokens))
+encoder         <- layer_lstm(units = latent_dim, return_state=TRUE)
 encoder_results <- encoder_inputs %>% encoder
 ## We discard `encoder_outputs` and only keep the states.
 encoder_states  <- encoder_results[2:3]
@@ -219,6 +225,7 @@ decoder_outputs <- decoder_dense(decoder_results[[1]])
 decoder_model   <- keras_model(
   inputs  = c(decoder_inputs, decoder_states_inputs),
   outputs = c(decoder_outputs, decoder_states))
+
 
 ```
 

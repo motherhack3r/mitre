@@ -1,0 +1,164 @@
+---
+title: "annotate_cpes"
+author: "Humbert Costas"
+date: '2022-07-09'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+seed <- "42"
+data_path <- "/DEVEL/code/data/annotation/seed42/"
+name_folder <- "500"
+num_samples <- 500   # value 0 means all
+```
+
+```{r imports}
+suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(stringr, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(stringdist, warn.conflicts = FALSE))
+
+set.seed(seed)
+
+if (!dir.exists(paste0(data_path, name_folder)))
+  dir.create(paste0(data_path, name_folder))
+```
+
+## Annotate CPE standard
+
+
+```{r load_data}
+df <- mitre::cpe.nist %>% filter(!deprecated)
+df$id <- 1:nrow(df)
+df <- df %>% select(id, title, vendor, product, version)
+```
+
+## VENDOR
+
+```{r vendor, cache=TRUE}
+df_vendor <- df %>% select(id, title, vendor)
+df_vendor$title <- tolower(df_vendor$title)
+df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "\\\\", "")
+df_vendor$vendor <- stringr::str_replace_all(df_vendor$vendor, "_",  " ")
+tit2vend <- apply(df_vendor, 1, 
+                  function(x) 
+                    as.data.frame.list(afind(x[2], x[3]))) %>% bind_rows()
+```
+
+```{r vendor_annotation}
+df_vendor <- df_vendor %>% 
+  bind_cols(tit2vend) %>% 
+  filter(distance < 2)
+
+df_vendor$annotation <- paste0(substr(df_vendor$title, 1, df_vendor$location - 1), 
+                                "[", df_vendor$match, "](cpe_vendor)", 
+                                substr(df_vendor$title, 
+                                       df_vendor$location + nchar(df_vendor$match), 
+                                       nchar(df_vendor$title))) 
+df_vendor <- df_vendor %>% select(id, title, annotation)
+df_vendor$title <- iconv(df_vendor$title, to = 'ASCII//TRANSLIT')
+df_vendor$annotation <- iconv(df_vendor$annotation, to = 'ASCII//TRANSLIT')
+
+if (num_samples > 0)
+  df_vendor <- df_vendor %>% sample_n(num_samples)
+
+#Create training & test set
+cpe_vendor_train <- df_vendor %>% sample_frac(0.8)
+cpe_vendor_test  <- anti_join(df_vendor, cpe_vendor_train, by = 'id') %>% select(-id)
+cpe_vendor_train <-  cpe_vendor_train %>% select(-id)
+
+readr::write_csv(x = cpe_vendor_train, 
+                 file = paste0(data_path, name_folder,"/cpe_vendor_train.csv"), 
+                 col_names = FALSE)
+readr::write_csv(x = cpe_vendor_test, 
+                 file = paste0(data_path, name_folder,"/cpe_vendor_test.csv"), 
+                 col_names = FALSE)
+```
+
+## PRODUCT
+
+```{r product, cache=TRUE}
+df_product <- df %>% select(id, title, product)
+df_product$title <- tolower(df_product$title)
+df_product$product <- stringr::str_replace_all(df_product$product, "\\\\", "")
+df_product$product <- stringr::str_replace_all(df_product$product, "_",  " ")
+tit2prod <- apply(df_product, 1, 
+                  function(x) 
+                    as.data.frame.list(afind(x[2], x[3]))) %>% bind_rows()
+```
+
+```{r product_annotation}
+df_product <- df_product %>% 
+  bind_cols(tit2prod) %>% 
+  filter(distance < 2) %>% 
+  filter(location > 1)
+
+df_product$annotation <- paste0(substr(df_product$title, 1, df_product$location - 1), 
+                                "[", df_product$match, "](cpe_product)", 
+                                substr(df_product$title, 
+                                       df_product$location + nchar(df_product$match), 
+                                       nchar(df_product$title))) 
+
+df_product <- df_product %>% select(id, title, annotation)
+df_product$title <- iconv(df_product$title, to = 'ASCII//TRANSLIT')
+df_product$annotation <- iconv(df_product$annotation, to = 'ASCII//TRANSLIT')
+
+if (num_samples > 0)
+  df_product <- df_product %>% sample_n(num_samples)
+
+#Create training & test set
+cpe_product_train <- df_product %>% sample_frac(0.8)
+cpe_product_test  <- anti_join(df_product, cpe_product_train, by = 'id') %>% select(-id)
+cpe_product_train <-  cpe_product_train %>% select(-id)
+
+readr::write_csv(x = cpe_product_train, 
+                 file = paste0(data_path, name_folder,"/cpe_product_train.csv"), 
+                 col_names = FALSE)
+readr::write_csv(x = cpe_product_test, 
+                 file = paste0(data_path, name_folder,"/cpe_product_test.csv"), 
+                 col_names = FALSE)
+```
+
+## VERSION
+
+```{r version, cache=TRUE}
+df_version <- df %>% select(id, title, version)
+df_version$title <- tolower(df_version$title)
+df_version$version <- stringr::str_replace_all(df_version$version, "\\\\", "")
+df_version$version <- stringr::str_replace_all(df_version$version, "_",  " ")
+tit2vers <- apply(df_version, 1, 
+                  function(x) 
+                    as.data.frame.list(afind(x[2], x[3]))) %>% bind_rows()
+```
+
+```{r}
+df_version <- df_version %>% 
+  bind_cols(tit2vers) %>% 
+  filter(distance < 10) %>% 
+  filter(location > 1)
+
+df_version$annotation <- paste0(substr(df_version$title, 1, df_version$location - 1), 
+                                "[", df_version$match, "](cpe_version)", 
+                                substr(df_version$title, 
+                                       df_version$location + nchar(df_version$match), 
+                                       nchar(df_version$title))) 
+df_version <- df_version %>% select(id, title, annotation)
+df_version$title <- iconv(df_version$title, to = 'ASCII//TRANSLIT')
+df_version$annotation <- iconv(df_version$annotation, to = 'ASCII//TRANSLIT')
+
+if (num_samples > 0)
+  df_version <- df_version %>% sample_n(num_samples)
+
+#Create training & test set
+cpe_version_train <- df_version %>% sample_frac(0.8)
+cpe_version_test  <- anti_join(df_version, cpe_version_train, by = 'id') %>% select(-id)
+cpe_version_train <-  cpe_version_train %>% select(-id)
+
+readr::write_csv(x = cpe_product_train, 
+                 file = paste0(data_path, name_folder,"/cpe_version_train.csv"), 
+                 col_names = FALSE)
+readr::write_csv(x = cpe_product_test, 
+                 file = paste0(data_path, name_folder,"/cpe_version_test.csv"), 
+                 col_names = FALSE)
+```

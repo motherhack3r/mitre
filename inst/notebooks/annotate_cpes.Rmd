@@ -11,7 +11,7 @@ params:
   ner_vendor: FALSE
   ner_product: TRUE
   ner_version: FALSE
-  num_samples: 10000
+  num_samples: 100
 ---
 
 ```{r imports_setup, include=FALSE}
@@ -65,27 +65,27 @@ if (!dir.exists(name_folder))
 ```{r get_annotated_cpes}
 if (p_kind %in% c("all", "RASA")) {
   # Load CPEs annotated with RASA
-  if (file.exists(file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))) {
-    df_rasa <- readRDS(file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))
+  if (file.exists(file.path(name_folder, paste0("cpes_", p_type,"_rasa.rds")))) {
+    df_rasa <- readRDS(file.path(name_folder, paste0("cpes_", p_type,"_rasa.rds")))
   } else {
     df_rasa <- mitre::nlp_cpe_annotate(type = p_type, kind = "RASA")
-    saveRDS(df_rasa, file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")))
+    saveRDS(df_rasa, file.path(name_folder, paste0("cpes_", p_type,"_rasa.rds")))
   }
   readr::write_csv(x = df_rasa,
-                   file = file.path(p_data_path,paste0("cpes_", p_type,"_rasa.csv")),
+                   file = file.path(name_folder,paste0("cpes_", p_type,"_rasa.csv")),
                    col_names = FALSE)
 }
 
 if (p_kind %in% c("all", "entities")) {
   # Load CPEs annotated with ENTITIES
-  if (file.exists(file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))) {
-    df_enti <- readRDS(file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))
+  if (file.exists(file.path(name_folder, paste0("cpes_", p_type,"_entities.rds")))) {
+    df_enti <- readRDS(file.path(name_folder, paste0("cpes_", p_type,"_entities.rds")))
   } else {
     df_enti <- mitre::nlp_cpe_annotate(type = p_type, kind = "entities")
-    saveRDS(df_enti, file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")))
+    saveRDS(df_enti, file.path(name_folder, paste0("cpes_", p_type,"_entities.rds")))
   }
   readr::write_csv(x = df_enti,
-                   file = file.path(p_data_path,paste0("cpes_", p_type,"_entities.csv")),
+                   file = file.path(name_folder,paste0("cpes_", p_type,"_entities.csv")),
                    col_names = FALSE)
 }
 ```
@@ -97,27 +97,29 @@ if (p_kind %in% c("all", "entities")) {
 if (p_kind %in% c("all", "RASA")) {
   cpes_custom <- nlp.ner_cpe_trainset(kind = "RASA", type = p_type, 
                                       num_samples = p_num_samples, 
-                                      rdataset = file.path(p_data_path, paste0("cpes_", p_type,"_rasa.rds")),
+                                      rdataset = file.path(name_folder, paste0("cpes_", p_type,"_rasa.rds")),
                                       seed = p_seed) %>%
     select(title, annotated)
-  readr::write_csv(x = cpes_custom, 
-                   file = file.path(name_folder, 
-                                    paste0("cpes_rasa_", p_type,"_", 
-                                           round(p_num_samples / 1000, 1), "k.csv")), 
-                   col_names = FALSE)
+  if (p_num_samples >= 1000) {
+    name_file <- file.path(name_folder, paste0("cpes_rasa_", p_type,"_", round(p_num_samples / 1000, 1), "k.csv"))
+  } else {
+    name_file <- file.path(name_folder,paste0("cpes_rasa_", p_type,"_", p_num_samples, ".csv"))
+  }
+  readr::write_csv(x = cpes_custom, file = name_file, col_names = FALSE)
 }
 
 if (p_kind %in% c("all", "entities")) {
   cpes_custom <- nlp.ner_cpe_trainset(kind = "entities", type = p_type, 
                                       num_samples = p_num_samples, 
-                                      rdataset = file.path(p_data_path, paste0("cpes_", p_type,"_entities.rds")),
+                                      rdataset = file.path(name_folder, paste0("cpes_", p_type,"_entities.rds")),
                                       seed = p_seed) %>%
     select(title, annotated)
-  readr::write_csv(x = cpes_custom, 
-                   file = file.path(name_folder, 
-                                    paste0("cpes_entities_", p_type,"_", 
-                                           round(p_num_samples / 1000, 1), "k.csv")), 
-                   col_names = FALSE)
+  if (p_num_samples >= 1000) {
+    name_file <- file.path(name_folder,paste0("cpes_entities_", p_type,"_", round(p_num_samples / 1000, 1), "k.csv"))
+  } else {
+    name_file <- file.path(name_folder,paste0("cpes_entities_", p_type,"_", p_num_samples, ".csv"))
+  }
+  readr::write_csv(x = cpes_custom, file = name_file, col_names = FALSE)
 }
 
 ```
