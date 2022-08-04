@@ -577,7 +577,7 @@ nlp.ner_cpe_trainset <- function(num_samples = 5000,
 #' @export
 nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
 
-  df <- df[, c("title", "part", "vendor", "product", "version")]
+  df <- df[!df$deprecated, c("title", "part", "vendor", "product", "version")]
   df$len_title <- stringr::str_length(df$title)
   df$len_vendor <- stringr::str_length(df$vendor)
   df$len_product <- stringr::str_length(df$product)
@@ -599,9 +599,9 @@ nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z]")
 
   log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
-  log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x+1)))
-  cpe_prcomp <- DataExplorer::plot_prcomp(log_cpes)
-  cpe_prcomp <- cpe_prcomp[["page_1"]][["data"]]
+  log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))
+
+  df <- cbind(dplyr::select(df, c("title", "part", "vendor", "product", "version")), log_cpes)
 
   # My selected features from PCA for sampling and create better train sets
   # len_version, len_title, num_product, len_vendor, sym_vendor
