@@ -4,10 +4,12 @@
 \alias{nlp_cpe_feateng}
 \title{Title}
 \usage{
-nlp_cpe_feateng(df = mitre::cpe.nist)
+nlp_cpe_feateng(df = nlp_cpe_dataset(), scale_log = FALSE)
 }
 \arguments{
 \item{df}{data.frame}
+
+\item{scale_log}{logical}
 }
 \value{
 data.frame

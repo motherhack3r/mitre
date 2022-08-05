@@ -173,28 +173,32 @@ wfn2str <- function(name = character()) {
 }
 
 
-#' Remove rows containing non valid characters for CPE LSTM tokenization
+#' Transform the CPEs data frame removing unnecessary columns. Change default parameters
+#' to remove deprecated or those that doesn't follow the WFN definition.
 #'
 #' @param df data.frame default mitre cpes
-#' @param keep_deprecated logical
+#' @param keep_deprecated logical, condition to keep or remove deprecated CPEs
+#' @param only_wfn logical, condition to keep or remove CPEs following WFN definition
 #'
 #' @return data.frame
 #' @export
-nlp_cpe_dataset <- function(df = mitre::cpe.nist, keep_deprecated = FALSE) {
+nlp_cpe_dataset <- function(df = mitre::cpe.nist, keep_deprecated = FALSE, only_wfn = TRUE) {
   df$id <- 1:nrow(df)
   if (!keep_deprecated) {
     df <- df[!df$deprecated, ]
   }
-  df <- df[, c("id", "title", "vendor", "product", "version")]
 
-  df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
-  df <- df[df$valid, c("id", "title", "vendor", "product", "version")]
+  if (only_wfn) {
+    df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
+    df <- df[df$valid, ]
+  }
+  df <- df[, c("id", "title", "part", "vendor", "product", "version")]
 
   return(df)
 }
@@ -466,12 +470,7 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
 #'
 #' @return data.frame
 #' @export
-getCPEstats <- function(only_vendor = TRUE, as_WFN = TRUE) {
-  if (as_WFN) {
-    df <- nlp_cpe_dataset()
-  } else {
-    df <- cpe.nist
-  }
+getCPEstats <- function(df = cpe.nist, only_vendor = TRUE) {
   if (only_vendor) {
     sts_cpes <- dplyr::count(df, vendor, sort = TRUE)
   } else {
@@ -496,7 +495,7 @@ nlp_cpe_sample_dataset <- function(df = nlp_cpe_dataset(),
                                    seed = 42,
                                    quantiles = c(0, 0.8, 0.9, 0.99, 1)) {
 
-  sts_vend <- getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
+  sts_vend <- getCPEstats(df, only_vendor = TRUE)
   sts_qntl <- quantile(sts_vend$log_n, probs = quantiles)
 
   df02 <- sts_vend[sts_vend$log_n <= sts_qntl[2], ]
@@ -549,7 +548,7 @@ nlp.ner_cpe_trainset <- function(num_samples = 5000,
   }
 
   # TODO: Review notebook for normalize this kind of distribution
-  sts_vend <- getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
+  sts_vend <- getCPEstats(only_vendor = TRUE)
   sts_qntl <- quantile(sts_vend$log_n, probs = c(0, 0.8, 0.9, 0.99, 1))
 
   df02 <- sts_vend[sts_vend$log_n <= sts_qntl[2], ]
@@ -578,12 +577,12 @@ nlp.ner_cpe_trainset <- function(num_samples = 5000,
 #' Title
 #'
 #' @param df data.frame
+#' @param scale_log logical
 #'
 #' @return data.frame
 #' @export
-nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
+nlp_cpe_feateng <- function(df = nlp_cpe_dataset(), scale_log = FALSE) {
 
-  df <- df[!df$deprecated, c("title", "part", "vendor", "product", "version")]
   df$len_title <- stringr::str_length(df$title)
   df$len_vendor <- stringr::str_length(df$vendor)
   df$len_product <- stringr::str_length(df$product)
@@ -604,13 +603,12 @@ nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z]")
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z]")
 
-  log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
-  log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))
+  if (scale_log) {
+    log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
+    log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))
 
-  df <- cbind(dplyr::select(df, c("title", "part", "vendor", "product", "version")), log_cpes)
-
-  # My selected features from PCA for sampling and create better train sets
-  # len_version, len_title, num_product, len_vendor, sym_vendor
+    df <- cbind(dplyr::select(df, c("title", "part", "vendor", "product", "version")), log_cpes)
+  }
 
   return(df)
 }
