@@ -201,7 +201,7 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
 #' @param df_ner data.frame
 #' @param type character
 #'
-#' @return
+#' @return data.frame
 nlp_cpe_rasa_notation <- function(df_ner = data.frame(),
                                   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1]) {
 
@@ -335,10 +335,12 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
   print(paste0("[*] ", "start annotation process..."))
   df_ner$annotated <- df_ner$title
 
-  # Remove rows without version for types: vpv, pv, vv and version
-  if (type %in% c("vpv", "pv", "vv", "version")) {
-    print(paste0("[+] ", "removing empty versions..."))
-    df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
+  if (strict) {
+    # Remove rows without version for types: vpv, pv, vv and version
+    if (type %in% c("vpv", "pv", "vv", "version")) {
+      print(paste0("[+] ", "removing empty versions..."))
+      df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
+    }
   }
 
   # Check overlapping vendor-product
@@ -571,9 +573,9 @@ nlp.ner_cpe_trainset <- function(num_samples = 5000,
 
 #' Title
 #'
-#' @param df
+#' @param df data.frame
 #'
-#' @return
+#' @return data.frame
 #' @export
 nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
 

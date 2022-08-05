@@ -7,7 +7,10 @@
 nlp_cpe_feateng(df = mitre::cpe.nist)
 }
 \arguments{
-\item{df}{}
+\item{df}{data.frame}
+}
+\value{
+data.frame
 }
 \description{
 Title
