@@ -4,10 +4,12 @@
 \alias{nlp_cpe_dataset}
 \title{Remove rows containing non valid characters for CPE LSTM tokenization}
 \usage{
-nlp_cpe_dataset(df = mitre::cpe.nist)
+nlp_cpe_dataset(df = mitre::cpe.nist, keep_deprecated = FALSE)
 }
 \arguments{
 \item{df}{data.frame default mitre cpes}
+
+\item{keep_deprecated}{logical}
 }
 \value{
 data.frame

@@ -176,12 +176,16 @@ wfn2str <- function(name = character()) {
 #' Remove rows containing non valid characters for CPE LSTM tokenization
 #'
 #' @param df data.frame default mitre cpes
+#' @param keep_deprecated logical
 #'
 #' @return data.frame
 #' @export
-nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
+nlp_cpe_dataset <- function(df = mitre::cpe.nist, keep_deprecated = FALSE) {
   df$id <- 1:nrow(df)
-  df <- df[!df$deprecated, c("id", "title", "vendor", "product", "version")]
+  if (!keep_deprecated) {
+    df <- df[!df$deprecated, ]
+  }
+  df <- df[, c("id", "title", "vendor", "product", "version")]
 
   df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
   df <- df[df$valid, ]
