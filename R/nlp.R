@@ -566,10 +566,12 @@ nlp_cpe_feateng <- function(df = nlp_cpe_dataset(), scale_log = FALSE) {
 
 #' Title
 #'
-#' @param seed numeric
-#' @param num_samples numeric
+#' @param seed integer
+#' @param num_samples integer
 #' @param mix_config list
 #' @param ner_config list
+#' @param save_path character
+#' @param verbose logical
 #'
 #' @return data.frame
 #' @export
@@ -578,10 +580,101 @@ nlp_cpe_build_ner_trainset <- function(seed = 42,
                                        mix_config = list(keep_deprecated = FALSE,
                                                          only_wfn = FALSE,
                                                          scale_log = FALSE,
-                                                         sample_weight = c("pca", "vendor", "none")[1]),
+                                                         sample_weight = c("pca", "vendor", "none")[1],
+                                                         pca_features = c("len_vendor", "abc_vendor", "num_version", "len_version", "abc_product"),
+                                                         vendor_qntl = c(0, 0.8, 0.9, 0.99, 1)),
                                        ner_config = list(notation = c("rasa", "offset")[1],
                                                          vendor = TRUE,
                                                          product = TRUE,
-                                                         version = TRUE)) {
+                                                         version = TRUE),
+                                       save_path = file.path("C:", "DEVEL", "code", "data", "ner_trainsets"),
+                                       verbose = FALSE) {
 
+  if (verbose) print(paste0("[*] ", "Initializing creation..."))
+
+  if (verbose) print(paste0("[|] ", "setting random seed ..."))
+  set.seed(seed)
+
+  p_type <- paste0(ifelse(ner_config$vendor, "v", ""),
+                   ifelse(ner_config$product, "p", ""),
+                   ifelse(ner_config$version, "v", ""))
+  if (nchar(p_type) == 1) {
+    p_type <- ifelse(ner_config$vendor, "vend",
+                     ifelse(ner_config$product, "prod", "vers"))
+  }
+  if (verbose) print(paste0("[|] ", "identified type '", p_type, "'"))
+
+  if (verbose) print(paste0("[|] ", "loading CPE data ..."))
+  cpes <- mitre::cpe.nist
+  cpes$id <- 1:nrow(cpes)
+
+
+  if (mix_config$sample_weight == "pca") {
+    if (verbose) print(paste0("[|] ", "Sampling mix with PCA option ..."))
+    p_features <- mix_config$pca_features
+    if (verbose) print(paste0("[|] > ", "selecting features ..."))
+    if (verbose) print(paste0("[|] > ", paste(p_features, collapse = ", ")))
+
+    if (verbose) print(paste0("[|] > ", "computing stats ..."))
+    if (verbose & mix_config$scale_log) print(paste0("[|] > ", "logarithmic scaling ..."))
+    df <- nlp_cpe_feateng(df = cpes, scale_log = mix_config$scale_log)
+    sam_size <- floor((num_samples*4) / length(p_features))
+    sam_size_extra <- (num_samples*4) %% length(p_features)
+    if (verbose) print(paste0("[|] > ", "weighted sampling ..."))
+    df_sample <- dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[p_features[1]]])
+    if (length(p_features) > 1) {
+      for (i in 2:length(p_features)) {
+        df_sample <- rbind(df_sample,
+                           dplyr::sample_n(df, size = sam_size, weight = df[[p_features[i]]]))
+      }
+    }
+    df <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
+    rm(df_sample)
+    if (verbose) print(paste0("[|] > ", "PCA sampling done!"))
+  }
+
+  if (mix_config$sample_weight == "vendor") {
+    if (verbose) print(paste0("[|] ", "Sampling mix by vendor fame ..."))
+    p_features <- mix_config$vendor_qntl
+    if (verbose) print(paste0("[|] > distribution by quantiles: ", paste(p_features, collapse = ", ")))
+    df <- nlp_cpe_sample_dataset(df = cpes, num_samples = num_samples,
+                                 seed = seed, quantiles = mix_config$vendor_qntl)
+    df <- df[, c("id", "title", "part", "vendor", "product", "version")]
+    if (verbose) print(paste0("[|] > ", "Vendor sampling done!"))
+  }
+
+  if (verbose) print(paste0("[|] ", "Shuffling data ..."))
+  df <- dplyr::sample_n(df, nrow(df))
+
+  if (ner_config$notation == "rasa") {
+    if (verbose) print(paste0("[|] ", "Adding RASA notation ..."))
+    # Load CPEs annotated with RASA
+    df_sample <- nlp_cpe_annotate(df = df, type = p_type, kind = "RASA", strict = FALSE)
+    df_sample <- dplyr::sample_n(df_sample, num_samples)
+    if (num_samples >= 1000) {
+      name_file <- file.path(save_path, paste0("cpes_rasa_", p_type,"_", round(num_samples / 1000, 1), "k.csv"))
+    } else {
+      name_file <- file.path(save_path,paste0("cpes_rasa_", p_type,"_", num_samples, ".csv"))
+    }
+    readr::write_csv(x = df_sample[, c("title", "annotated")],
+                     file = name_file, col_names = FALSE)
+  }
+
+  if (ner_config$notation == "offset") {
+    if (verbose) print(paste0("[|] ", "Adding offsets as json entities (scapy) ..."))
+    # Load CPEs annotated with ENTITIES
+    df_sample <- mitre::nlp_cpe_annotate(df = df, type = p_type, kind = "entities", strict = FALSE)
+    df_sample <- dplyr::sample_n(df_sample, num_samples)
+
+    if (num_samples >= 1000) {
+      name_file <- file.path(save_path,paste0("cpes_entities_", p_type,"_", round(num_samples / 1000, 1), "k.csv"))
+    } else {
+      name_file <- file.path(save_path,paste0("cpes_entities_", p_type,"_", num_samples, ".csv"))
+    }
+    readr::write_csv(x = df_sample[, c("title", "annotated")],
+                     file = name_file, col_names = FALSE)
+  }
+  if (verbose) print(paste0("[.] ", "done!"))
+
+  return(df_sample)
 }
