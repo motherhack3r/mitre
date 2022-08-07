@@ -14,6 +14,7 @@ nlp_cpe_build_ner_trainset(
   ner_config = list(notation = c("rasa", "offset")[1], vendor = TRUE, product = TRUE,
     version = TRUE),
   save_path = file.path("C:", "DEVEL", "code", "data", "ner_trainsets"),
+  train_codename = "",
   verbose = FALSE
 )
 }
@@ -27,6 +28,8 @@ nlp_cpe_build_ner_trainset(
 \item{ner_config}{list}
 
 \item{save_path}{character}
+
+\item{train_codename}{character}
 
 \item{verbose}{logical}
 }

@@ -572,6 +572,7 @@ nlp_cpe_feateng <- function(df = nlp_cpe_dataset(), scale_log = FALSE) {
 #' @param ner_config list
 #' @param save_path character
 #' @param verbose logical
+#' @param train_codename character
 #'
 #' @return data.frame
 #' @export
@@ -588,12 +589,39 @@ nlp_cpe_build_ner_trainset <- function(seed = 42,
                                                          product = TRUE,
                                                          version = TRUE),
                                        save_path = file.path("C:", "DEVEL", "code", "data", "ner_trainsets"),
+                                       train_codename = "",
                                        verbose = FALSE) {
 
   if (verbose) print(paste0("[*] ", "Initializing creation..."))
 
   if (verbose) print(paste0("[|] ", "setting random seed ..."))
   set.seed(seed)
+
+  if (train_codename == "") {
+    train_name <- textclean::replace_hash(iconv(unlist(stopwords::data_stopwords_stopwordsiso),
+                                                to = 'ASCII//TRANSLIT', sub = ""),
+                                          pattern = "\\?", replacement = "")
+    train_name <- train_name[train_name != ""]
+    train_name <- train_name[stringr::str_detect(train_name, "^[a-z]+$", negate = F)]
+    train_name <- sort(unique(train_name[nchar(train_name) > 2]))
+    train_codename <- sample(train_name, 1)
+  }
+
+  p_version <- as.character(packageVersion("mitre"))
+  # root path
+  if (!dir.exists(save_path))
+    dir.create(save_path)
+
+  # version subpath
+  save_path <- file.path(save_path, paste0("v", p_version))
+  if (!dir.exists(save_path))
+    dir.create(save_path)
+
+  if (verbose) print(paste0("[|] ", "random name for trainset: ", train_codename))
+  save_path <- file.path(save_path, train_codename)
+  if (verbose) print(paste0("[|] ", " > save_path: ", save_path))
+  if (!dir.exists(save_path))
+    dir.create(save_path)
 
   p_type <- paste0(ifelse(ner_config$vendor, "v", ""),
                    ifelse(ner_config$product, "p", ""),
@@ -637,7 +665,7 @@ nlp_cpe_build_ner_trainset <- function(seed = 42,
     if (verbose) print(paste0("[|] ", "Sampling mix by vendor fame ..."))
     p_features <- mix_config$vendor_qntl
     if (verbose) print(paste0("[|] > distribution by quantiles: ", paste(p_features, collapse = ", ")))
-    df <- nlp_cpe_sample_dataset(df = cpes, num_samples = num_samples,
+    df <- nlp_cpe_sample_dataset(df = cpes, num_samples = num_samples*4,
                                  seed = seed, quantiles = mix_config$vendor_qntl)
     df <- df[, c("id", "title", "part", "vendor", "product", "version")]
     if (verbose) print(paste0("[|] > ", "Vendor sampling done!"))
