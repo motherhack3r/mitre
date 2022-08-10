@@ -1,0 +1,133 @@
+---
+title: "Create CPE custom NER trainset"
+author: "Humbert Costas"
+date: !r Sys.Date()
+output: html_document
+params:
+  seed: 42
+  num_samples: 0
+  data_path: /DEVEL/code/data/ner_trainsets
+  path_vers: !r as.character(packageVersion("mitre"))
+  output_kind: all
+  ner_vendor: TRUE
+  ner_product: TRUE
+  ner_version: FALSE
+  ner_features: !r c("len_vendor", "abc_vendor", "num_version", "len_version", "abc_product")
+---
+
+```{r imports_setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Imports
+suppressPackageStartupMessages(library(mitre, warn.conflicts = FALSE))
+suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
+
+# Parameters
+p_version <- params$path_vers
+p_seed <- as.character(params$seed)
+p_data_path <- params$data_path
+p_num_samples <- params$num_samples   # value 0 means all
+p_kind <- params$output_kind         # RASA | entities | all
+p_type <- ifelse(test = (params$ner_vendor & params$ner_product & params$ner_version), 
+                 yes = "vpv", 
+                 no = ifelse(test = (params$ner_vendor & params$ner_product & !params$ner_version), 
+                             yes = "vp", 
+                             no = ifelse(test = (!params$ner_vendor & params$ner_product & params$ner_version), 
+                                         yes = "pv", 
+                                         no = ifelse(test = (params$ner_vendor & !params$ner_product & params$ner_version), 
+                                                     yes = "vv", 
+                                                     no = ifelse(test = (params$ner_vendor), 
+                                                                 yes = "vend", 
+                                                                 no = ifelse(test = (params$ner_product), 
+                                                                             yes = "prod", 
+                                                                             no = "vers"))))))
+p_features <- params$ner_features
+
+set.seed(p_seed)
+```
+
+```{r check_paths}
+# root path
+if (!dir.exists(p_data_path))
+  dir.create(p_data_path)
+
+# version subpath
+name_folder <- file.path(p_data_path, paste0("v", p_version))
+if (!dir.exists(name_folder))
+  dir.create(name_folder)
+
+# seed subpath
+name_folder <- file.path(p_data_path, paste0("v", p_version), p_seed)
+if (!dir.exists(name_folder))
+  dir.create(name_folder)
+```
+
+
+## Sample CPE data set using feature engineering
+
+```{r feateng}
+cpes <- mitre::cpe.nist
+cpes$id <- 1:nrow(cpes)
+
+df <- mitre::nlp_cpe_feateng(df = cpes)
+# df_sw <- mitre::nlp_cpe_feateng(df = cpes[cpes$part == "a", ])
+# df_so <- mitre::nlp_cpe_feateng(df = cpes[cpes$part == "o", ])
+# df_hw <- mitre::nlp_cpe_feateng(df = cpes[cpes$part == "h", ])
+
+```
+
+
+```{r sample_dist}
+if (p_num_samples > 0) {
+  sam_size <- floor((p_num_samples*4) / length(p_features))
+  sam_size_extra <- (p_num_samples*4) %% length(p_features)
+  df_sample <- dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[p_features[1]]])
+  if (length(p_features) > 1) {
+    for (i in 2:length(p_features)) {
+      df_sample <- rbind(df_sample,
+                         dplyr::sample_n(df, size = sam_size, weight = df[[p_features[i]]]))
+    }
+  } 
+} else {
+  df_sample <- dplyr::sample_n(df, nrow(df))
+}
+df_sample$id <- 1:nrow(df_sample)
+df_sample <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
+```
+
+## Annotate CPE standard
+
+```{r get_annotated_cpes}
+if (p_kind %in% c("all", "RASA")) {
+  # Load CPEs annotated with RASA
+  df_rasa <- mitre::nlp_cpe_annotate(df = df_sample, type = p_type, kind = "RASA", strict = FALSE)
+  df_rasa <- dplyr::sample_n(df_rasa, p_num_samples)
+  if (p_num_samples >= 1000) {
+    name_file <- file.path(name_folder, paste0("cpes_rasa_", p_type,"_", round(p_num_samples / 1000, 1), "k.csv"))
+  } else {
+    name_file <- file.path(name_folder,paste0("cpes_rasa_", p_type,"_", p_num_samples, ".csv"))
+  }
+  readr::write_csv(x = df_rasa[, c("title", "annotated")],
+                   file = name_file, col_names = FALSE)
+  # readr::write_csv(x = data.frame(sample = df_rasa$annotated), 
+  #                  file = name_file, col_names = FALSE)  
+}
+
+if (p_kind %in% c("all", "entities")) {
+  # Load CPEs annotated with ENTITIES
+  df_enti <- mitre::nlp_cpe_annotate(df = df_sample, type = p_type, kind = "entities", strict = FALSE)
+  df_enti <- dplyr::sample_n(df_enti, p_num_samples)
+
+  if (p_num_samples >= 1000) {
+    name_file <- file.path(name_folder,paste0("cpes_entities_", p_type,"_", round(p_num_samples / 1000, 1), "k.csv"))
+  } else {
+    name_file <- file.path(name_folder,paste0("cpes_entities_", p_type,"_", p_num_samples, ".csv"))
+  }
+  readr::write_csv(x = df_enti[, c("title", "annotated")],
+                   file = name_file, col_names = FALSE)
+
+  # readr::write_csv(x = data.frame(sample = df_enti$annotated), 
+  #                  file = name_file, col_names = FALSE)
+}
+```
+
