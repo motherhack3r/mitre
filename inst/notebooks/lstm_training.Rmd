@@ -21,7 +21,7 @@ codename <- "follows"
 
 col2predict <- "version"
 seed <- 43
-num_samples <- 28000  # Number of samples to train on.
+num_samples <- 20000  # Number of samples to train on.
 test_size <- 0.05 # Slice percentage from num_samples
 validation_size <- 0.2 # percentage of train set used for validation
 batch_size <- 64  # Batch size for training.

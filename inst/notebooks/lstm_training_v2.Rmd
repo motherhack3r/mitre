@@ -17,17 +17,17 @@ knitr::opts_chunk$set(
 ## Set parameters
 
 ```{r }
-codename <- "cpe_version"
+codename <- "parot"
 
-col2predict <- "version"
-seed <- 42
-num_samples <- 18000  # Number of samples to train on.
-test_size <- 0.1 # Slice percentage from num_samples
+col2predict <- "product"
+seed <- 43
+num_samples <- 20000  # Number of samples to train on.
+test_size <- 0.05 # Slice percentage from num_samples
 validation_size <- 0.2 # percentage of train set used for validation
 batch_size <- 64  # Batch size for training.
-epochs <- 100  # Number of epochs to train for.
-latent_dim <- 128  # Latent dimensionality of the encoding space.
-activation_function <- "softmax" # relu, sigmoid, softmax, softplus, softsign, tanh, selu, elu, exponential
+epochs <- 400  # Number of epochs to train for.
+latent_dim <- 192  # Latent dimensionality of the encoding space.
+activation_function <- "softmax"
 
 modelconf <- list(col2predict, seed, num_samples, test_size, 
                   validation_size, batch_size, epochs, latent_dim, activation_function)
@@ -61,29 +61,38 @@ library(keras)
 suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(dplyr))
 
-
-
 ```
 
-# Example with CPE "lite"
+# Example with CPE
+
 
 ## Create Training set
 
 ```{r custom_train_Set}
-df <- mitre::nlp_cpe_build_ner_trainset(num_samples = num_samples, seed = seed)
-# df <- mitre::nlp_cpe_dataset(only_wfn = T)
-# df$cpe_lite <- paste(df$vendor, df$product, df$version, sep = ":")
+raw_cpes <- mitre::cpe.nist
 
+# remove rows with escaped chars because of tagging regex
+df <- raw_cpes[!grepl(pattern = "\\\\", raw_cpes[, col2predict]), ]
+# replace WFN _ to space
+# df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
+# select trainable rows
+df <- cpe_add_features(df)
+traincol <- paste0("train_", col2predict)
+traincol <- df[, traincol]
+df <- df[traincol, ]
+
+cpes <- nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
+cpes <- cpes[, c("title", col2predict)]
 ```
 
 Split data into train and test:
 
 ```{r }
-spliter <- sample(c(rep(0, (1 - test_size) * nrow(df)), 
-                  rep(1, test_size * nrow(df))))
+spliter <- sample(c(rep(0, (1 - test_size) * nrow(cpes)), 
+                  rep(1, test_size * nrow(cpes))))
 
-df_train <- df[spliter == 0, ] 
-df_test <- df[spliter == 1, ] 
+df_train <- cpes[spliter == 0, ] 
+df_test <- cpes[spliter == 1, ] 
 ```
 
 
@@ -169,9 +178,6 @@ model <- keras_model( inputs = list(encoder_inputs, decoder_inputs),
 
 ## Compile model
 model %>% compile(optimizer = 'rmsprop', loss = 'categorical_crossentropy')
-# model %>% compile(optimizer = 'rmsprop', 
-#                   loss = 'categorical_crossentropy', 
-#                   metrics = "precision")
 
 ```
 

@@ -1,0 +1,124 @@
+---
+title: "cpe2vec"
+author: "Humbert Costas"
+date: "2022-08-19"
+output: html_document
+---
+
+```{r, init, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library("stringr")
+library("dplyr")
+```
+
+## Set parameters
+
+```{r, set_params}
+seed <- 43
+set.seed(seed)
+```
+
+```{r, load_cpes, cache=TRUE}
+cpes <- mitre::cpe.nist
+df_ner <- mitre::nlp_cpe_dataset(df = cpes)
+```
+
+```{r detect_matches}
+# remove rows with escaped chars because of tagging regex
+df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$title), ]
+df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
+df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
+df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
+# replace WFN _ to space
+df_ner$vendor <- str_replace_all(df_ner$vendor, "_", " ")
+df_ner$product <- str_replace_all(df_ner$product, "_", " ")
+# remove titles with equal vendor and product
+df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
+# lowercase title
+df_ner$wfn_title <- tolower(df_ner$title)
+# vendor entities candidates
+df_ner$train_v <- rep(F, nrow(df_ner))
+df_ner$train_v <- str_detect(df_ner$wfn_title, fixed(df_ner$vendor))
+# product entities candidates
+df_ner$train_p <- rep(F, nrow(df_ner))
+df_ner$train_p <- str_detect(df_ner$wfn_title, fixed(df_ner$product))
+# version entities candidates
+df_ner$train_r <- rep(F, nrow(df_ner))
+df_ner$train_r <- str_detect(df_ner$wfn_title, fixed(df_ner$version))
+```
+
+```{r filter_valid_rows}
+# Keep only titles with all entities
+df_ner <- filter(df_ner, train_v & train_p & train_r)
+df_ner <- select(df_ner, -train_v, -train_p, -train_r)
+
+# Select rows where title contains the 3 components
+df_ner$ner_3cols <- str_detect(string = df_ner$title, 
+                               pattern = paste0("(?i)(.*)(", 
+                                                df_ner$vendor,")(\\s.*)(", 
+                                                df_ner$product,")(\\s.*)(", 
+                                                df_ner$version,")(.*)"))
+
+df_ner$ner_2cols <- str_detect(string = df_ner$title, 
+                               pattern = paste0("(?i)(.*)(", 
+                                                df_ner$vendor,")(\\s.*)(", 
+                                                df_ner$product,")(\\s.*)"))
+df_ner <- filter(df_ner, ner_3cols | ner_2cols)
+```
+
+```{r annotate_rasa}
+
+## vendor + product + version
+df_ner$rasa_3cols <- str_replace_all(string = df_ner$title,
+                                     pattern = paste0("(?i)(.*)(", 
+                                                      df_ner$vendor,")(\\s.*)(", 
+                                                      df_ner$product,")(.*)(", 
+                                                      df_ner$version,")(.*)"),
+                                     replacement = paste0("\\1\\[\\2\\]\\(cpe_vendor\\)",
+                                                          "\\3\\[\\4\\]\\(cpe_product\\)",
+                                                          "\\5\\[\\6\\]\\(cpe_version\\)\\7"))
+
+## vendor + product
+df_ner$rasa_2cols <- str_replace_all(string = df_ner$title,
+                                     pattern = paste0("(?i)(.*)(", 
+                                                      df_ner$vendor,")(\\s.*)(", 
+                                                      df_ner$product,")(.*)"),
+                                     replacement = paste0("\\1\\[\\2\\]\\(cpe_vendor\\)",
+                                                          "\\3\\[\\4\\]\\(cpe_product\\)\\5"))
+
+
+```
+
+```{r save_df_ner}
+saveRDS(df_ner, file = "df_ner_rasa.rds") 
+readr::write_csv(x = df_ner[, c("id", "rasa_2cols")], 
+                 file = "full_train_ner_2cols.csv", col_names = FALSE)
+```
+
+```{r sample_train_2cols}
+num_samples <- 10000
+
+df <- mitre::cpe_add_features(df_ner[df_ner$ner_2cols, ])
+
+df_ner_train <- mitre::nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
+df_ner_train <- df_ner_train %>% inner_join(df_ner %>% select(id, rasa_2cols), by = "id")
+readr::write_csv(x = df_ner_train[, c("id", "rasa_2cols")], 
+                 file = "10k_train_ner_2cols.csv", col_names = FALSE)
+
+```
+
+```{r sample_test_2cols}
+num_samples <- 2000
+
+df_ner_test <- mitre::nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
+df_ner_test <- df_ner_test %>% inner_join(df_ner %>% select(id, rasa_2cols), by = "id")
+readr::write_csv(x = df_ner_test[, c("id", "rasa_2cols")], 
+                 file = "2k_test_ner_2cols.csv", col_names = FALSE)
+
+```
+
+```{r }
+#> TODO
+
+```
+
