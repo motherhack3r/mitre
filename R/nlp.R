@@ -201,7 +201,7 @@ nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
 #' @param df_ner data.frame
 #' @param type character
 #'
-#' @return
+#' @return data.frame
 nlp_cpe_rasa_notation <- function(df_ner = data.frame(),
                                   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "version")[1]) {
 
@@ -591,6 +591,10 @@ nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
   df$sym_vendor <- stringr::str_count(df$vendor, "[^0-9a-zA-Z]")
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z]")
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z]")
+
+  df$dot_version <- stringr::str_count(df$version, "[\\.]")
+
+  df <- dplyr::mutate(df, pct_version = ((num_version + dot_version)/len_version)-(abc_version/len_version))
 
   return(df)
 }

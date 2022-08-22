@@ -14,6 +14,9 @@ nlp_cpe_rasa_notation(
 
 \item{type}{character}
 }
+\value{
+data.frame
+}
 \description{
 Used by generic annotate cpes function
 }
