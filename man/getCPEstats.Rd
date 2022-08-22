@@ -4,12 +4,14 @@
 \alias{getCPEstats}
 \title{Returns data frame with grouped count by vendor and product.}
 \usage{
-getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
+getCPEstats(df = cpe.nist, only_vendor = TRUE, scale_log = FALSE)
 }
 \arguments{
+\item{df}{data.frame}
+
 \item{only_vendor}{logical}
 
-\item{as_WFN}{logical}
+\item{scale_log}{logical}
 }
 \value{
 data.frame

@@ -173,24 +173,32 @@ wfn2str <- function(name = character()) {
 }
 
 
-#' Remove rows containing non valid characters for CPE LSTM tokenization
+#' Transform the CPEs data frame removing unnecessary columns. Change default parameters
+#' to remove deprecated or those that doesn't follow the WFN definition.
 #'
 #' @param df data.frame default mitre cpes
+#' @param keep_deprecated logical, condition to keep or remove deprecated CPEs
+#' @param only_wfn logical, condition to keep or remove CPEs following WFN definition
 #'
 #' @return data.frame
 #' @export
-nlp_cpe_dataset <- function(df = mitre::cpe.nist) {
+nlp_cpe_dataset <- function(df = mitre::cpe.nist, keep_deprecated = FALSE, only_wfn = TRUE) {
   df$id <- 1:nrow(df)
-  df <- df[!df$deprecated, c("id", "title", "vendor", "product", "version")]
+  if (!keep_deprecated) {
+    df <- df[!df$deprecated, ]
+  }
 
-  df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
-  df <- df[df$valid, ]
-  df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
-  df <- df[df$valid, c("id", "title", "vendor", "product", "version")]
+  if (only_wfn) {
+    df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
+    df <- df[df$valid, ]
+  }
+  df <- df[, c("id", "title", "part", "vendor", "product", "version")]
 
   return(df)
 }
@@ -335,10 +343,12 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
   print(paste0("[*] ", "start annotation process..."))
   df_ner$annotated <- df_ner$title
 
-  # Remove rows without version for types: vpv, pv, vv and version
-  if (type %in% c("vpv", "pv", "vv", "version")) {
-    print(paste0("[+] ", "removing empty versions..."))
-    df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
+  if (strict) {
+    # Remove rows without version for types: vpv, pv, vv and version
+    if (type %in% c("vpv", "pv", "vv", "version")) {
+      print(paste0("[+] ", "removing empty versions..."))
+      df_ner <- df_ner[stringr::str_detect(string = df_ner$version, pattern = "^\\-$", negate = T), ]
+    }
   }
 
   # Check overlapping vendor-product
@@ -455,23 +465,21 @@ nlp_cpe_annotate <- function(df = nlp_cpe_dataset(),
 
 #' Returns data frame with grouped count by vendor and product.
 #'
+#' @param df data.frame
+#' @param scale_log logical
 #' @param only_vendor logical
-#' @param as_WFN logical
 #'
 #' @return data.frame
 #' @export
-getCPEstats <- function(only_vendor = TRUE, as_WFN = TRUE) {
-  if (as_WFN) {
-    df <- nlp_cpe_dataset()
-  } else {
-    df <- cpe.nist
-  }
+getCPEstats <- function(df = cpe.nist, only_vendor = TRUE, scale_log = FALSE) {
   if (only_vendor) {
     sts_cpes <- dplyr::count(df, vendor, sort = TRUE)
   } else {
     sts_cpes <- dplyr::count(df, vendor, product, sort = TRUE)
   }
-  sts_cpes$log_n <- log(sts_cpes$n)
+  if (scale_log) {
+    sts_cpes$n <- log(sts_cpes$n)
+  }
 
   return(sts_cpes)
 }
@@ -490,16 +498,16 @@ nlp_cpe_sample_dataset <- function(df = nlp_cpe_dataset(),
                                    seed = 42,
                                    quantiles = c(0, 0.8, 0.9, 0.99, 1)) {
 
-  sts_vend <- getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
-  sts_qntl <- quantile(sts_vend$log_n, probs = quantiles)
+  sts_vend <- getCPEstats(df, only_vendor = TRUE)
+  sts_qntl <- quantile(sts_vend$n, probs = quantiles)
 
-  df02 <- sts_vend[sts_vend$log_n <= sts_qntl[2], ]
+  df02 <- sts_vend[sts_vend$n <= sts_qntl[2], ]
   df02 <- dplyr::inner_join(df, df02, by = c("vendor" = "vendor"))
-  df25 <- sts_vend[((sts_qntl[2] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[3])), ]
+  df25 <- sts_vend[((sts_qntl[2] < sts_vend$n) & (sts_vend$n <= sts_qntl[3])), ]
   df25 <- dplyr::inner_join(df, df25, by = c("vendor" = "vendor"))
-  df57 <- sts_vend[((sts_qntl[3] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[4])), ]
+  df57 <- sts_vend[((sts_qntl[3] < sts_vend$n) & (sts_vend$n <= sts_qntl[4])), ]
   df57 <- dplyr::inner_join(df, df57, by = c("vendor" = "vendor"))
-  df70 <- sts_vend[sts_vend$log_n > sts_qntl[4], ]
+  df70 <- sts_vend[sts_vend$n > sts_qntl[4], ]
   df70 <- dplyr::inner_join(df, df70, by = c("vendor" = "vendor"))
 
   # Sampling using quantiles to select slices
@@ -511,67 +519,20 @@ nlp_cpe_sample_dataset <- function(df = nlp_cpe_dataset(),
   df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df70, (num_samples/4)))
 
   df_sam <- dplyr::sample_n(df_sam, nrow(df_sam))
-  df_sam <- df_sam[, c("id", "title", "vendor", "product", "version")]
+  df_sam <- df_sam[, c("id", "title", "part", "vendor", "product", "version")]
 
   return(df_sam)
 }
 
 #' Title
 #'
-#' @param num_samples integer
-#' @param type character, default vpv
-#' @param kind character, default RASA
-#' @param pydict logical, python offsets begins with 0, otherwise 1
-#' @param rdataset character, path to RDS. nlp_cpe_annotate default if not exists
-#' @param seed integer, used for reproducible research
+#' @param df data.frame
+#' @param scale_log logical
 #'
 #' @return data.frame
 #' @export
-nlp.ner_cpe_trainset <- function(num_samples = 5000,
-                                 type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1],
-                                 kind = c("RASA", "entities")[1],
-                                 pydict = TRUE,
-                                 rdataset = "data-raw/NLP/cpes_vpv_rasa.rds",
-                                 seed = 42) {
+nlp_cpe_feateng <- function(df = nlp_cpe_dataset(), scale_log = FALSE) {
 
-  set.seed(seed)
-
-  if (file.exists(rdataset)) {
-    df <- readRDS(rdataset)
-  } else {
-    df <- nlp_cpe_annotate(type = type, kind = kind, pydict = pydict, seed = seed)
-  }
-
-  # TODO: Review notebook for normalize this kind of distribution
-  sts_vend <- getCPEstats(only_vendor = TRUE, as_WFN = TRUE)
-  sts_qntl <- quantile(sts_vend$log_n, probs = c(0, 0.8, 0.9, 0.99, 1))
-
-  df02 <- sts_vend[sts_vend$log_n <= sts_qntl[2], ]
-  df02 <- dplyr::inner_join(df, df02, by = c("vendor" = "vendor"))
-  df25 <- sts_vend[((sts_qntl[2] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[3])), ]
-  df25 <- dplyr::inner_join(df, df25, by = c("vendor" = "vendor"))
-  df57 <- sts_vend[((sts_qntl[3] < sts_vend$log_n) & (sts_vend$log_n <= sts_qntl[4])), ]
-  df57 <- dplyr::inner_join(df, df57, by = c("vendor" = "vendor"))
-  df70 <- sts_vend[sts_vend$log_n > sts_qntl[4], ]
-  df70 <- dplyr::inner_join(df, df70, by = c("vendor" = "vendor"))
-
-  # Sampling using quantiles to select slices
-  nbias <- num_samples %% 4
-
-  df_sam <- dplyr::sample_n(df02, num_samples/4)
-  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df25, (num_samples/4) + nbias))
-  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df57, (num_samples/4)))
-  df_sam <- dplyr::bind_rows(df_sam, dplyr::sample_n(df70, (num_samples/4)))
-
-  df_sam <- dplyr::sample_n(df_sam, nrow(df_sam))
-  df_sam <- df_sam[, c("id", "title", "vendor", "product", "version", "annotated")]
-
-  return(df_sam)
-}
-
-nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
-
-  df <- df[, c("title", "part", "vendor", "product", "version")]
   df$len_title <- stringr::str_length(df$title)
   df$len_vendor <- stringr::str_length(df$vendor)
   df$len_product <- stringr::str_length(df$product)
@@ -595,6 +556,156 @@ nlp_cpe_feateng <- function(df = mitre::cpe.nist) {
   df$dot_version <- stringr::str_count(df$version, "[\\.]")
 
   df <- dplyr::mutate(df, pct_version = ((num_version + dot_version)/len_version)-(abc_version/len_version))
+  if (scale_log) {
+    log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
+    log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))
+
+    df <- cbind(dplyr::select(df, c("title", "part", "vendor", "product", "version")), log_cpes)
+  }
 
   return(df)
+}
+
+
+#' Title
+#'
+#' @param seed integer
+#' @param num_samples integer
+#' @param mix_config list
+#' @param ner_config list
+#' @param save_path character
+#' @param verbose logical
+#' @param train_codename character
+#'
+#' @return data.frame
+#' @export
+nlp_cpe_build_ner_trainset <- function(seed = 42,
+                                       num_samples = 10000,
+                                       mix_config = list(keep_deprecated = FALSE,
+                                                         only_wfn = FALSE,
+                                                         scale_log = FALSE,
+                                                         sample_weight = c("pca", "vendor", "none")[1],
+                                                         pca_features = c("len_vendor", "abc_vendor", "num_version", "len_version", "abc_product"),
+                                                         vendor_qntl = c(0, 0.8, 0.9, 0.99, 1)),
+                                       ner_config = list(notation = c("rasa", "offset")[1],
+                                                         vendor = TRUE,
+                                                         product = TRUE,
+                                                         version = TRUE),
+                                       save_path = file.path("C:", "DEVEL", "code", "data", "ner_trainsets"),
+                                       train_codename = "",
+                                       verbose = FALSE) {
+
+  if (verbose) print(paste0("[*] ", "Initializing creation..."))
+
+  if (verbose) print(paste0("[|] ", "setting random seed ..."))
+  set.seed(seed)
+
+  if (train_codename == "") {
+    train_name <- textclean::replace_hash(iconv(unlist(stopwords::data_stopwords_stopwordsiso),
+                                                to = 'ASCII//TRANSLIT', sub = ""),
+                                          pattern = "\\?", replacement = "")
+    train_name <- train_name[train_name != ""]
+    train_name <- train_name[stringr::str_detect(train_name, "^[a-z]+$", negate = F)]
+    train_name <- sort(unique(train_name[nchar(train_name) > 2]))
+    train_codename <- sample(train_name, 1)
+  }
+
+  p_version <- as.character(packageVersion("mitre"))
+  # root path
+  if (!dir.exists(save_path))
+    dir.create(save_path)
+
+  # version subpath
+  save_path <- file.path(save_path, paste0("v", p_version))
+  if (!dir.exists(save_path))
+    dir.create(save_path)
+
+  if (verbose) print(paste0("[|] ", "random name for trainset: ", train_codename))
+  save_path <- file.path(save_path, train_codename)
+  if (verbose) print(paste0("[|] ", " > save_path: ", save_path))
+  if (!dir.exists(save_path))
+    dir.create(save_path)
+
+  p_type <- paste0(ifelse(ner_config$vendor, "v", ""),
+                   ifelse(ner_config$product, "p", ""),
+                   ifelse(ner_config$version, "v", ""))
+  if (nchar(p_type) == 1) {
+    p_type <- ifelse(ner_config$vendor, "vend",
+                     ifelse(ner_config$product, "prod", "vers"))
+  }
+  if (verbose) print(paste0("[|] ", "identified type '", p_type, "'"))
+
+  if (verbose) print(paste0("[|] ", "loading CPE data ..."))
+  cpes <- mitre::cpe.nist
+  cpes$id <- 1:nrow(cpes)
+
+
+  if (mix_config$sample_weight == "pca") {
+    if (verbose) print(paste0("[|] ", "Sampling mix with PCA option ..."))
+    p_features <- mix_config$pca_features
+    if (verbose) print(paste0("[|] > ", "selecting features ..."))
+    if (verbose) print(paste0("[|] > ", paste(p_features, collapse = ", ")))
+
+    if (verbose) print(paste0("[|] > ", "computing stats ..."))
+    if (verbose & mix_config$scale_log) print(paste0("[|] > ", "logarithmic scaling ..."))
+    df <- nlp_cpe_feateng(df = cpes, scale_log = mix_config$scale_log)
+    sam_size <- floor((num_samples*4) / length(p_features))
+    sam_size_extra <- (num_samples*4) %% length(p_features)
+    if (verbose) print(paste0("[|] > ", "weighted sampling ..."))
+    df_sample <- dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[p_features[1]]])
+    if (length(p_features) > 1) {
+      for (i in 2:length(p_features)) {
+        df_sample <- rbind(df_sample,
+                           dplyr::sample_n(df, size = sam_size, weight = df[[p_features[i]]]))
+      }
+    }
+    df <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
+    rm(df_sample)
+    if (verbose) print(paste0("[|] > ", "PCA sampling done!"))
+  }
+
+  if (mix_config$sample_weight == "vendor") {
+    if (verbose) print(paste0("[|] ", "Sampling mix by vendor fame ..."))
+    p_features <- mix_config$vendor_qntl
+    if (verbose) print(paste0("[|] > distribution by quantiles: ", paste(p_features, collapse = ", ")))
+    df <- nlp_cpe_sample_dataset(df = cpes, num_samples = num_samples*4,
+                                 seed = seed, quantiles = mix_config$vendor_qntl)
+    df <- df[, c("id", "title", "part", "vendor", "product", "version")]
+    if (verbose) print(paste0("[|] > ", "Vendor sampling done!"))
+  }
+
+  if (verbose) print(paste0("[|] ", "Shuffling data ..."))
+  df <- dplyr::sample_n(df, nrow(df))
+
+  if (ner_config$notation == "rasa") {
+    if (verbose) print(paste0("[|] ", "Adding RASA notation ..."))
+    # Load CPEs annotated with RASA
+    df_sample <- nlp_cpe_annotate(df = df, type = p_type, kind = "RASA", strict = FALSE)
+    df_sample <- dplyr::sample_n(df_sample, num_samples)
+    if (num_samples >= 1000) {
+      name_file <- file.path(save_path, paste0("cpes_rasa_", p_type,"_", round(num_samples / 1000, 1), "k.csv"))
+    } else {
+      name_file <- file.path(save_path,paste0("cpes_rasa_", p_type,"_", num_samples, ".csv"))
+    }
+    readr::write_csv(x = df_sample[, c("title", "annotated")],
+                     file = name_file, col_names = FALSE)
+  }
+
+  if (ner_config$notation == "offset") {
+    if (verbose) print(paste0("[|] ", "Adding offsets as json entities (scapy) ..."))
+    # Load CPEs annotated with ENTITIES
+    df_sample <- mitre::nlp_cpe_annotate(df = df, type = p_type, kind = "entities", strict = FALSE)
+    df_sample <- dplyr::sample_n(df_sample, num_samples)
+
+    if (num_samples >= 1000) {
+      name_file <- file.path(save_path,paste0("cpes_entities_", p_type,"_", round(num_samples / 1000, 1), "k.csv"))
+    } else {
+      name_file <- file.path(save_path,paste0("cpes_entities_", p_type,"_", num_samples, ".csv"))
+    }
+    readr::write_csv(x = df_sample[, c("title", "annotated")],
+                     file = name_file, col_names = FALSE)
+  }
+  if (verbose) print(paste0("[.] ", "done!"))
+
+  return(df_sample)
 }
