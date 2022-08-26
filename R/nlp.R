@@ -10,7 +10,7 @@
 #' @return character
 #' @export
 str73enc <- function(name = character(), na_replace = "*") {
-  encname <- iconv(name, to = 'ASCII//TRANSLIT')
+  encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
   valid_dec_chars <- enc_valid_chars(taste = "dec", type = "input")
   valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
@@ -72,7 +72,7 @@ str73enc <- function(name = character(), na_replace = "*") {
 #' @return character
 #' @export
 str49enc <- function(name = character(), na_replace = "*") {
-  encname <- iconv(name, to = 'ASCII//TRANSLIT')
+  encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
   valid_dec_chars <- enc_valid_chars(taste = "dec", type = "output")
   valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
