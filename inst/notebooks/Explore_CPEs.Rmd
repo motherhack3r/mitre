@@ -8,6 +8,10 @@ output:
   pdf_document: default
 ---
 
+STRATEGY: Analyze characters used in official data.
+          At the end, two data sets are created, defining the charset used in
+          RNN for input and output layers.
+
 ------------------------------------------------------------------------
 
 ```{r setup, include=FALSE}

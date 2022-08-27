@@ -5,6 +5,11 @@ date: '2022-07-09'
 output: html_document
 ---
 
+STRATEGY: Use `afind` function to detect in title the position for each component.
+          At the end, three data frames are created, one for each component.
+
+-------------------------------------------
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
