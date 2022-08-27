@@ -4,12 +4,10 @@
 \alias{cpe_add_features}
 \title{Title}
 \usage{
-cpe_add_features(df = cpe.nist, scale_log = FALSE)
+cpe_add_features(df = cpe.nist)
 }
 \arguments{
 \item{df}{data.frame}
-
-\item{scale_log}{logical}
 }
 \value{
 data.frame

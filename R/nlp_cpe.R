@@ -10,9 +10,8 @@
 cpe_latest_data <- function(local_path = "inst/extdata/cpe.nist.rds", remote = F) {
   if (is.na(local_path) | remote) {
     local_path <- tempfile(fileext = ".rds")
-    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/cpes.rds",
+    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
                   destfile = local_path)
-
   }
   cpes <- readRDS(local_path)
 
