@@ -5,19 +5,24 @@
 #'
 #' @param local_path path to RDS file. NA value implies remote TRUE
 #' @param remote logical
+#' @param keep_deprecated logical
 #'
 #' @return data.frame
 #' @export
 #'
 #' @examples
 #' cpes <- mitre::cpe_latest_date(local_path = "inst/extdata/cpe.nist.rds")
-cpe_latest_data <- function(local_path = NA, remote = F) {
+cpe_latest_data <- function(local_path = NA, remote = F, keep_deprecated = F) {
   if (is.na(local_path) | remote) {
     local_path <- tempfile(fileext = ".rds")
     download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
                   destfile = local_path)
   }
   cpes <- readRDS(local_path)
+  if (!keep_deprecated) {
+    cpes <- cpes[!cpes$deprecated, ]
+  }
+  cpes <- cpes[, c("id", "title", "part", "vendor", "product", "version")]
 
   return(cpes)
 }
@@ -29,7 +34,7 @@ cpe_latest_data <- function(local_path = NA, remote = F) {
 #'
 #' @return data.frame
 #' @export
-cpe_stats <- function(df = data.frame(), only_vendor = TRUE) {
+cpe_stats <- function(df = cpe_latest_data(), only_vendor = TRUE) {
   if (only_vendor) {
     sts_cpes <- dplyr::count(df, vendor, sort = TRUE)
   } else {
@@ -79,14 +84,15 @@ cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
 
 #' Used by generic annotate cpes function
 #'
-#' @param df_ner data.frame
+#' @param df data.frame
 #' @param type character
 #'
 #' @return data.frame
 #' @export
-cpe_add_notation <- function(df_ner = data.frame(),
+cpe_add_notation <- function(df = cpe_latest_data(),
                              type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1]) {
 
+  df_ner <- df
   # Method: Use specific regex for each case and replace matches with RASA.
   print(paste0("[*] ", "RASA notation..."))
   # remove rows with escaped chars because of tagging regex
@@ -192,10 +198,7 @@ cpe_add_notation <- function(df_ner = data.frame(),
 #'
 #' @return data.frame
 #' @export
-cpe_add_features <- function(df = cpe.nist) {
-  if (!("id" %in% names(df))) {
-    df$id <- 1:nrow(df)
-  }
+cpe_add_features <- function(df = cpe_latest_data()) {
   df <- dplyr::select(df, c("id", "title", "part", "vendor", "product", "version"))
 
   df$len_title <- stringr::str_length(df$title)
