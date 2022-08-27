@@ -4,12 +4,14 @@
 \alias{cpe_latest_data}
 \title{Load CPE data frame from local file or download latest}
 \usage{
-cpe_latest_data(local_path = NA, remote = F)
+cpe_latest_data(local_path = NA, remote = F, keep_deprecated = F)
 }
 \arguments{
 \item{local_path}{path to RDS file. NA value implies remote TRUE}
 
 \item{remote}{logical}
+
+\item{keep_deprecated}{logical}
 }
 \value{
 data.frame

@@ -4,7 +4,7 @@
 \alias{cpe_add_features}
 \title{Title}
 \usage{
-cpe_add_features(df = cpe.nist)
+cpe_add_features(df = cpe_latest_data())
 }
 \arguments{
 \item{df}{data.frame}

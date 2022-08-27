@@ -4,7 +4,7 @@
 \alias{cpe_stats}
 \title{Returns data frame with grouped count by vendor and product.}
 \usage{
-cpe_stats(df = data.frame(), only_vendor = TRUE)
+cpe_stats(df = cpe_latest_data(), only_vendor = TRUE)
 }
 \arguments{
 \item{df}{data.frame}

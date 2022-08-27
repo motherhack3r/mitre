@@ -5,12 +5,12 @@
 \title{Used by generic annotate cpes function}
 \usage{
 cpe_add_notation(
-  df_ner = data.frame(),
+  df = cpe_latest_data(),
   type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1]
 )
 }
 \arguments{
-\item{df_ner}{data.frame}
+\item{df}{data.frame}
 
 \item{type}{character}
 }
