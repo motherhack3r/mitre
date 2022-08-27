@@ -1,10 +1,22 @@
 # ONLY NEEDED FOR VULNDIGGER
 
-cpe_latest_data <- function(local_path = "inst/extdata/cpe.nist.rda", remote = F) {
-  if (remote) {
-    t <- tempfile(fileext = ".rds")
-    download.file(url = )
+#' Load CPE data frame from local file or download latest
+#'
+#' @param local_path path to RDS file. NA value implies remote TRUE
+#' @param remote logical
+#'
+#' @return data.frame
+#' @export
+cpe_latest_data <- function(local_path = "inst/extdata/cpe.nist.rds", remote = F) {
+  if (is.na(local_path) | remote) {
+    local_path <- tempfile(fileext = ".rds")
+    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/cpes.rds",
+                  destfile = local_path)
+
   }
+  cpes <- readRDS(local_path)
+
+  return(cpes)
 }
 
 #' Returns data frame with grouped count by vendor and product.
