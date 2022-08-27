@@ -4,7 +4,7 @@
 \alias{cpe_latest_data}
 \title{Load CPE data frame from local file or download latest}
 \usage{
-cpe_latest_data(local_path = "inst/extdata/cpe.nist.rds", remote = F)
+cpe_latest_data(local_path = NA, remote = F)
 }
 \arguments{
 \item{local_path}{path to RDS file. NA value implies remote TRUE}
@@ -16,4 +16,7 @@ data.frame
 }
 \description{
 Load CPE data frame from local file or download latest
+}
+\examples{
+cpes <- mitre::cpe_latest_date(local_path = "inst/extdata/cpe.nist.rds")
 }

@@ -2,6 +2,7 @@
 
 export(build_network)
 export(cpe_add_features)
+export(cpe_add_notation)
 export(cpe_encode_name)
 export(cpe_latest_data)
 export(cpe_stats)

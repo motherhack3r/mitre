@@ -1,5 +1,6 @@
 # ONLY NEEDED FOR VULNDIGGER
 
+
 #' Load CPE data frame from local file or download latest
 #'
 #' @param local_path path to RDS file. NA value implies remote TRUE
@@ -7,7 +8,10 @@
 #'
 #' @return data.frame
 #' @export
-cpe_latest_data <- function(local_path = "inst/extdata/cpe.nist.rds", remote = F) {
+#'
+#' @examples
+#' cpes <- mitre::cpe_latest_date(local_path = "inst/extdata/cpe.nist.rds")
+cpe_latest_data <- function(local_path = NA, remote = F) {
   if (is.na(local_path) | remote) {
     local_path <- tempfile(fileext = ".rds")
     download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
@@ -79,6 +83,7 @@ cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
 #' @param type character
 #'
 #' @return data.frame
+#' @export
 cpe_add_notation <- function(df_ner = data.frame(),
                              type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1]) {
 
@@ -88,20 +93,18 @@ cpe_add_notation <- function(df_ner = data.frame(),
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
   df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
-  # replace WFN _ to space
+  # replace WFN _ to space in vendor and product
   df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
   df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
   # remove titles with equal vendor and product
   df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
-  # lowercase title
-  # df_ner$title <- tolower(df_ner$title)
-  # vendor entities candidates
+  # vendor candidates
   df_ner$train_v <- rep(F, nrow(df_ner))
   df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor, ignore_case = TRUE))
-  # product entities candidates
+  # product candidates
   df_ner$train_p <- rep(F, nrow(df_ner))
   df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product, ignore_case = TRUE))
-  # version entities candidates
+  # version candidates
   df_ner$train_r <- rep(F, nrow(df_ner))
   df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version, ignore_case = TRUE))
 
