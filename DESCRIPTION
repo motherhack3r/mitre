@@ -31,7 +31,8 @@ Imports:
     httr,
     utils,
     DescTools,
-    stringdist
+    stringdist,
+    datawizard
 RoxygenNote: 7.2.1
 Suggests: 
     rmarkdown,

@@ -40,6 +40,7 @@ cpe_stats <- function(df = cpe_latest_data(), only_vendor = TRUE) {
   } else {
     sts_cpes <- dplyr::count(df, vendor, product, sort = TRUE)
   }
+  sts_cpes$popular <- datawizard::categorize(sts_cpes$n, split = "quantile", n_groups = 11)
 
   return(sts_cpes)
 }
@@ -221,9 +222,9 @@ cpe_add_features <- function(df = cpe_latest_data()) {
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z\\_]") / df$len_product
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z\\.]") / df$len_version
 
-  df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
-  df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
-  df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
+  # df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
+  # df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
+  # df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
 
   return(df)
 }
