@@ -12,7 +12,12 @@ params:
   ner_product: TRUE
   ner_version: FALSE
   num_samples: 10000
+  acum_prop: 0.75
 ---
+
+STRATEGY: PCA based on length and char count features
+
+---------------------------
 
 ```{r imports_setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -23,23 +28,18 @@ suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE))
 
 # Parameters
 p_version <- params$path_vers
-p_seed <- as.character(params$seed)
+p_seed <- as.numeric(params$seed)
 p_data_path <- params$data_path
 p_num_samples <- params$num_samples   # value 0 means all
 p_kind <- params$output_kind         # RASA | entities | all
-p_type <- ifelse(test = (params$ner_vendor & params$ner_product & params$ner_version), 
-                 yes = "vpv", 
-                 no = ifelse(test = (params$ner_vendor & params$ner_product & !params$ner_version), 
-                             yes = "vp", 
-                             no = ifelse(test = (!params$ner_vendor & params$ner_product & params$ner_version), 
-                                         yes = "pv", 
-                                         no = ifelse(test = (params$ner_vendor & !params$ner_product & params$ner_version), 
-                                                     yes = "vv", 
-                                                     no = ifelse(test = (params$ner_vendor), 
-                                                                 yes = "vend", 
-                                                                 no = ifelse(test = (params$ner_product), 
-                                                                             yes = "prod", 
-                                                                             no = "vers"))))))
+# Create type tag: vpv, vp, pv, vv, vend, prod or vers
+p_type <- paste0(ifelse(params$ner_vendor, "v", ""),
+                 ifelse(params$ner_product, "p", ""),
+                 ifelse(params$ner_version, "v", ""))
+if (nchar(p_type) == 1) {
+  p_type <- ifelse(params$ner_vendor, "vend",
+                   ifelse(params$ner_product, "prod", "vers"))
+}
 
 set.seed(p_seed)
 ```
@@ -72,7 +72,7 @@ First we need to enrich the data. For each column:
  - Number of symbols: `sym_*`
 
 ```{r feateng}
-cpes <- mitre::cpe.nist
+cpes <- mitre::cpe_latest_data()
 
 df <- mitre::nlp_cpe_feateng(df = cpes)
 df_sw <- mitre::nlp_cpe_feateng(df = cpes[cpes$part == "a", ])
@@ -84,8 +84,8 @@ df_hw <- mitre::nlp_cpe_feateng(df = cpes[cpes$part == "h", ])
 Now we are ready to explore them with a PCA...
 
 ```{r pca_summary}
-acum_prop <- 0.75
-pca <- prcomp(dplyr::select(df, -c("title", "part", "vendor", "product", "version")), scale = T)
+acum_prop <- params$acum_prop 
+pca <- prcomp(dplyr::select(df, -c("id", "title", "part", "vendor", "product", "version")), scale = T)
 pca_sum <- summary(pca)
 pc_selected  <- sum(as.data.frame(pca_sum$importance)[3,] < acum_prop) + 1
 pca_sum
@@ -191,21 +191,21 @@ Finally the features to use for weighted sampling are: **`r paste(feat_lite_sele
 ## Sample data set using
 
 ```{r sample_dist}
-sam_size <- floor((p_num_samples*2) / length(feat_lite_selected))
-sam_size_extra <- (p_num_samples*2) %% length(feat_lite_selected)
-
-df_sample <- rbind(dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[feat_lite_selected[1]]]),
-            dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[2]]]),
-            dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[3]]]),
-            dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[4]]]),
-            dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[5]]]))
-df_sample$id <- 1:nrow(df_sample)
-df_sample <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
-
-
-df_rasa <- mitre::nlp_cpe_annotate(df = df_sample, type = p_type, kind = "RASA")
-df_rasa <- dplyr::sample_n(df_rasa, p_num_samples)
-saveRDS(df_rasa, file.path(name_folder, paste0("sampling_cpes_rasa.rds")))
+# sam_size <- floor((p_num_samples*2) / length(feat_lite_selected))
+# sam_size_extra <- (p_num_samples*2) %% length(feat_lite_selected)
+# 
+# df_sample <- rbind(dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[feat_lite_selected[1]]]),
+#             dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[2]]]),
+#             dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[3]]]),
+#             dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[4]]]),
+#             dplyr::sample_n(df, size = sam_size, weight = df[[feat_lite_selected[5]]]))
+# df_sample$id <- 1:nrow(df_sample)
+# df_sample <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
+# 
+# 
+# df_rasa <- mitre::nlp_cpe_annotate(df = df_sample, type = p_type, kind = "RASA")
+# df_rasa <- dplyr::sample_n(df_rasa, p_num_samples)
+# saveRDS(df_rasa, file.path(name_folder, paste0("sampling_cpes_rasa.rds")))
 
 ```
 
