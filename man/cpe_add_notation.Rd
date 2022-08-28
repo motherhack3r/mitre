@@ -6,13 +6,16 @@
 \usage{
 cpe_add_notation(
   df = cpe_latest_data(),
-  type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1]
+  type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1],
+  verbose = FALSE
 )
 }
 \arguments{
 \item{df}{data.frame}
 
 \item{type}{character}
+
+\item{verbose}{logical}
 }
 \value{
 data.frame
