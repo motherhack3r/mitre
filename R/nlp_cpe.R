@@ -255,27 +255,33 @@ cpe_add_features <- function(df = cpe_latest_data()) {
   return(df)
 }
 
-
-
 #' Title
 #'
-#' @param x character
+#' @param df data.frame
+#' @param verbose logical
 #'
-#' @return characer
+#' @return data.frame
 #' @export
-cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
-  # encode vendor string to WFN
-  x <- tolower(x)
-  x <- stringr::str_replace_all(x, "(\\s|,)+(corporation|ltd|llc|inc).{0,1}$", "")
-  x <- stringr::str_replace_all(x, "(\\s|,)+software(\\s|,){0,1}", " ")
-  x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(\\s|,)+foundation(\\s|,){0,1}", " ")
-  x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "([^[:alnum:]])", "\\\\\\1")
-  x <- stringr::str_replace_all(x, "\\\\\\s", "_")
-  x <- str2wfn_str(x)
+cpe_local_inventory <- function(df = getInventory(), verbose = FALSE) {
 
-  return(x)
+  df_inv <- df
+  df_inv$wfn_vendor <- cpe_wfn_vendor(df_inv$vendor)
+  df_inv$wfn_product <- cpe_wfn_product(df_inv$name)
+  df_inv$wfn_version <- stringr::str_replace_all(df_inv$name, "(.*)(\\s|,|-)+v*([\\d|\\.]+)(.*)$", "\\3")
+
+  # Remove vendor if exists in product and not versions
+  df_inv$wfn_product <- stringr::str_replace_all(string = df_inv$wfn_product, pattern = paste0("^(", df_inv$wfn_vendor,")( .+$|$)"), "\\2")
+  df_inv$wfn_version <- stringr::str_replace_all(df_inv$name, "(.*)(\\s|,|-)+v*([\\d|\\.]+)(.*)$", "\\3")
+  df_inv$wfn_version[!grepl("\\d+(\\.\\d+)+", df_inv$name)] <- df_inv$version[!grepl("\\d+(\\.\\d+)+", df_inv$name)]
+
+  df$title = paste(df_inv$wfn_vendor, df_inv$wfn_product, df_inv$wfn_version)
+  df$title <- stringr::str_replace_all(df$title, "\\s+", " ")
+  df$title <- stringr::str_trim(df$title)
+
+  df <- dplyr::rename(df, product = name)
+  df <- df[, c("title", "vendor", "product", "version")]
+
+  return(df)
 }
 
 #' Title
@@ -284,21 +290,42 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
 #'
 #' @return character
 #' @export
+cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
+  # Normalize vendor: First apply translit, then remove bad words and HTML entities
+  x <- iconv(x, to = 'ASCII//TRANSLIT')
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(corporation|ltd|llc|inc).{0,1}$", "")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+software(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
+  x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
+
+  return(x)
+}
+
+
+#' Title
+#'
+#' @param x character
+#'
+#' @return character
+#' @export
 cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
-  # encode product string to WFN
-  x <- tolower(x)
+  x <- iconv(x, to = 'ASCII//TRANSLIT')
   x <- stringr::str_replace_all(x, "\\(.*$", "")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(\\s|,|-)+v*(\\d+\\.{0,1})+\\.{0,1}\\d*$", "")
   x <- stringr::str_replace_all(x, "\\s", "_")
   x <- stringr::str_replace_all(x, "_\\-_.*$", "")
   x <- stringr::str_replace_all(x, "_\\d+\\.\\d+.*$", "")
-  x <- stringr::str_replace_all(x, "_(x|amd)(32|64|86).*$", "")
-  x <- stringr::str_replace_all(x, "_for_.*$", "")
+  x <- stringr::str_replace_all(x, "(?i)_(x|amd)(32|64|86).*$", "")
+  x <- stringr::str_replace_all(x, "(?i)_for_.*$", "")
   x <- stringr::str_replace_all(x, "\\(\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(r\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(tm\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(c\\)", "")
+  x <- stringr::str_replace_all(x, "_", " ")
   x <- stringr::str_trim(x)
-
-  x <- str2wfn_str(x)
 
   return(x)
 }

@@ -10,7 +10,7 @@ cpe_wfn_vendor(x = "Microsoft Corporation")
 \item{x}{character}
 }
 \value{
-characer
+character
 }
 \description{
 Title
