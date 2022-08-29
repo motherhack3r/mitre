@@ -38,5 +38,13 @@ data-raw/**/*.json
 data-raw/**/*.xml
 data-raw/**/*.gz
 data-raw/**/*.zip
-inst/doc
+# Data sets
 data
+# notebook outputs and temporal files
+inst/notebooks/**/*.rds
+inst/notebooks/**/*.bin
+inst/notebooks/**/*.png
+inst/notebooks/**/*.html
+inst/notebooks/**/*.h5
+inst/notebooks/**/*.csv
+

@@ -41,6 +41,7 @@ new.cols <- c("std", "std.v", "part", "vendor", "product",
               "target_sw", "target_hw", "other")
 cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
 cpes <- tidyr::separate(data = cpes, col = "cpe.23", into = new.cols, sep = ":", remove = F)
+cpes$id <- 1:nrow(cpes)
 cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
 
 cpe.nist <- cpes

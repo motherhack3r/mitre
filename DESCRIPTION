@@ -1,7 +1,7 @@
 Package: mitre
 Type: Package
 Title: Cybersecurity MITRE Standards Data and Digraphs
-Version: 1.0.0.9026
+Version: 1.0.0.9029
 Authors@R: person("Humbert", "Costas", email = "humbert.costas@gmail.com",
                role = c("aut", "cre"))
 Maintainer: Humbert Costas <humbert.costas@gmail.com>
@@ -31,7 +31,8 @@ Imports:
     httr,
     utils,
     DescTools,
-    stringdist
+    stringdist,
+    datawizard
 RoxygenNote: 7.2.1
 Suggests: 
     rmarkdown,

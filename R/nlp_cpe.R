@@ -1,4 +1,215 @@
-cpe_for_ner <- function(df = cpe.nist) {
+# ONLY NEEDED FOR VULNDIGGER
+
+
+#' Load CPE data frame from local file or download latest
+#'
+#' @param local_path path to RDS file. NA value implies remote TRUE
+#' @param remote logical
+#' @param keep_deprecated logical
+#' @param allcols logical
+#' @param verbose logical
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+#' cpes <- mitre::cpe_latest_date(local_path = "inst/extdata/cpe.nist.rds")
+cpe_latest_data <- function(local_path = NA, remote = F, keep_deprecated = F, allcols = F, verbose = F) {
+  if (is.na(local_path) | remote) {
+    local_path <- tempfile(fileext = ".rds")
+    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
+                  destfile = local_path, quiet = !verbose)
+  }
+  cpes <- readRDS(local_path)
+  if (!keep_deprecated) {
+    cpes <- cpes[!cpes$deprecated, ]
+  }
+
+  if (!allcols) {
+    cpes <- cpes[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+  }
+
+  return(cpes)
+}
+
+#' Returns data frame with grouped count by vendor and product.
+#'
+#' @param df data.frame
+#' @param only_vendor logical
+#'
+#' @return data.frame
+#' @export
+cpe_stats <- function(df = cpe_latest_data(), only_vendor = TRUE) {
+  if (only_vendor) {
+    sts_cpes <- dplyr::count(df, vendor, sort = TRUE)
+  } else {
+    sts_cpes <- dplyr::count(df, vendor, product, sort = TRUE)
+  }
+  sts_cpes$popular <- datawizard::categorize(sts_cpes$n, split = "quantile", n_groups = 11)
+
+  return(sts_cpes)
+}
+
+#' Returns a custom list of valid chars defined in notebook Explore_CPE_charset.
+#' The parameters are used to customize the output.
+#'
+#' @param taste character, type of output "char", "dec", or "hex"
+#' @param add_tab logical, include tab char
+#' @param add_enter logical, include enter char
+#' @param add_underline logical, include "_"
+#' @param type character, returns valid chars for "input" or "output"
+#'
+#' @return character
+#' @export
+cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
+                            add_tab = FALSE, add_enter = FALSE,
+                            add_underline = FALSE,
+                            type = c("input", "output")[1]) {
+
+  # Subset of CPE accepted characters in WFN
+  valid_chars <- c(32,33,38,40,41, 43:58, 65:90, 97:122)
+  if (type == "output")
+    # lowercase
+    valid_chars <- c(32,33,38,40,41, 43:58, 97:122)
+
+  # Add extra characters
+  if (add_enter) valid_chars <- c(10, valid_chars)
+  if (add_tab) valid_chars <- c(9, valid_chars)
+  if (add_underline) valid_chars <- c(95, valid_chars)
+
+  # output as characters, hexadecimal or decimal
+  if (taste == "char") {
+    valid_chars <- sapply(valid_chars, DescTools::AscToChar)
+  } else if (taste == "hex") {
+    valid_chars <- sapply(valid_chars, DescTools::DecToHex)
+  }
+
+  return(valid_chars)
+}
+
+
+#' Used by generic annotate cpes function
+#'
+#' @param df data.frame
+#' @param type character
+#' @param verbose logical
+#'
+#' @return data.frame
+#' @export
+cpe_add_notation <- function(df = cpe_latest_data(),
+                             type = c("vpv", "vp", "pv", "vv", "vend", "prod", "vers")[1],
+                             verbose = FALSE) {
+  if (verbose) print(paste0("[*] ", "RASA notation..."))
+  df_ner <- df
+  # Method: Use specific regex for each case and replace matches with RASA.
+  if (verbose) print(paste0("[|] ", "Remove rows with escaped chars not compatibles"))
+  # remove rows with escaped chars because of tagging regex
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$vendor), ]
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$product), ]
+  df_ner <- df_ner[!grepl(pattern = "\\\\", df_ner$version), ]
+  if (verbose) print(paste0("[|] ", "replace WFN _ to space in vendor and product"))
+  # replace WFN _ to space in vendor and product
+  df_ner$vendor <- stringr::str_replace_all(df_ner$vendor, "_", " ")
+  df_ner$product <- stringr::str_replace_all(df_ner$product, "_", " ")
+  if (verbose) print(paste0("[|] ", "remove titles with equal vendor and product"))
+  # remove titles with equal vendor and product
+  df_ner <- df_ner[which(df_ner$vendor != df_ner$product), ]
+  if (verbose) print(paste0("[|] ", "Detecting vendor candidates in titles"))
+  # vendor candidates
+  df_ner$train_v <- rep(F, nrow(df_ner))
+  df_ner$train_v <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$vendor, ignore_case = TRUE))
+  if (verbose) print(paste0("[|] ", "Detecting product candidates in titles"))
+  # product candidates
+  df_ner$train_p <- rep(F, nrow(df_ner))
+  df_ner$train_p <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$product, ignore_case = TRUE))
+  if (verbose) print(paste0("[|] ", "Detecting version candidates in titles"))
+  # version candidates
+  df_ner$train_r <- rep(F, nrow(df_ner))
+  df_ner$train_r <- stringr::str_detect(df_ner$title, stringr::fixed(df_ner$version, ignore_case = TRUE))
+
+  if (type == "vpv") {
+    if (verbose) print(paste0(" |> VPV: ", "Keep only titles with all entities"))
+    # Keep only titles with all entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_p & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> VPV: ", "RASA notation for vendor + product + version"))
+    ## vendor + product + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5\\[\\6\\]\\(cpe_version\\)\\7")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  } else if (type == "vp") {
+    if (verbose) print(paste0(" |> VP: ", "Keep only titles with vendor and product entities"))
+    # Keep only titles with vendor and product entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_p)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> VP: ", "RASA notation for vendor + product"))
+    ## vendor + product
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$product,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_product\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_product\\).*", df_ner$annotated)), ]
+  } else if (type == "pv") {
+    if (verbose) print(paste0(" |> PV: ", "Keep only titles with product and version entities"))
+    # Keep only titles with product and version entities
+    df_ner <- dplyr::filter(df_ner, train_p & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> PV: ", "RASA notation for product + version"))
+    ## product + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$product,")(\\s.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  } else if (type == "vv") {
+    if (verbose) print(paste0(" |> VV: ", "Keep only titles with vendor and version entities"))
+    # Keep only titles with vendor and version entities
+    df_ner <- dplyr::filter(df_ner, train_v & train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> VV: ", "RASA notation for vendor + version"))
+    ## vendor + version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$vendor,")(\\s.*)(", df_ner$version,")(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3\\[\\4\\]\\(cpe_version\\)\\5")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*\\(cpe_version\\).*", df_ner$annotated)), ]
+  } else if (type == "vend") {
+    if (verbose) print(paste0(" |> VENDOR: ", "Keep only titles with vendor entities"))
+    if (verbose) print(paste0(" |> VENDOR: ", "RASA notation for vendor"))
+    # Keep only titles with vendor entity
+    df_ner <- dplyr::filter(df_ner, train_v)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    ## vendor
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$vendor,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_vendor\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_vendor\\).*", df_ner$annotated)), ]
+  } else if (type == "prod") {
+    if (verbose) print(paste0(" |> PRODUCT: ", "Keep only titles with product entities"))
+    # Keep only titles with product entity
+    df_ner <- dplyr::filter(df_ner, train_p)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> PRODUCT: ", "RASA notation for product"))
+    ## product
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$product,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_product\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_product\\).*", df_ner$annotated)), ]
+  } else if (type == "vers") {
+    if (verbose) print(paste0(" |> VERSION: ", "Keep only titles with version entities"))
+    # Keep only titles with version entity
+    df_ner <- dplyr::filter(df_ner, train_r)
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    if (verbose) print(paste0(" |> VERSION: ", "RASA notation for version"))
+    ## version
+    df_ner$annotated <- stringr::str_replace_all(string = df_ner$title,
+                                                 pattern = paste0("(?i)(.*)(", df_ner$version,")(\\s.*)(.*)"),
+                                                 replacement = "\\1\\[\\2\\]\\(cpe_version\\)\\3")
+    df_ner <- df_ner[which(grepl(pattern = ".*\\(cpe_version\\).*", df_ner$annotated)), ]
+  } else {
+    df_ner <- dplyr::select(df_ner, -train_v, -train_p, -train_r)
+    print("[ERROR] type not valid. Read manual to check allowed values.")
+  }
+
+  df <- dplyr::left_join(df, df_ner[, c("id", "annotated")], by = "id")
 
   return(df)
 }
@@ -9,12 +220,7 @@ cpe_for_ner <- function(df = cpe.nist) {
 #'
 #' @return data.frame
 #' @export
-cpe_add_features <- function(df = cpe.nist) {
-# cpe_add_features <- function(df = cpe.nist, scale_log = FALSE) {
-    if (!("id" %in% names(df))) {
-    df$id <- 1:nrow(df)
-    # df$uuid <- uuid::UUIDgenerate(n = nrow(df))
-  }
+cpe_add_features <- function(df = cpe_latest_data()) {
   df <- dplyr::select(df, c("id", "title", "part", "vendor", "product", "version"))
 
   df$len_title <- stringr::str_length(df$title)
@@ -42,16 +248,84 @@ cpe_add_features <- function(df = cpe.nist) {
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z\\_]") / df$len_product
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z\\.]") / df$len_version
 
-  # if (scale_log) {
-  #   log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
-  #   log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))
-  #
-  #   df <- cbind(dplyr::select(df, c("title", "part", "vendor", "product", "version")), log_cpes)
-  # }
-
-  df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
-  df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
-  df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
+  # df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
+  # df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
+  # df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
 
   return(df)
+}
+
+#' Title
+#'
+#' @param df data.frame
+#' @param verbose logical
+#'
+#' @return data.frame
+#' @export
+cpe_local_inventory <- function(df = getInventory(), verbose = FALSE) {
+
+  df_inv <- df
+  df_inv$wfn_vendor <- cpe_wfn_vendor(df_inv$vendor)
+  df_inv$wfn_product <- cpe_wfn_product(df_inv$name)
+  df_inv$wfn_version <- stringr::str_replace_all(df_inv$name, "(.*)(\\s|,|-)+v*([\\d|\\.]+)(.*)$", "\\3")
+
+  # Remove vendor if exists in product and not versions
+  df_inv$wfn_product <- stringr::str_replace_all(string = df_inv$wfn_product, pattern = paste0("^(", df_inv$wfn_vendor,")( .+$|$)"), "\\2")
+  df_inv$wfn_version <- stringr::str_replace_all(df_inv$name, "(.*)(\\s|,|-)+v*([\\d|\\.]+)(.*)$", "\\3")
+  df_inv$wfn_version[!grepl("\\d+(\\.\\d+)+", df_inv$name)] <- df_inv$version[!grepl("\\d+(\\.\\d+)+", df_inv$name)]
+
+  df$title = paste(df_inv$wfn_vendor, df_inv$wfn_product, df_inv$wfn_version)
+  df$title <- stringr::str_replace_all(df$title, "\\s+", " ")
+  df$title <- stringr::str_trim(df$title)
+
+  df <- dplyr::rename(df, product = name)
+  df <- df[, c("title", "vendor", "product", "version")]
+
+  return(df)
+}
+
+#' Title
+#'
+#' @param x character
+#'
+#' @return character
+#' @export
+cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
+  # Normalize vendor: First apply translit, then remove bad words and HTML entities
+  x <- iconv(x, to = 'ASCII//TRANSLIT')
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(corporation|ltd|llc|inc).{0,1}$", "")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+software(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
+  x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
+
+  return(x)
+}
+
+
+#' Title
+#'
+#' @param x character
+#'
+#' @return character
+#' @export
+cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
+  x <- iconv(x, to = 'ASCII//TRANSLIT')
+  x <- stringr::str_replace_all(x, "\\(.*$", "")
+  x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(\\s|,|-)+v*(\\d+\\.{0,1})+\\.{0,1}\\d*$", "")
+  x <- stringr::str_replace_all(x, "\\s", "_")
+  x <- stringr::str_replace_all(x, "_\\-_.*$", "")
+  x <- stringr::str_replace_all(x, "_\\d+\\.\\d+.*$", "")
+  x <- stringr::str_replace_all(x, "(?i)_(x|amd)(32|64|86).*$", "")
+  x <- stringr::str_replace_all(x, "(?i)_for_.*$", "")
+  x <- stringr::str_replace_all(x, "\\(\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(r\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(tm\\)", "")
+  x <- stringr::str_replace_all(x, "(?i)\\(c\\)", "")
+  x <- stringr::str_replace_all(x, "_", " ")
+  x <- stringr::str_trim(x)
+
+  return(x)
 }
