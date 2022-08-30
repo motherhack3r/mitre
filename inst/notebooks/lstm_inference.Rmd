@@ -63,10 +63,26 @@ suppressPackageStartupMessages(library(dplyr))
 
 
 ```{r get_inventory, cache=TRUE}
-df_inventory <- mitre::getInventory()
+# df_inventory <- mitre::getInventory()
+```
+
+
+```{r prepare_inventory, cache=TRUE}
+# # Adapt SCCM inventory to CPE data frame
+# df_inventory$deprecated <- FALSE
+# df_inventory$title <- stringr::str_trim(paste(df_inventory$vendor, df_inventory$name))
+# names(df_inventory)[names(df_inventory) == "name"] <- "product"
+# df_inventory$id <- 1:nrow(df_inventory)
+# df_inventory <- df_inventory[, c("id", "title", "vendor", "product", "version", "deprecated")]
+# # lowercase title
+# df_inventory$title <- tolower(df_inventory$title)
+# 
+# df_input <- mitre::nlp_cpe_dataset(df_inventory)
 ```
 
 ```{r get_inventory, cache=TRUE}
+df_inventory <- mitre::cpe_local_inventory()
+
 # kk <- df_inventory %>%
 #   bind_cols(
 #     bind_rows(apply(df_inventory, 1,
@@ -76,19 +92,6 @@ df_inventory <- mitre::getInventory()
 #                                  dplyr::bind_rows(apply(df_inventory, 1, 
 #                                                         function(x) 
 #                                                           as.data.frame(stringdist::afind(x[1], x[2])))))
-```
-
-```{r prepare_inventory, cache=TRUE}
-# Adapt SCCM inventory to CPE data frame
-df_inventory$deprecated <- FALSE
-df_inventory$title <- stringr::str_trim(paste(df_inventory$vendor, df_inventory$name))
-names(df_inventory)[names(df_inventory) == "name"] <- "product"
-df_inventory$id <- 1:nrow(df_inventory)
-df_inventory <- df_inventory[, c("id", "title", "vendor", "product", "version", "deprecated")]
-# lowercase title
-df_inventory$title <- tolower(df_inventory$title)
-
-df_input <- mitre::nlp_cpe_dataset(df_inventory)
 ```
 
 ## Load the model
