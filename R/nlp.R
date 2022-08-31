@@ -10,7 +10,7 @@
 #' @return character
 #' @export
 str73enc <- function(name = character(), na_replace = "*") {
-  encname <- iconv(name, to = 'ASCII//TRANSLIT')
+  encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
   valid_dec_chars <- enc_valid_chars(taste = "dec", type = "input")
   valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
@@ -72,7 +72,7 @@ str73enc <- function(name = character(), na_replace = "*") {
 #' @return character
 #' @export
 str49enc <- function(name = character(), na_replace = "*") {
-  encname <- iconv(name, to = 'ASCII//TRANSLIT')
+  encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
   valid_dec_chars <- enc_valid_chars(taste = "dec", type = "output")
   valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
@@ -553,6 +553,9 @@ nlp_cpe_feateng <- function(df = nlp_cpe_dataset(), scale_log = FALSE) {
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z]")
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z]")
 
+  df$dot_version <- stringr::str_count(df$version, "[\\.]")
+
+  df <- dplyr::mutate(df, pct_version = ((num_version + dot_version)/len_version)-(abc_version/len_version))
   if (scale_log) {
     log_cpes <- dplyr::select(df, -c("title", "part", "vendor", "product", "version"))
     log_cpes <- as.data.frame.matrix(apply(log_cpes, 2, function(x) log(x + 1)))

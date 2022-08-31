@@ -36,7 +36,6 @@ if (nchar(p_type) == 1) {
   p_type <- ifelse(params$ner_vendor, "vend",
                    ifelse(params$ner_product, "prod", "vers"))
 }
-
 set.seed(p_seed)
 ```
 

@@ -17,5 +17,6 @@ NULL
 #' Each standard is a list of data frames that represents the entities of the
 #' standard and its relationships.
 #'
+#' @export
 #' @format A list of standards, were every standard is a list of data frames
 "standards"
