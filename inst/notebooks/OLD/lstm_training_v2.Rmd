@@ -17,9 +17,9 @@ knitr::opts_chunk$set(
 ## Set parameters
 
 ```{r }
-codename <- "follows"
+codename <- "parot"
 
-col2predict <- "version"
+col2predict <- "product"
 seed <- 43
 num_samples <- 20000  # Number of samples to train on.
 test_size <- 0.05 # Slice percentage from num_samples
@@ -69,11 +69,18 @@ suppressPackageStartupMessages(library(dplyr))
 ## Create Training set
 
 ```{r custom_train_Set}
-df <- mitre::nlp_cpe_dataset()
+# raw_cpes <- mitre::standards$cpe$cpe.nist
+raw_cpes <- readRDS("../extdata/cpe.nist.rds")
+
 # remove rows with escaped chars because of tagging regex
-df <- df[!grepl(pattern = "\\\\", df[, col2predict]), ]
+df <- raw_cpes[!grepl(pattern = "\\\\", raw_cpes[, col2predict]), ]
 # replace WFN _ to space
-df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
+# df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
+# select trainable rows
+df <- cpe_add_features(df)
+# traincol <- paste0("train_", col2predict)
+# traincol <- df[, traincol]
+# df <- df[traincol, ]
 
 cpes <- nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
 cpes <- cpes[, c("title", col2predict)]
