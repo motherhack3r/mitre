@@ -319,7 +319,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_sccm$wfn_product <- stringr::str_trim(df_sccm$wfn_product)
   df_sccm$bad_product <- (stringr::str_count(df_sccm$wfn_product, "[^a-zA-Z0-9 \\.]")
                          / sapply(df_sccm$wfn_product, nchar)
-  ) > 0.2
+                         ) > 0.2
   df_product <- df_sccm[!df_sccm$bad_product, c("id", "wfn_product")]
   df_product <- dplyr::rename(df_product, product = wfn_product)
   df_product$wfn_product <- mitre::cpe_wfn_product(df_product$product)
@@ -327,8 +327,16 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_product <- dplyr::rename(df_product, product = wfn_product)
 
   # Clean version strings
-  df_sccm$wfn_version <- stringr::str_replace_all(df_sccm$version, "(.*)(\\s|,|-)+v*([\\d|\\.]+)(.*)$", "\\3")
-  df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))] <- gsub(", ", ".", df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))])
+  df_sccm$wfn_version <- df_sccm$version
+  df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))] <-
+    gsub("\\, ", "\\.", df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))])
+  df_sccm$wfn_version[(grepl("\\d+(,\\d+)+", df_sccm$wfn_version))] <-
+    gsub("\\,", "\\.", df_sccm$wfn_version[(grepl("\\d+(,\\d+)+", df_sccm$wfn_version))])
+  df_sccm$wfn_version[(grepl("\\d+(\\. \\d+)+", df_sccm$wfn_version))] <-
+    gsub("\\. ", "\\.", df_sccm$wfn_version[(grepl("\\d+(\\. \\d+)+", df_sccm$wfn_version))])
+
+  df_sccm$wfn_version <- stringr::str_extract(df_sccm$wfn_version, "\\d+(\\.\\d+)*")
+  # df_sccm$wfn_version <- stringr::str_replace_all(df_sccm$wfn_version, "(.*)(\\s|,|-)+[vers\\.]*([\\d|\\.]+)(.*)$", "\\3")
   df_version <- df_sccm[, c("id", "wfn_version")]
   df_version <- dplyr::rename(df_version, version = wfn_version)
 
@@ -339,6 +347,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$vendor[is.na(df_inv$vendor)] <- ""
   # df_inv <- dplyr::full_join(df_inv, df_product, by = "id")
   df_inv$product[is.na(df_inv$product)] <- ""
+  df_inv$version[is.na(df_inv$version)] <- ""
 
   df_inv$title = paste(df_inv$vendor, df_inv$product, df_inv$version)
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\s+", " ")
