@@ -20,13 +20,25 @@ ubisoft_url <- "https://github.com/humbertcostas/vulnmine/raw/master/data/csv/v_
 df_ubi_raw <- read.csv("../extdata/ubisoft3.csv", header = T, sep = "|", fill = T)
 
 df_ubi <- df_ubi_raw %>% select(Publisher0, DisplayName0, Version0)
-names(df_ubi) <- c("vendor", "name", "version")
+names(df_ubi) <- c("vendor", "product", "version")
 
-df <- mitre::cpe_local_inventory(df = df_ubi)
+write.csv(df_ubi[,c("product", "vendor", "version")], "../extdata/ubisoft_clean.csv", row.names = FALSE, col.names = TRUE)
+
+df <- mitre::cpe_sccm_inventory(path_sccm = "../extdata/ubisoft_clean.csv", verbose = T)
+df <- df[2:nrow(df), ]
 
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
+table(is.na(df$title))
+```
+
+```{r}
+df <- df[!is.na(df$title),]
+
+df[1,]
+```
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
