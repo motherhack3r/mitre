@@ -1,5 +1,5 @@
 col2predict <- "version"
-num_samples <- 100000
+num_samples <- 200000
 seed <- 42
 
 load("inst/extdata/cpe.nist.rda")
@@ -14,18 +14,10 @@ df_lstm <- df_lstm[!(grepl("\\t", df_lstm$vendor)), ]
 df_lstm <- df_lstm[!(grepl("\\t", df_lstm$product)), ]
 df_lstm <- df_lstm[!(grepl("\\t", df_lstm$version)), ]
 
-df_lstm <- df_lstm[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+df_lstm <- df_lstm[, c("id", "title", "cpe.23", "part", "vendor", "product", "version", "deprecated")]
 
-df <- mitre::nlp_cpe_dataset(df = df_lstm, keep_deprecated = T)
-df <- df[, c("title", col2predict, "id")]
+df <- mitre::cpe_lstm_dataset(df = df_lstm)
+df <- mitre::cpe_add_features(df)
 
-
-# remove rows with escaped chars because of tagging regex
-# df <- df[!grepl(pattern = "\\\\", df[, col2predict]), ]
-# replace WFN _ to space
-# df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
-
-# cpes <- mitre::nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
-# cpes <- cpes[, c("title", col2predict)]
-
-readr::write_delim(x = df, file = "C:/DEVEL/code/data/lstm_version_trainset.csv", delim = "\t", quote = "none")
+df_train <- df[df$train_version, c("title", col2predict, "cpe.23")]
+readr::write_delim(x = df_train, file = "C:/DEVEL/code/data/lstm_version_trainset.csv", delim = "\t", quote = "none")
