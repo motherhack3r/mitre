@@ -25,9 +25,9 @@ df_copy <- df
 
 
 str2wfn_str <- function(x = "Nuxtjs @nuxt/devalue 1.2.0 for Node.js") {
-  x <- tolower(x) %>% textclean::replace_non_ascii()
+  x <- textclean::replace_non_ascii(x)
   x <- iconv(x, "UTF-8", "ASCII", sub = "")
-  x <- stringr::str_replace_all(x, "[^a-z|\\'|\\-|\\!|\\$|\\(|\\)|\\,|\\.|\\/|\\;|\\?|\\@|\\[|\\]|\\\\|_|\\||\\+|\\d]", "")
+  x <- stringr::str_replace_all(x, "[^a-zA-Z|\\'|\\-|\\!|\\$|\\(|\\)|\\,|\\.|\\/|\\;|\\?|\\@|\\[|\\]|\\\\|_|\\||\\+|\\d| ]", "")
   x <- stringr::str_trim(x)
 
   return(x)

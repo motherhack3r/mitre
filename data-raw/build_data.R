@@ -53,4 +53,5 @@ rm(cve.nist, cpe.nist, cwe.views, cwe.categories, cwe.weaknesses,
    attck.data_relations, attck.relations, engage.activities,
    engage.approaches, engage.goals, engage.relations, engage.av)
 
+usethis::use_data(standards, compress = "xz", overwrite = TRUE)
 usethis::use_data(standards, compress = "xz", overwrite = TRUE, internal = TRUE)

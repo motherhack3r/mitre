@@ -69,7 +69,9 @@ suppressPackageStartupMessages(library(dplyr))
 ## Create Training set
 
 ```{r custom_train_Set}
-df <- mitre::nlp_cpe_dataset()
+raw_cpes <- readRDS("../extdata/cpe.nist.rds")
+
+df <- mitre::nlp_cpe_dataset(df = raw_cpes)
 # remove rows with escaped chars because of tagging regex
 df <- df[!grepl(pattern = "\\\\", df[, col2predict]), ]
 # replace WFN _ to space

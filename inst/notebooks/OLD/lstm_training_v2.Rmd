@@ -69,7 +69,8 @@ suppressPackageStartupMessages(library(dplyr))
 ## Create Training set
 
 ```{r custom_train_Set}
-raw_cpes <- mitre::cpe.nist
+# raw_cpes <- mitre::standards$cpe$cpe.nist
+raw_cpes <- readRDS("../extdata/cpe.nist.rds")
 
 # remove rows with escaped chars because of tagging regex
 df <- raw_cpes[!grepl(pattern = "\\\\", raw_cpes[, col2predict]), ]
@@ -77,9 +78,9 @@ df <- raw_cpes[!grepl(pattern = "\\\\", raw_cpes[, col2predict]), ]
 # df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
 # select trainable rows
 df <- cpe_add_features(df)
-traincol <- paste0("train_", col2predict)
-traincol <- df[, traincol]
-df <- df[traincol, ]
+# traincol <- paste0("train_", col2predict)
+# traincol <- df[, traincol]
+# df <- df[traincol, ]
 
 cpes <- nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
 cpes <- cpes[, c("title", col2predict)]
