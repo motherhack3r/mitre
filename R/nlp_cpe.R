@@ -87,6 +87,39 @@ cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
   return(valid_chars)
 }
 
+#' Title
+#'
+#' @param df data.frame
+#' @param keep_deprecated logical
+#' @param only_wfn logical
+#'
+#' @return data.frame
+#' @export
+cpe_lstm_dataset <- function(df = cpe_latest_data(), keep_deprecated = FALSE, only_wfn = TRUE) {
+  df$id <- 1:nrow(df)
+  if (!keep_deprecated) {
+    df <- df[!df$deprecated, ]
+  }
+
+  if (only_wfn) {
+    df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
+    df <- df[df$valid, ]
+    df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
+    df <- df[df$valid, ]
+  }
+
+  # remove titles, vendor, product or versions with tabs
+  df <- df[!(grepl("\\t", df$title)), ]
+
+  df <- df[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+
+  return(df)
+}
+
 
 #' Used by generic annotate cpes function
 #'
@@ -221,7 +254,7 @@ cpe_add_notation <- function(df = cpe_latest_data(),
 #' @return data.frame
 #' @export
 cpe_add_features <- function(df = cpe_latest_data()) {
-  df <- dplyr::select(df, c("id", "title", "part", "vendor", "product", "version"))
+  df <- dplyr::select(df, c("id", "title", "cpe.23", "part", "vendor", "product", "version"))
 
   df$len_title <- stringr::str_length(df$title)
   df$len_vendor <- stringr::str_length(df$vendor)
@@ -248,9 +281,9 @@ cpe_add_features <- function(df = cpe_latest_data()) {
   df$sym_product <- stringr::str_count(df$product, "[^0-9a-zA-Z\\_]") / df$len_product
   df$sym_version <- stringr::str_count(df$version, "[^0-9a-zA-Z\\.]") / df$len_version
 
-  # df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
-  # df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
-  # df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
+  df$train_vendor <- F | ((df$sym_vendor < 0.05) & ((df$abc_vendor + df$dot_vendor) > 0.5))
+  df$train_product <- F | ((df$sym_product < 0.2) & ((df$abc_product + df$dot_product) > 0.8))
+  df$train_version <- F | ((df$abc_version < 0.3) & ((df$num_version + df$dot_version) > 0.5))
 
   return(df)
 }
