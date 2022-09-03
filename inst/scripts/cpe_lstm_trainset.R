@@ -1,23 +1,35 @@
 col2predict <- "version"
 num_samples <- 200000
 seed <- 42
+verbose <- TRUE
 
-load("inst/extdata/cpe.nist.rda")
+library(mitre)
 
-df_lstm <- cpe.nist
-df_lstm$id <- 1:nrow(df_lstm)
+cpes <- mitre::cpe_latest_data(remote = T, keep_deprecated = T, verbose = verbose)
+cpe_stats <- cpe_stats(df = cpes)
+cpe_stats <- dplyr::select(cpe_stats, -n)
+cpes <- dplyr::left_join(cpes, cpe_stats, by = "vendor")
 
-# remove titles, vendor, product or versions with tabs
-df_lstm <- df_lstm[!(grepl("\\t", df_lstm$title)), ]
-df_lstm <- df_lstm[!(grepl("\\t", df_lstm$cpe.23)), ]
-df_lstm <- df_lstm[!(grepl("\\t", df_lstm$vendor)), ]
-df_lstm <- df_lstm[!(grepl("\\t", df_lstm$product)), ]
-df_lstm <- df_lstm[!(grepl("\\t", df_lstm$version)), ]
+df <- mitre::cpe_lstm_dataset(df = cpes, verbose = verbose)
+df <- dplyr::left_join(df, cpes[, c("id","popular")], by = "id")
 
-df_lstm <- df_lstm[, c("id", "title", "cpe.23", "part", "vendor", "product", "version", "deprecated")]
+df_train <- dplyr::sample_n(df, size = num_samples, weight = df$popular)
+df_train <- df_train[, c("title", col2predict, "cpe.23")]
 
-df <- mitre::cpe_lstm_dataset(df = df_lstm)
-df <- mitre::cpe_add_features(df)
+readr::write_delim(x = df_train, file = "../../datos/lstm_version_trainset.csv",
+                   delim = "\t", quote = "none")
 
-df_train <- df[df$train_version, c("title", col2predict, "cpe.23")]
-readr::write_delim(x = df_train, file = "C:/DEVEL/code/data/lstm_version_trainset.csv", delim = "\t", quote = "none")
+
+# --------------
+# rx_noversion <- "[^\\s\\-\\.\\da-z]"
+# selected_rows <- stringr::str_detect(cpes$version, rx_noversion)
+#
+# rx_notitle <- "[^\\s\\!\\&\\(\\)\\+\\,\\-\\.\\/\\:\\da-zA-Z]"
+# selected_rows <- !selected_rows & !stringr::str_detect(cpes$title, rx_notitle)
+#
+# df_lstm <- mitre::cpe_lstm_dataset(df = cpes[selected_rows, ])
+# df <- mitre::cpe_add_features(df = df_lstm)
+#
+#
+# df_train <- df[df$train_version, c("title", col2predict, "cpe.23")]
+# readr::write_delim(x = df_train, file = "C:/DEVEL/code/data/lstm_version_trainset.csv", delim = "\t", quote = "none")
