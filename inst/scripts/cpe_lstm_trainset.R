@@ -11,7 +11,7 @@ cpe_stats <- dplyr::select(cpe_stats, -n)
 cpes <- dplyr::left_join(cpes, cpe_stats, by = "vendor")
 
 df <- mitre::cpe_lstm_dataset(df = cpes, verbose = verbose)
-df <- dplyr::left_join(df, cpes[, c("id","popular")], by = "id")
+# df <- dplyr::left_join(df, cpes[, c("id","popular")], by = "id")
 
 df_train <- dplyr::sample_n(df, size = num_samples, weight = df$popular)
 df_train <- df_train[, c("title", col2predict, "cpe.23")]

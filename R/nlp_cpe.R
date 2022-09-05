@@ -151,7 +151,7 @@ cpe_wfn_dataset <- function(df = cpe_latest_data()) {
   # remove titles, vendor, product or versions with tabs
   df <- df[!(grepl("\\t", df$title)), ]
 
-  df <- df[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+  # df <- df[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
 
   return(df)
 }

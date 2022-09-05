@@ -21,7 +21,7 @@ codename <- "follows"
 
 col2predict <- "version"
 seed <- 43
-num_samples <- 25000  # Number of samples to train on.
+num_samples <- 5000  # Number of samples to train on.
 test_size <- 0.05 # Slice percentage from num_samples
 validation_size <- 0.2 # percentage of train set used for validation
 batch_size <- 16  # Batch size for training.
@@ -69,7 +69,7 @@ suppressPackageStartupMessages(library(dplyr))
 ## Create Training set
 
 ```{r custom_train_Set}
-raw_cpes <- readRDS("../extdata/cpe.nist.rds")
+raw_cpes <- readRDS("../../extdata/cpe.nist.rds")
 
 df <- mitre::nlp_cpe_dataset(df = raw_cpes)
 # remove rows with escaped chars because of tagging regex
