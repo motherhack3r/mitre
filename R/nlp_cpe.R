@@ -81,7 +81,7 @@ cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
   if (taste == "char") {
     valid_chars <- sapply(valid_chars, DescTools::AscToChar)
   } else if (taste == "hex") {
-    valid_chars <- sapply(valid_chars, DescTools::DecToHex)
+    valid_chars <- DescTools::DecToHex(valid_chars)
   }
 
   return(valid_chars)
