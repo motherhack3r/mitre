@@ -1,6 +1,5 @@
 # ONLY NEEDED FOR VULNDIGGER
 
-
 #' Load CPE data frame from local file or download latest
 #'
 #' @param local_path path to RDS file. NA value implies remote TRUE
@@ -90,32 +89,69 @@ cpe_valid_chars <- function(taste = c("char", "dec", "hex")[1],
 #' Title
 #'
 #' @param df data.frame
-#' @param keep_deprecated logical
-#' @param only_wfn logical
+#' @param verbose
 #'
 #' @return data.frame
 #' @export
-cpe_lstm_dataset <- function(df = cpe_latest_data(), keep_deprecated = FALSE, only_wfn = TRUE) {
-  df$id <- 1:nrow(df)
-  if (!keep_deprecated) {
-    df <- df[!df$deprecated, ]
-  }
+cpe_lstm_dataset <- function(df = cpe_latest_data(), verbose = F) {
 
-  if (only_wfn) {
-    df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
-    df <- df[df$valid, ]
-    df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
-    df <- df[df$valid, ]
-    df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
-    df <- df[df$valid, ]
-    df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
-    df <- df[df$valid, ]
-  }
+  if (verbose) print(paste0("[|] ", "Remove rows with escaped chars not compatibles"))
+  # remove rows with escaped chars because of tagging regex
+  df <- df[!grepl(pattern = "\\\\", df$vendor), ]
+  df <- df[!grepl(pattern = "\\\\", df$product), ]
+  df <- df[!grepl(pattern = "\\\\", df$version), ]
+  if (verbose) print(paste0("[|] ", "replace WFN _ to space in vendor and product"))
+  # replace WFN _ to space in vendor and product
+  df$vendor <- stringr::str_replace_all(df$vendor, "_", " ")
+  df$product <- stringr::str_replace_all(df$product, "_", " ")
+  if (verbose) print(paste0("[|] ", "remove titles with equal vendor and product"))
+  # remove titles with equal vendor and product
+  df <- df[which(df$vendor != df$product), ]
+  if (verbose) print(paste0("[|] ", "Detecting vendor candidates in titles"))
+  # vendor candidates
+  df$train_v <- rep(F, nrow(df))
+  df$train_v <- stringr::str_detect(df$title, stringr::fixed(df$vendor, ignore_case = TRUE))
+  if (verbose) print(paste0("[|] ", "Detecting product candidates in titles"))
+  # product candidates
+  df$train_p <- rep(F, nrow(df))
+  df$train_p <- stringr::str_detect(df$title, stringr::fixed(df$product, ignore_case = TRUE))
+  if (verbose) print(paste0("[|] ", "Detecting version candidates in titles"))
+  # version candidates
+  df$train_r <- rep(F, nrow(df))
+  df$train_r <- stringr::str_detect(df$title, stringr::fixed(df$version, ignore_case = TRUE))
+
+  if (verbose) print(paste0("[|> VERSION: ", "Keep only titles with version entities"))
+  # Keep only titles with version entity
+  df <- dplyr::filter(df, train_r)
+  df <- dplyr::select(df, -train_v, -train_p, -train_r)
+
+  if (verbose) print(paste0("[|] ", "Normalize to WFN strings"))
+  df <- cpe_wfn_dataset(df)
+
+  if (verbose) print(paste0("[.] Done."))
+  return(df)
+}
+
+#' Title
+#'
+#' @param df data.frame
+#'
+#' @return data.frame
+#' @export
+cpe_wfn_dataset <- function(df = cpe_latest_data()) {
+  df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
+  df <- df[df$valid, ]
+  df$valid <- stringr::str_detect(str49enc(df$vendor), "\\*", negate = T)
+  df <- df[df$valid, ]
+  df$valid <- stringr::str_detect(str49enc(df$product), "\\*", negate = T)
+  df <- df[df$valid, ]
+  df$valid <- stringr::str_detect(str49enc(df$version), "\\*", negate = T)
+  df <- df[df$valid, ]
 
   # remove titles, vendor, product or versions with tabs
   df <- df[!(grepl("\\t", df$title)), ]
 
-  df <- df[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+  # df <- df[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
 
   return(df)
 }
@@ -256,10 +292,10 @@ cpe_add_notation <- function(df = cpe_latest_data(),
 cpe_add_features <- function(df = cpe_latest_data()) {
   df <- dplyr::select(df, c("id", "title", "cpe.23", "part", "vendor", "product", "version"))
 
-  df$len_title <- stringr::str_length(df$title)
-  df$len_vendor <- stringr::str_length(df$vendor)
-  df$len_product <- stringr::str_length(df$product)
-  df$len_version <- stringr::str_length(df$version)
+  df$len_title <- as.numeric(stringr::str_length(df$title))
+  df$len_vendor <- as.numeric(stringr::str_length(df$vendor))
+  df$len_product <- as.numeric(stringr::str_length(df$product))
+  df$len_version <- as.numeric(stringr::str_length(df$version))
 
   df$num_title <- stringr::str_count(df$title, "[0-9]") / df$len_title
   df$num_vendor <- stringr::str_count(df$vendor, "[0-9]") / df$len_vendor
@@ -287,6 +323,51 @@ cpe_add_features <- function(df = cpe_latest_data()) {
 
   return(df)
 }
+
+
+#' Title
+#'
+#' @param df data.frame
+#' @param verbose logical
+#' @param acum_prop numeric
+#'
+#' @return data.frame
+#' @export
+cpe_pca_stats <- function(df = cpe_add_features(), verbose = FALSE, acum_prop = 0.75) {
+
+  # df_pca <- dplyr::select_if(df, is.numeric)
+  # df_pca <- df_pca[, stringr::str_detect(names(df_pca), "(len_title|version)")]
+  #
+  # pca <- prcomp(df_pca, scale = T)
+  # pca_sum <- summary(pca)
+  # pc_selected  <- sum(as.data.frame(pca_sum$importance)[3,] < acum_prop) + 1
+  # pca_sum
+  #
+  # if (verbose) print(paste0("[|] ", "Sampling mix with PCA option ..."))
+  # p_features <- mix_config$pca_features
+  # if (verbose) print(paste0("[|] > ", "selecting features ..."))
+  # if (verbose) print(paste0("[|] > ", paste(p_features, collapse = ", ")))
+  #
+  # if (verbose) print(paste0("[|] > ", "computing stats ..."))
+  # if (verbose & mix_config$scale_log) print(paste0("[|] > ", "logarithmic scaling ..."))
+  # df <- nlp_cpe_feateng(df = cpes, scale_log = mix_config$scale_log)
+  # sam_size <- floor((num_samples*4) / length(p_features))
+  # sam_size_extra <- (num_samples*4) %% length(p_features)
+  # if (verbose) print(paste0("[|] > ", "weighted sampling ..."))
+  # df_sample <- dplyr::sample_n(df, size = sam_size + sam_size_extra, weight = df[[p_features[1]]])
+  # if (length(p_features) > 1) {
+  #   for (i in 2:length(p_features)) {
+  #     df_sample <- rbind(df_sample,
+  #                        dplyr::sample_n(df, size = sam_size, weight = df[[p_features[i]]]))
+  #   }
+  # }
+  # df <- df_sample[, c("id", "title", "part", "vendor", "product", "version")]
+  # rm(df_sample)
+  # if (verbose) print(paste0("[|] > ", "PCA sampling done!"))
+
+  return(df)
+}
+
 
 #' Title
 #'
@@ -388,6 +469,11 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 
   df <- dplyr::left_join(df, df_inv[, c("id", "title")], by = "id")
   df <- df[, c("title", "vendor", "product", "version")]
+
+  # Final cleansing
+  df <- df[!is.na(df$title), ]
+  df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
+  df <- df[df$valid, c("title", "vendor", "product", "version")]
 
   return(df)
 }
