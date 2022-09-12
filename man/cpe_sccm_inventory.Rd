@@ -6,13 +6,19 @@
 \usage{
 cpe_sccm_inventory(
   path_sccm = "inst/extdata/sccm_component_definitions.csv",
-  verbose = FALSE
+  df_sccm = data.frame(),
+  verbose = FALSE,
+  headr = TRUE
 )
 }
 \arguments{
 \item{path_sccm}{path to sccm component definitions csv file}
 
+\item{df_sccm}{data.frame}
+
 \item{verbose}{logical}
+
+\item{headr}{logical}
 }
 \value{
 data.frame
