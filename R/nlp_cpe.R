@@ -478,7 +478,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$version <- stringr::str_trim(df_inv$version)
 
   df_inv <- dplyr::mutate(df_inv,
-                          title = ifelse(stringr::str_starts(product, vendor),
+                          title = ifelse(stringr::str_starts(product, stringr::fixed(vendor)),
                                          paste(product, version),
                                          paste(vendor, product, version)))
 
@@ -513,6 +513,8 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated|company)\\.{0,1}$", "")
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+software(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+s\\.(a|l)\\.(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
@@ -534,6 +536,8 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "^\\${0,1}\\{(.+)\\}$", "")
   x <- stringr::str_replace_all(x, "^\\$(.+)\\$$", "")
   x <- stringr::str_replace_all(x, "\\(\\)", "")
+  x <- stringr::str_replace_all(x, "\\(([^\\)]+)\\)", "")
+  x <- stringr::str_replace_all(x, "\\(([^\\)]+)$", "")
   x <- stringr::str_replace_all(x, "\\[\\]", "")
   x <- stringr::str_replace_all(x, "^'([^']+)'$", "\\1")
   x <- stringr::str_replace_all(x, "^\"([^']+)\"$", "\\1")
@@ -572,6 +576,8 @@ cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
   x <- stringr::str_replace_all(x, "(?i)_{0,1}(x|amd)(32|64|86).*$", "")
   x <- stringr::str_replace_all(x, "(?i)_for_.*$", "")
   x <- stringr::str_replace_all(x, "\\(\\)", "")
+  x <- stringr::str_replace_all(x, "\\(([^\\)]+)\\)", "")
+  x <- stringr::str_replace_all(x, "\\(([^\\)]+)$", "")
   x <- stringr::str_replace_all(x, "(?i)\\(r\\)", "")
   x <- stringr::str_replace_all(x, "(?i)\\(tm\\)", "")
   x <- stringr::str_replace_all(x, "(?i)\\(c\\)", "")
