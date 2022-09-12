@@ -472,6 +472,9 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 
   # Final cleansing
   df <- df[!is.na(df$title), ]
+  df$title <- iconv(df$title, to = 'ASCII//TRANSLIT')
+  df$version <- iconv(df$version, to = 'ASCII//TRANSLIT')
+  df <- df[!is.na(df$title), ]
   df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
   df <- df[df$valid, c("title", "vendor", "product", "version")]
 
