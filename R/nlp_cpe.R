@@ -403,12 +403,20 @@ cpe_local_inventory <- function(df = getInventory(), verbose = FALSE) {
 #'
 #' @param path_sccm path to sccm component definitions csv file
 #' @param verbose logical
+#' @param df_sccm data.frame
+#' @param headr logical
 #'
 #' @return data.frame
 #' @export
 cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definitions.csv",
-                               verbose = FALSE) {
-  df <- read.csv(path_sccm, header = F, col.names = c("product", "vendor", "version"))
+                               df_sccm = data.frame(),
+                               verbose = FALSE,
+                               headr = TRUE) {
+  if (nrow(df_sccm) == 0) {
+    df <- read.csv(path_sccm, header = headr, col.names = c("product", "vendor", "version"))
+  } else {
+    df <- df_sccm
+  }
   # Add uuid and copy to temporal df
   # df$uuid <- uuid::UUIDgenerate(n = nrow(df))
   df$id <- 1:nrow(df)
@@ -456,14 +464,24 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 
   df_inv <- dplyr::inner_join(df_vendor, df_product, by = "id")
   df_inv <- dplyr::inner_join(df_inv, df_version, by = "id")
-
   # df_inv <- dplyr::full_join(df_version, df_vendor, by = "id")
   df_inv$vendor[is.na(df_inv$vendor)] <- ""
   # df_inv <- dplyr::full_join(df_inv, df_product, by = "id")
   df_inv$product[is.na(df_inv$product)] <- ""
   df_inv$version[is.na(df_inv$version)] <- ""
 
-  df_inv$title = paste(df_inv$vendor, df_inv$product, df_inv$version)
+  df_inv$vendor <- stringr::str_replace_all(df_inv$vendor, "\\s+", " ")
+  df_inv$vendor <- stringr::str_trim(df_inv$vendor)
+  df_inv$product <- stringr::str_replace_all(df_inv$product, "\\s+", " ")
+  df_inv$product <- stringr::str_trim(df_inv$product)
+  df_inv$version <- stringr::str_replace_all(df_inv$version, "\\s+", " ")
+  df_inv$version <- stringr::str_trim(df_inv$version)
+
+  df_inv <- dplyr::mutate(df_inv,
+                          title = ifelse(stringr::str_starts(product, vendor),
+                                         paste(product, version),
+                                         paste(vendor, product, version)))
+
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\s+", " ")
   df_inv$title <- stringr::str_trim(df_inv$title)
 
@@ -489,7 +507,7 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- iconv(x, to = 'ASCII//TRANSLIT', sub = "")
   x <- stringr::str_replace_all(x, "(?i)\\([c|tm|r]\\)", "")
   x <- stringr::str_replace_all(x, "(?i)^\\(([^\\)]+)\\){0,1}", "\\1")
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated)\\.{0,1}$", "")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated|company)\\.{0,1}$", "")
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+software(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
@@ -503,6 +521,7 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)+(team){0,1}$", " ")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated|company)\\.{0,1}$", "")
   x <- stringr::str_trim(x)
   x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
 
@@ -519,6 +538,12 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   # CUSTOM MODIFICATORS
   # sap_xx --> sap
   x <- stringr::str_replace_all(x, "sap_[a-z]{2}", "sap")
+  # Advanced Micro Devices --> AMD
+  x <- stringr::str_replace_all(x, "(?i)Advanced Micro Devices", "AMD")
+  # ASUSTek Computer --> ASUSTEK
+  x <- stringr::str_replace_all(x, "(?i)ASUSTek(\\s|\\.)*Computer(\\s|\\.)*(inc){0,1}", "ASUSTEK")
+  # Hewlett-Packard --> hp
+  x <- stringr::str_replace_all(x, "(?i)Hewlett(\\s|\\.|\\-)*Packard(\\s|\\.|\\-)*", "HP")
 
   x[x == "NA"] <- NA
   x[is.na(x)] <- ""
