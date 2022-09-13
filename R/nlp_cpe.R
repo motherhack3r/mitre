@@ -478,7 +478,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$version <- stringr::str_trim(df_inv$version)
 
   df_inv <- dplyr::mutate(df_inv,
-                          title = ifelse(stringr::str_starts(product, stringr::fixed(vendor)),
+                          title = ifelse(stringr::str_starts(product, stringr::fixed(paste0(vendor, " "))),
                                          paste(product, version),
                                          paste(vendor, product, version)))
 
@@ -508,25 +508,31 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   # Normalize vendor: First apply translit, then remove bad words and HTML entities
   x <- iconv(x, to = 'ASCII//TRANSLIT', sub = "")
+  x <- stringr::str_replace_all(x, "\\(([^\\)]+)\\)", "")
   x <- stringr::str_replace_all(x, "(?i)\\([c|tm|r]\\)", "")
   x <- stringr::str_replace_all(x, "(?i)^\\(([^\\)]+)\\){0,1}", "\\1")
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated|company)\\.{0,1}$", "")
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+software(\\s|,){0,1}", " ")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)*(team|company){0,1}$", " ")
+  x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(software|soft)(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+s\\.(a|l)\\.(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+l\\.p\\.(\\s|,){0,1}", " ")
+  x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
-  x <- stringr::str_trim(x)
+  # x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
+  # x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+technologies(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+limited(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+[\\d\\-]+(\\s)*", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)+(team){0,1}$", " ")
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|inc|incorporated|company)\\.{0,1}$", "")
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)*(team|company){0,1}$", " ")
+  x <- stringr::str_trim(x)
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
   x <- stringr::str_trim(x)
   x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
 
@@ -536,11 +542,13 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "^\\${0,1}\\{(.+)\\}$", "")
   x <- stringr::str_replace_all(x, "^\\$(.+)\\$$", "")
   x <- stringr::str_replace_all(x, "\\(\\)", "")
-  x <- stringr::str_replace_all(x, "\\(([^\\)]+)\\)", "")
   x <- stringr::str_replace_all(x, "\\(([^\\)]+)$", "")
   x <- stringr::str_replace_all(x, "\\[\\]", "")
   x <- stringr::str_replace_all(x, "^'([^']+)'$", "\\1")
   x <- stringr::str_replace_all(x, "^\"([^']+)\"$", "\\1")
+
+  # Errors from SCCM query
+  x <- stringr::str_replace_all(x, "(?i)CFullName", "")
 
   # CUSTOM MODIFICATORS
   # sap_xx --> sap
@@ -550,7 +558,12 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   # ASUSTek Computer --> ASUSTEK
   x <- stringr::str_replace_all(x, "(?i)ASUSTek(\\s|\\.)*Computer(\\s|\\.)*(inc){0,1}", "ASUSTEK")
   # Hewlett-Packard --> hp
-  x <- stringr::str_replace_all(x, "(?i)Hewlett(\\s|\\.|\\-)*Packard(\\s|\\.|\\-)*", "HP")
+  x <- stringr::str_replace_all(x, "(?i)Hewlett(\\s|\\.|\\-)*Packard(\\s|\\.|\\-)*", "HP ")
+  # Internet Testing Systems --> ITS
+  x <- stringr::str_replace_all(x, "(?i)Internet Testing Systems", "ITS")
+
+  x <- stringr::str_replace_all(x, "(?i)(\\s)+S\\.(A|p)\\.(S|a)\\.(\\s|$)", " ")
+  x <- stringr::str_trim(x)
 
   x[x == "NA"] <- NA
   x[is.na(x)] <- ""
