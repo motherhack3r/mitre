@@ -486,7 +486,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$title <- stringr::str_trim(df_inv$title)
 
   df <- dplyr::left_join(df, df_inv[, c("id", "title")], by = "id")
-  df <- df[, c("title", "vendor", "product", "version")]
+  df <- df[, c("id", "title", "vendor", "product", "version")]
 
   # Final cleansing
   df <- df[!is.na(df$title), ]
@@ -494,7 +494,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df$version <- iconv(df$version, to = 'ASCII//TRANSLIT')
   df <- df[!is.na(df$title), ]
   df$valid <- stringr::str_detect(str73enc(df$title), "\\*", negate = T)
-  df <- df[df$valid, c("title", "vendor", "product", "version")]
+  df <- df[df$valid, c("id", "title", "vendor", "product", "version")]
 
   return(df)
 }
