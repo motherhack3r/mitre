@@ -536,7 +536,6 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_trim(x)
   x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
 
-
   x <- stringr::str_replace_all(x, "^[^a-zA-Z0-9]+$", "")
   x <- stringr::str_replace_all(x, "^[^a-zA-Z0-9]+\\s([a-zA-Z0-9].+)$", "\\1")
   x <- stringr::str_replace_all(x, "^\\${0,1}\\{(.+)\\}$", "")

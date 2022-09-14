@@ -17,16 +17,17 @@ knitr::opts_chunk$set(
 ## Set parameters
 
 ```{r }
-codename <- "follows"
+codename <- "kachis"
+globalchars <- TRUE
 
 col2predict <- "version"
 seed <- 43
-num_samples <- 5000  # Number of samples to train on.
+num_samples <- 350000  # Number of samples to train on.
 test_size <- 0.05 # Slice percentage from num_samples
 validation_size <- 0.2 # percentage of train set used for validation
-batch_size <- 16  # Batch size for training.
-epochs <- 100  # Number of epochs to train for.
-latent_dim <- 128  # Latent dimensionality of the encoding space.
+batch_size <- 32  # Batch size for training.
+epochs <- 400  # Number of epochs to train for.
+latent_dim <- 256  # Latent dimensionality of the encoding space.
 activation_function <- "softmax"
 
 modelconf <- list(col2predict, seed, num_samples, test_size, 
@@ -77,7 +78,19 @@ df <- df[!grepl(pattern = "\\\\", df[, col2predict]), ]
 # replace WFN _ to space
 df[, col2predict] <- stringr::str_replace_all(df[, col2predict], "_", " ")
 
-cpes <- nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
+
+```
+
+```{r}
+if (globalchars) {
+  cpes <- readRDS("../../extdata/train4lstm.rds")
+  # cpes <- cpes[cpes$id %in% mytrain$id, ]
+  cpes$title <- tolower(cpes$title)
+  cpes$version <- tolower(cpes$version)
+} else {
+  cpes <- nlp_cpe_sample_dataset(df = df, num_samples = num_samples, seed = seed)
+}
+
 cpes <- cpes[, c("title", col2predict)]
 ```
 
@@ -104,8 +117,16 @@ target_texts <- lapply( target_texts, function(s) strsplit(s, split = "")[[1]])
 ## Define encoder/decoder tokens
 
 ```{r }
-input_characters  <- sort(unique(enc_valid_chars()))
-target_characters <- sort(unique(tolower(enc_valid_chars(add_tab = T, add_enter = T))))
+input_characters  <- sort(unique(unlist(input_texts)))
+target_characters <- sort(unique(unlist(target_texts)))
+
+if (globalchars) {
+  input_characters  <- sort(unique(c(input_characters, enc_valid_chars())))
+  target_characters <- sort(unique(c(target_characters, tolower(enc_valid_chars(add_tab = T, add_enter = T)))))
+
+}
+
+
 num_encoder_tokens <- length(input_characters)
 num_decoder_tokens <- length(target_characters)
 max_encoder_seq_length <- max(sapply(input_texts,length))
@@ -183,7 +204,9 @@ model %>% compile(optimizer = 'rmsprop', loss = 'categorical_crossentropy')
 history <- model %>% fit(list(encoder_input_data, decoder_input_data), decoder_target_data,
               batch_size = batch_size,
               epochs = epochs,
-              validation_split = validation_size)
+              validation_split = validation_size,
+              callbacks = list(callback_early_stopping(patience = 5))
+    )
 ```
 
 ## Save model
