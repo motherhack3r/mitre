@@ -495,6 +495,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
                                          paste(vendor, product, version)))
 
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\s+", " ")
+  df_inv$title <- stringr::str_replace_all(df_inv$title, "\\b(\\w+\\s)\\1\\b(.*)", "\\1\\2")
   df_inv$title <- stringr::str_trim(df_inv$title)
 
   df <- dplyr::left_join(df, df_inv[, c("id", "title")], by = "id")
