@@ -1,0 +1,325 @@
+---
+title: "Build model for CPE generation"
+output:
+  html_document:
+    df_print: paged
+params:
+  seed: 42
+  num_samples: 10000
+  verbose: TRUE
+  local_path: "../inst/extdata/"
+---
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+```{r setup_r}
+library(dplyr)
+library(mitre)
+
+p_seed <- as.numeric(params$seed)
+p_num_samples <- as.integer(params$num_samples)
+p_verbose <- as.logical(params$verbose)
+p_local_path <- params$local_path
+```
+
+```{r}
+train_ner <- mitre::cpe_add_notation(verbose = T)
+df_train_raw <- left_join(mitre::cpe_train_set(train_ner[!is.na(train_ner$annotated), ], 
+                                               p_num_samples) %>% select(id),
+                          train_ner, 
+                          by = c("id" = "id"), keep = FALSE)
+readr::write_csv(x = df_train_raw, file = paste0(p_local_path, "df_train_raw.csv"), col_names = TRUE)
+```
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r setup_python, include=FALSE}
+# Load reticulate into current R session
+library(reticulate)
+library(here)
+
+use_condaenv("rtransf")
+
+# Retrieve/force initialization of Python
+reticulate::py_config()
+
+# Check if python is available
+reticulate::py_available()
+```
+
+```{r install_python_requirements}
+# Install Python package into virtual environment
+py_requirements <- c("pandas", "matplotlib", "sanitize-ml-labels", 
+                     "entrypoints","jupyter-core", "nest-asyncio",
+                     "pyzmq", "tornado", "traitlets", "numpy",
+                     "transformers", "datasets", "torch")
+reticulate::py_install(py_requirements, pip = TRUE)
+
+knitr::knit_engines$set(python = reticulate::eng_python)
+```
+
+```{python}
+# import required modules
+import pandas as pd
+import numpy as np
+import time
+import re
+import csv
+import torch
+
+# Check if GPU is configured
+print(torch.rand(5, 3))
+
+```
+
+
+```{python}
+train_path = r.p_local_path
+verbose = r.p_verbose
+split_train = 0.7
+split_validation = 0.1
+
+pretrained_tokenizer_name = "distilbert-base-cased" # distilbert-base-uncased, distilbert-base-cased
+pretrained_model_name = "distilbert-base-cased" # distilbert-base-uncased, distilbert-base-cased
+num_epochs = 4
+num_decay = 0.05
+
+p_seed = np.int64(r.p_seed)
+
+np.random.seed(p_seed)
+
+# time taken to read data
+s_time = time.time()
+df = pd.read_csv(train_path + "df_train_raw.csv")
+df['annotated'] = df['annotated'].astype(str) + '.'
+e_time = time.time()
+  
+# data
+if (verbose):
+    print("Read without chunks: ", (e_time-s_time), "seconds")
+
+```
+
+```{python}
+def train_validate_test_split(df, train_percent=.6, validate_percent=.2, seed=None):
+    np.random.seed(seed)
+    perm = np.random.permutation(df.index)
+    m = len(df.index)
+    train_end = int(train_percent * m)
+    validate_end = int(validate_percent * m) + train_end
+    train = df.iloc[perm[:train_end]]
+    validate = df.iloc[perm[train_end:validate_end]]
+    test = df.iloc[perm[validate_end:]]
+    return train, validate, test
+```
+
+```{python}
+num_samples = r.p_num_samples
+
+df_sample = df.loc[np.random.choice(df.index, num_samples)].reset_index()
+
+train, validate, test = train_validate_test_split(df_sample, train_percent=split_train, 
+                                                  validate_percent=split_validation, seed=p_seed)
+
+train_text = train.annotated.to_list()
+test_text = test.annotated.to_list()
+validate_text = validate.annotated.to_list()
+```
+
+```{python}
+def get_tokens_with_entities(raw_text: str):
+    raw_tokens = re.split(r"\s(?![^\[]*\])", raw_text)
+    entity_value_pattern = r"\[(?P<value>.+?)\]\((?P<entity>.+?)\)"
+    entity_value_pattern_compiled = re.compile(entity_value_pattern, flags=re.I|re.M)
+    tokens_with_entities = []
+    for raw_token in raw_tokens:
+        match = entity_value_pattern_compiled.match(raw_token)
+        if match:
+            raw_entity_name, raw_entity_value = match.group("entity"), match.group("value")
+            for i, raw_entity_token in enumerate(re.split("\\s", raw_entity_value)): 
+                entity_prefix = "B" if i == 0 else "I"
+                entity_name = f"{entity_prefix}-{raw_entity_name}"
+                tokens_with_entities.append((raw_entity_token, entity_name))
+        else:
+            tokens_with_entities.append((raw_token, "O"))
+    return tokens_with_entities
+
+```
+
+
+```{python}
+print(get_tokens_with_entities(train_text[0]))
+print(get_tokens_with_entities(test_text[0]))
+print(get_tokens_with_entities(validate_text[0]))
+
+```
+
+
+```{python}
+class NERDataMaker:
+    def __init__(self, texts):
+        self.unique_entities = []
+        self.processed_texts = []
+        temp_processed_texts = []
+        for text in texts:
+            tokens_with_entities = get_tokens_with_entities(text)
+            for _, ent in tokens_with_entities:
+                if ent not in self.unique_entities:
+                    self.unique_entities.append(ent)
+            temp_processed_texts.append(tokens_with_entities)
+        self.unique_entities.sort(key=lambda ent: ent if ent != "O" else "")
+        for tokens_with_entities in temp_processed_texts:
+            self.processed_texts.append([(t, self.unique_entities.index(ent)) for t, ent in tokens_with_entities])
+    
+    @property
+    def id2label(self):
+        return dict(enumerate(self.unique_entities))
+    
+    @property
+    def label2id(self):
+        return {v:k for k, v in self.id2label.items()}
+      
+    def __len__(self):
+        return len(self.processed_texts)
+    
+    def __getitem__(self, idx):
+        def _process_tokens_for_one_text(id, tokens_with_encoded_entities):
+            ner_tags = []
+            tokens = []
+            for t, ent in tokens_with_encoded_entities:
+                ner_tags.append(ent)
+                tokens.append(t)
+            return {
+                "id": id,
+                "ner_tags": ner_tags,
+                "tokens": tokens
+            }
+        tokens_with_encoded_entities = self.processed_texts[idx]
+        if isinstance(idx, int):
+            return _process_tokens_for_one_text(idx, tokens_with_encoded_entities)
+        else:
+            return [_process_tokens_for_one_text(i+idx.start, tee) for i, tee in enumerate(tokens_with_encoded_entities)]
+    
+    def as_hf_dataset(self, tokenizer):
+        from datasets import Dataset, Features, Value, ClassLabel, Sequence
+        def tokenize_and_align_labels(examples):
+            tokenized_inputs = tokenizer(examples["tokens"], truncation=True, is_split_into_words=True)
+            labels = []
+            for i, label in enumerate(examples[f"ner_tags"]):
+                word_ids = tokenized_inputs.word_ids(batch_index=i)  # Map tokens to their respective word.
+                previous_word_idx = None
+                label_ids = []
+                for word_idx in word_ids:  # Set the special tokens to -100.
+                    if word_idx is None:
+                        label_ids.append(-100)
+                    elif word_idx != previous_word_idx:  # Only label the first token of a given word.
+                        label_ids.append(label[word_idx])
+                    else:
+                        label_ids.append(-100)
+                    previous_word_idx = word_idx
+                labels.append(label_ids)
+            tokenized_inputs["labels"] = labels
+            return tokenized_inputs
+        ids, ner_tags, tokens = [], [], []
+        for i, pt in enumerate(self.processed_texts):
+            ids.append(i)
+            pt_tokens,pt_tags = list(zip(*pt))
+            ner_tags.append(pt_tags)
+            tokens.append(pt_tokens)
+        data = {
+            "id": ids,
+            "ner_tags": ner_tags,
+            "tokens": tokens
+        }
+        features = Features({
+            "tokens": Sequence(Value("string")),
+            "ner_tags": Sequence(ClassLabel(names=dm.unique_entities)),
+            "id": Value("int32")
+        })
+        ds = Dataset.from_dict(data, features)
+        tokenized_ds = ds.map(tokenize_and_align_labels, batched=True)
+        return tokenized_ds
+
+```
+
+
+```{python}
+# Create Training NER Data Object
+dm = NERDataMaker(train_text)
+print(f"total examples = {len(dm)}")
+print(f"labels = {dm.id2label}")
+print(f"samples = {dm[0:3]}")
+```
+
+
+```{python}
+# Create NER Data Object
+dm_test = NERDataMaker(test_text)
+print(f"total examples = {len(dm_test)}")
+print(f"labels = {dm_test.id2label}")
+print(f"samples = {dm_test[0:3]}")
+```
+
+```{python}
+# Create NER Data Object
+dm_validate = NERDataMaker(validate_text)
+print(f"total examples = {len(dm_validate)}")
+print(f"labels = {dm_validate.id2label}")
+print(f"samples = {dm_validate[0:3]}")
+```
+
+
+
+
+```{python}
+from transformers import AutoTokenizer, DataCollatorForTokenClassification, AutoModelForTokenClassification, TrainingArguments, Trainer
+tokenizer = AutoTokenizer.from_pretrained(pretrained_tokenizer_name)
+data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+model = AutoModelForTokenClassification.from_pretrained(pretrained_model_name, num_labels=len(dm.unique_entities), id2label=dm.id2label, label2id=dm.label2id)
+```
+
+
+```{python}
+train_ds = dm.as_hf_dataset(tokenizer=tokenizer)
+test_ds = dm_test.as_hf_dataset(tokenizer=tokenizer)
+validate_ds = dm_validate.as_hf_dataset(tokenizer=tokenizer)
+```
+
+```{python}
+training_args = TrainingArguments(
+    output_dir="./results",
+    evaluation_strategy="steps",
+    learning_rate=2e-5,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=16,
+    num_train_epochs=num_epochs,
+    weight_decay=num_decay,
+    seed = p_seed,
+    data_seed = p_seed,
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_ds,
+    eval_dataset=test_ds, 
+    tokenizer=tokenizer,
+    data_collator=data_collator,
+)
+
+if (verbose):
+    print(trainer.model.config)
+```
+
+```{python}
+trainer.train()
+# model.save_pretrained("models/ner_cpe_cran_v1")
+# tokenizer.save_pretrained("models/ner_cpe_cran_v1/tokenizer")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
