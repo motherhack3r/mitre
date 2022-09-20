@@ -8,7 +8,7 @@ cpe_sccm_inventory(
   path_sccm = "inst/extdata/sccm_component_definitions.csv",
   df_sccm = data.frame(),
   verbose = FALSE,
-  headr = TRUE
+  csv.headr = TRUE
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ cpe_sccm_inventory(
 
 \item{verbose}{logical}
 
-\item{headr}{logical}
+\item{csv.headr}{logical}
 }
 \value{
 data.frame
