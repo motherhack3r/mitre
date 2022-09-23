@@ -420,6 +420,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
     if (verbose) print(paste0("[!] ", "Adding missing 'id' column."))
     df_sccm$id <- 1:nrow(df_sccm)
   }
+  df <- df_sccm
   if (verbose) print(paste0(" |> ", "Input rows: ", nrow(df_sccm)))
 
   # Clean vendor strings
@@ -495,7 +496,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\b(\\w+\\s)\\1\\b(.*)", "\\1\\2")
   df_inv$title <- stringr::str_trim(df_inv$title)
 
-  df <- dplyr::left_join(df, df_inv[, c("id", "title")], by = "id")
+  df <- dplyr::left_join(df, dplyr::select(df_inv, "id", "title"), by = "id")
   df <- df[, c("id", "title", "vendor", "product", "version")]
 
   # Final cleansing
