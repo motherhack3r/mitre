@@ -575,6 +575,8 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "(?i)Hewlett(\\s|\\.|\\-)*Packard(\\s|\\.|\\-)*", "HP ")
   # Internet Testing Systems --> ITS
   x <- stringr::str_replace_all(x, "(?i)Internet Testing Systems", "ITS")
+  # Adobe Systems Incorporated (+variations)--> Adobe
+  x <- stringr::str_replace_all(x, "(?i)Adobe([[:punct:]]|\\s)*(System|s)*([[:punct:]]|\\s|\\t)*(Inc)*([[:punct:]]|\\s)*(orporated){0,1}([[:punct:]]|\\s)*(Company)*", "Adobe")
 
   x <- stringr::str_replace_all(x, "(?i)(\\s)+S\\.(A|p)\\.(S|a)\\.(\\s|$)", " ")
   x <- stringr::str_trim(x)
