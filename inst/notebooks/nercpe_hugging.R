@@ -2,17 +2,17 @@
 # library(reticulate)
 # library(here)
 #
-# reticulate::use_condaenv("transf")
+reticulate::use_condaenv("transf")
 #
 # # Install Python package into virtual environment
 # # > conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 # # reticulate::py_install(packages = c("pytorch", "torchvision", "torchaudio", "cudatoolkit"), pip = TRUE)
 #
 # # Retrieve/force initialization of Python
-# reticulate::py_config()
+reticulate::py_config()
 #
 # # Check if python is available
-# reticulate::py_available()
+reticulate::py_available()
 
 library(text)
 
@@ -25,14 +25,24 @@ textrpp_initialize(condaenv = "transf", save_profile = TRUE, prompt = FALSE)
 library(mitre)
 library(dplyr)
 
-predict_cpe <- function(df_inventory = mitre::getInventory(), model_name = "Neurona/cpener-test") {
+predict_cpe <- function(df_inventory = mitre::getInventory(),
+                        model_name = "Neurona/cpener-test",
+                        hastitle = FALSE) {
+  # Function for processing NER output
   embed2cpener <- function(df_ner = data.frame()) {
     df_cpe <- as.data.frame(df_ner$x_NER)
     df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
                                               pattern = "^[BIOLU]\\-(cpe.+)$",
                                               replacement = "\\1")
-    df_cpe <- inner_join(x = df_cpe %>% group_by(entity) %>% summarise(score = mean(score)),
-                         y = df_cpe %>% select(entity, word) %>% group_by(entity) %>% mutate(word = paste(word, collapse = " ")) %>% unique() %>% as.data.frame(),
+    df_cpe <- inner_join(x = df_cpe %>%
+                           group_by(entity) %>%
+                           summarise(score = mean(score)),
+                         y = df_cpe %>%
+                           select(entity, word) %>%
+                           group_by(entity) %>%
+                           mutate(word = paste(word, collapse = " ")) %>%
+                           unique() %>%
+                           as.data.frame(),
                          by = "entity")
     df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
     df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
@@ -40,6 +50,7 @@ predict_cpe <- function(df_inventory = mitre::getInventory(), model_name = "Neur
     return(df_cpe)
   }
 
+  # Function for CPE creation
   cpener2cpe23 <- function(df_ner = data.frame()) {
     part <- "a"
     vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
@@ -53,26 +64,34 @@ predict_cpe <- function(df_inventory = mitre::getInventory(), model_name = "Neur
                       no = "*")
     vendor <- stringr::str_replace_all(vendor, " ", "_")
     product <- stringr::str_replace_all(product, " ", "_")
-    version <- stringr::str_replace_all(version, " ", "_")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
     cpe <- paste("cpe", "2.3", part, vendor, product, version, "*:*:*:*:*:*:*", sep = ":")
     return(cpe)
   }
 
-  sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
-                    mitre::cpe_wfn_product(df_inventory$name), sep = " ")
-  df_pred <- data.frame(title = sapply(sw_title,
-                                       function(x)
-                                         paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
-                        cpe = rep(NA, length(sw_title)))
-  df_pred$title <- paste(df_pred$title, df_inventory$version)
+  if (!hastitle) {
+    sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
+                      mitre::cpe_wfn_product(df_inventory$name), sep = " ")
+    df_pred <- data.frame(title = sapply(sw_title,
+                                         function(x)
+                                           paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
+                          cpe = rep(NA, length(sw_title)))
+    df_pred$title <- paste(df_pred$title, df_inventory$version)
+  } else {
+    df_pred <- df_inventory
+  }
 
   df_inventory$cpe <- sapply(df_pred$title,
                              function(x) {
-                               cpener2cpe23(embed2cpener(textNER(x = x, model = model_name, device = "gpu")))
+                               cpener2cpe23(embed2cpener(textNER(x = x,
+                                                                 model = model_name,
+                                                                 device = "gpu")))
                              }) %>% as.character()
 
   return(df_inventory)
 }
+
 
 df_inventory <- mitre::getInventory()
 df_inv <- df_inventory %>% sample_n(50)
