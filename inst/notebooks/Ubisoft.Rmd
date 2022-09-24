@@ -1,72 +1,152 @@
 ---
-title: "R Notebook"
+title: "Ubisoft Cybersecurity Analysis"
 output: html_notebook
 ---
+
+Load required packages.
 
 ```{r}
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(kableExtra))
+```
+
+Load NLP requirements.
+
+```{r}
+reticulate::use_condaenv("transf")
+
+library(text)
+
+textrpp_initialize(condaenv = "transf", prompt = FALSE)
 ```
 
 This is an example using [Ubisoft](https://github.com/humbertcostas/vulnmine) data. 
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 ```{r}
-# encoded UCS-2 LE with BOM -> converted with notepad and removed noisy row 20045
+# encoded UCS-2 LE with BOM
 ubisoft_url <- "https://github.com/humbertcostas/vulnmine/raw/master/data/csv/v_GS_ADD_REMOVE_PROGRAMS.csv"
-t <- tempfile(fileext = ".csv")
-download.file(ubisoft_url, t, quiet = T)
-raw_cnt <- readr::read_file_raw(file = t)
-# raw_cnt2 <- raw_cnt[raw_cnt != 00]
-
-# kk <- readr::read_file_raw(t)
-# kk2 <- stringi::stri_conv(kk, to = "UTF-8")
-
-# raw_cnt <- rawToChar(raw_cnt)
-# raw_cnt <- rawToChar(raw_cnt[raw_cnt != 00], multiple = T)
-raw_cnt <- rawToChar(raw_cnt[raw_cnt != 00])
-
-raw_df <- readr::read_delim(I(raw_cnt), delim = "|", trim_ws = T, show_col_types = FALSE, locale = readr::locale(asciify = T))
-df_ubi_raw <- raw_df
+df_ubi_raw <- read.csv2(file = ubisoft_url, as.is = T, sep = "|", 
+                        fileEncoding = "UCS-2", encoding = "UTF-16")
+df_ubi_raw$id <- 1:nrow(df_ubi_raw)
 ```
 
+Group inventory and get unique values for vendor, product and version:
 
 ```{r}
-# df_ubi_raw <- read.csv("../extdata/ubisoft3.csv", header = T, sep = "|", fill = T,encoding = readr::locale(asciify = T))
+df_ubi <- df_ubi_raw %>% 
+          select(Publisher0, DisplayName0, Version0) %>%
+          rename("vendor" = "Publisher0", 
+                 "product" = "DisplayName0", 
+                 "version" = "Version0") %>% 
+          group_by(vendor, product, version) %>% 
+          summarise(n = n(), .groups = 'drop') %>%
+          ungroup() %>%
+          arrange(desc(n)) %>%
+          mutate(id = seq_along(n)) %>%
+          select(id, vendor, product, version, n)
+df_ubi$id <- 1:nrow(df_ubi)
 
+df_ubi_sample <- head(df_ubi, 20)
+
+kbl(df_ubi_sample) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
+Create a clean **title** string as new column using strings from vendor, product and version.
 
 ```{r}
-df_ubi <- df_ubi_raw %>% select(Publisher0, DisplayName0, Version0)
-names(df_ubi) <- c("vendor", "product", "version")
+df <- mitre::cpe_sccm_inventory(df_sccm = df_ubi, verbose = T)
 ```
 
 
-```{r}
-
-write.csv(df_ubi[, c("product", "vendor", "version")], 
-          "../extdata/ubisoft_clean2.csv", row.names = FALSE)
-
-```
-
-
-```{r}
-# df <- mitre::cpe_sccm_inventory(path_sccm = "../extdata/ubisoft_clean2.csv", verbose = T)
-# df <- mitre::cpe_sccm_inventory(df_sccm = df_ubi, verbose = T)
-
-
-df <- mitre::cpe_sccm_inventory(path_sccm = "../extdata/ubisoft_clean.csv", verbose = T)
-
-```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 ```{r}
-df_sccm <- unique(df)
+predict_cpe <- function(df_inventory = mitre::getInventory(), 
+                        model_name = "Neurona/cpener-test", 
+                        hastitle = FALSE) {
+  # Function for processing NER output
+  embed2cpener <- function(df_ner = data.frame()) {
+    df_cpe <- as.data.frame(df_ner$x_NER)
+    df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
+                                              pattern = "^[BIOLU]\\-(cpe.+)$",
+                                              replacement = "\\1")
+    df_cpe <- inner_join(x = df_cpe %>% 
+                             group_by(entity) %>% 
+                             summarise(score = mean(score)),
+                         y = df_cpe %>% 
+                             select(entity, word) %>% 
+                             group_by(entity) %>% 
+                             mutate(word = paste(word, collapse = " ")) %>% 
+                             unique() %>% 
+                             as.data.frame(),
+                         by = "entity")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
+
+    return(df_cpe)
+  }
+
+  # Function for CPE creation
+  cpener2cpe23 <- function(df_ner = data.frame()) {
+    part <- "a"
+    vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
+                     yes = df_ner$word[df_ner$entity == "cpe_vendor"],
+                     no = "*")
+    product <- ifelse(test = "cpe_product" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_product"],
+                      no = "*")
+    version <- ifelse(test = "cpe_version" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_version"],
+                      no = "*")
+    vendor <- stringr::str_replace_all(vendor, " ", "_")
+    product <- stringr::str_replace_all(product, " ", "_")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    cpe <- paste("cpe", "2.3", part, vendor, product, version, "*:*:*:*:*:*:*", sep = ":")
+    return(cpe)
+  }
+
+  if (!hastitle) {
+    sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
+                      mitre::cpe_wfn_product(df_inventory$name), sep = " ")
+    df_pred <- data.frame(title = sapply(sw_title,
+                                         function(x)
+                                           paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
+                          cpe = rep(NA, length(sw_title)))
+    df_pred$title <- paste(df_pred$title, df_inventory$version)
+  } else {
+    df_pred <- df_inventory
+  }
+
+  df_inventory$cpe <- sapply(df_pred$title,
+                             function(x) {
+                               cpener2cpe23(embed2cpener(textNER(x = x, 
+                                                                 model = model_name, 
+                                                                 device = "gpu")))
+                             }) %>% as.character()
+
+  return(df_inventory)
+}
+
+
+```
+
+
+```{r}
+df_inventory <- df %>% sample_n(5)
+
+# df_inventory <- df[df$id %in% df_ubi_sample$id,]
+
 ```
 
 ```{r}
-df_test <- data.frame(id = 1:length(unique(df_sccm$title)), title = unique(df_sccm$title))
+suppressMessages(
+  df_inventory <- predict_cpe(df_inventory = df_inventory, hastitle = TRUE)
+)
+
 
 
 ```
