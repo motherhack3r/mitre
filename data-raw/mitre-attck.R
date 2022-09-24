@@ -183,5 +183,7 @@ usethis::use_data(attck.mitigations, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.groups, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.software, compress = "xz", overwrite = TRUE)
 usethis::use_data(attck.relations, compress = "xz", overwrite = TRUE)
+usethis::use_data(attck.data_component, compress = "xz", overwrite = TRUE)
+usethis::use_data(attck.data_relations, compress = "xz", overwrite = TRUE)
 
 rm(attck.ent, grup, miti, rels, tact, tech, soft, df, dscomp, dsrl, dsrc)
