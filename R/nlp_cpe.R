@@ -416,21 +416,23 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
     if (verbose) print(paste0("[*] ", "Reading CSV file..."))
     df_sccm <- read.csv(path_sccm, header = csv.headr, col.names = c("product", "vendor", "version"))
   }
-  if (!("id" %in% names(df_sccm))) {
-    if (verbose) print(paste0("[!] ", "Adding missing 'id' column."))
-    df_sccm$id <- 1:nrow(df_sccm)
+  if (!("id" %in% names(df))) {
+    if (verbose) print(paste0("[*] ", "Adding id column..."))
+    df$id <- 1:nrow(df)
   }
-  df <- df_sccm
-  if (verbose) print(paste0(" |> ", "Input rows: ", nrow(df_sccm)))
+  df_sccm <- df
+  if (verbose) print(paste0(" |> ", "Input rows: ", nrow(df)))
 
   # Clean vendor strings
   if (verbose) print(paste0("[|] ", "Clean vendor strings"))
   df_sccm$wfn_vendor <- iconv(df_sccm$vendor, from = "UTF-8", to = 'ASCII//TRANSLIT')
   df_sccm$wfn_vendor <- stringr::str_replace_all(df_sccm$wfn_vendor, "\\?", "")
   df_sccm$wfn_vendor <- stringr::str_trim(df_sccm$wfn_vendor)
+  df_sccm$wfn_vendor <- textclean::replace_white(textclean::replace_html(textclean::replace_emoji(df_sccm$wfn_vendor)))
   df_sccm$bad_vendor <- (stringr::str_count(df_sccm$wfn_vendor, "[^a-zA-Z0-9 \\.]")
                          / sapply(df_sccm$wfn_vendor, nchar)
                          ) > 0.2
+  df_sccm$bad_vendor[is.na(df_sccm$bad_vendor)] <- TRUE
   df_vendor <- df_sccm[!df_sccm$bad_vendor, c("id", "wfn_vendor")]
   df_vendor <- dplyr::rename(df_vendor, vendor = wfn_vendor)
   df_vendor$wfn_vendor <- mitre::cpe_wfn_vendor(df_vendor$vendor)
@@ -443,9 +445,11 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_sccm$wfn_product <- iconv(df_sccm$product, from = "UTF-8", to = 'ASCII//TRANSLIT')
   df_sccm$wfn_product <- stringr::str_replace_all(df_sccm$wfn_product, "\\?", "")
   df_sccm$wfn_product <- stringr::str_trim(df_sccm$wfn_product)
+  df_sccm$wfn_product <- textclean::replace_white(textclean::replace_html(textclean::replace_emoji(df_sccm$wfn_product)))
   df_sccm$bad_product <- (stringr::str_count(df_sccm$wfn_product, "[^a-zA-Z0-9 \\.]")
                          / sapply(df_sccm$wfn_product, nchar)
                          ) > 0.2
+  df_sccm$bad_product[is.na(df_sccm$bad_product)] <- TRUE
   df_product <- df_sccm[!df_sccm$bad_product, c("id", "wfn_product")]
   df_product <- dplyr::rename(df_product, product = wfn_product)
   df_product$wfn_product <- mitre::cpe_wfn_product(df_product$product)
@@ -456,6 +460,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   # Clean version strings
   if (verbose) print(paste0("[|] ", "Clean version strings"))
   df_sccm$wfn_version <- df_sccm$version
+  df_sccm$wfn_version <- textclean::replace_white(textclean::replace_html(textclean::replace_emoji(df_sccm$wfn_version)))
   df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))] <-
     gsub("\\, ", "\\.", df_sccm$wfn_version[(grepl("\\d+(, \\d+)+", df_sccm$wfn_version))])
   df_sccm$wfn_version[(grepl("\\d+(,\\d+)+", df_sccm$wfn_version))] <-
@@ -467,6 +472,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   # df_sccm$wfn_version <- stringr::str_replace_all(df_sccm$wfn_version, "(.*)(\\s|,|-)+[vers\\.]*([\\d|\\.]+)(.*)$", "\\3")
   df_version <- df_sccm[, c("id", "wfn_version")]
   df_version <- dplyr::rename(df_version, version = wfn_version)
+  df_version$version[is.na(df_version$version)] <- ""
   if (verbose) print(paste0(" |> ", "Good version rows: ", nrow(df_version)))
 
   if (verbose) print(paste0("[|] ", "General cleansing and remove NAs"))
@@ -484,6 +490,8 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$product <- stringr::str_trim(df_inv$product)
   df_inv$version <- stringr::str_replace_all(df_inv$version, "\\s+", " ")
   df_inv$version <- stringr::str_trim(df_inv$version)
+
+  df_inv$product[nchar(df_inv$version) == 0] <- df_sccm$product[df_sccm$id %in% df_inv$id[nchar(df_inv$version) == 0]]
   if (verbose) print(paste0(" |> ", "Good rows: ", nrow(df_inv)))
 
   if (verbose) print(paste0("[|] ", "Removing duplicated vendor in title"))
@@ -501,6 +509,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 
   # Final cleansing
   if (verbose) print(paste0("[|] ", "Final cleansing..."))
+  df <- as.data.frame(df)
   df <- df[!is.na(df$title), ]
   df$title <- iconv(df$title, to = 'ASCII//TRANSLIT')
   df$version <- iconv(df$version, to = 'ASCII//TRANSLIT')
@@ -573,6 +582,10 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   x <- stringr::str_replace_all(x, "(?i)Hewlett(\\s|\\.|\\-)*Packard(\\s|\\.|\\-)*", "HP ")
   # Internet Testing Systems --> ITS
   x <- stringr::str_replace_all(x, "(?i)Internet Testing Systems", "ITS")
+  # Amazon Web Services --> Amazon
+  x <- stringr::str_replace_all(x, "(?i)Amazon Web Services", "Amazon")
+  # Adobe Systems Incorporated (+variations)--> Adobe
+  x <- stringr::str_replace_all(x, "(?i)Adobe([[:punct:]]|\\s)*(System|s)*([[:punct:]]|\\s|\\t)*(Inc)*([[:punct:]]|\\s)*(orporated){0,1}([[:punct:]]|\\s)*(Company)*", "Adobe")
 
   x <- stringr::str_replace_all(x, "(?i)(\\s)+S\\.(A|p)\\.(S|a)\\.(\\s|$)", " ")
   x <- stringr::str_trim(x)

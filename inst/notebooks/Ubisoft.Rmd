@@ -1,73 +1,231 @@
 ---
-title: "R Notebook"
+title: "Ubisoft Cybersecurity Analysis"
 output: html_notebook
 ---
+
+Load required packages.
 
 ```{r}
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyr))
+```
+
+Load NLP requirements.
+
+```{r}
+reticulate::use_condaenv("transf")
+
+library(text)
+
+textrpp_initialize(condaenv = "transf", prompt = FALSE)
 ```
 
 This is an example using [Ubisoft](https://github.com/humbertcostas/vulnmine) data. 
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 ```{r}
-# encoded UCS-2 LE with BOM -> converted with notepad and removed noisy row 20045
+# encoded UCS-2 LE with BOM
 ubisoft_url <- "https://github.com/humbertcostas/vulnmine/raw/master/data/csv/v_GS_ADD_REMOVE_PROGRAMS.csv"
-t <- tempfile(fileext = ".csv")
-download.file(ubisoft_url, t, quiet = T)
-raw_cnt <- readr::read_file_raw(file = t)
-# raw_cnt2 <- raw_cnt[raw_cnt != 00]
-
-# kk <- readr::read_file_raw(t)
-# kk2 <- stringi::stri_conv(kk, to = "UTF-8")
-
-# raw_cnt <- rawToChar(raw_cnt)
-# raw_cnt <- rawToChar(raw_cnt[raw_cnt != 00], multiple = T)
-raw_cnt <- rawToChar(raw_cnt[raw_cnt != 00])
-
-raw_df <- readr::read_delim(I(raw_cnt), delim = "|", trim_ws = T, show_col_types = FALSE, locale = readr::locale(asciify = T))
-df_ubi_raw <- raw_df
+df_ubi_raw <- read.csv2(file = ubisoft_url, as.is = T, sep = "|", 
+                        fileEncoding = "UCS-2", encoding = "UTF-16")
+df_ubi_raw$id <- 1:nrow(df_ubi_raw)
 ```
 
+Group inventory and get unique values for vendor, product and version:
 
 ```{r}
-# df_ubi_raw <- read.csv("../extdata/ubisoft3.csv", header = T, sep = "|", fill = T,encoding = readr::locale(asciify = T))
+df_ubi <- df_ubi_raw %>% 
+          select(Publisher0, DisplayName0, Version0) %>%
+          rename("vendor" = "Publisher0", 
+                 "product" = "DisplayName0", 
+                 "version" = "Version0") %>% 
+          group_by(vendor, product, version) %>% 
+          summarise(n = n(), .groups = 'drop') %>%
+          ungroup() %>%
+          arrange(desc(n)) %>%
+          mutate(id = seq_along(n)) %>%
+          select(id, vendor, product, version, n)
+df_ubi$id <- 1:nrow(df_ubi)
 
+df_ubi_sample <- head(df_ubi, 100)
+
+kbl(df_ubi_sample) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 ```
 
+Create a clean **title** string as new column using strings from vendor, product and version.
 
 ```{r}
-df_ubi <- df_ubi_raw %>% select(Publisher0, DisplayName0, Version0)
-names(df_ubi) <- c("vendor", "product", "version")
+df <- mitre::cpe_sccm_inventory(df_sccm = df_ubi, verbose = T)
 ```
 
 
-```{r}
-
-write.csv(df_ubi[, c("product", "vendor", "version")], 
-          "../extdata/ubisoft_clean2.csv", row.names = FALSE)
-
-```
-
-
-```{r}
-# df <- mitre::cpe_sccm_inventory(path_sccm = "../extdata/ubisoft_clean2.csv", verbose = T)
-# df <- mitre::cpe_sccm_inventory(df_sccm = df_ubi, verbose = T)
-
-
-df <- mitre::cpe_sccm_inventory(path_sccm = "../extdata/ubisoft_clean.csv", verbose = T)
-
-```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 ```{r}
-df_sccm <- unique(df)
+predict_cpe <- function(df_inventory = mitre::getInventory(), 
+                        model_name = "Neurona/cpener-test", 
+                        hastitle = FALSE) {
+  # Function for processing NER output
+  embed2cpener <- function(df_ner = data.frame()) {
+    df_cpe <- as.data.frame(df_ner$x_NER)
+    df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
+                                              pattern = "^[BIOLU]\\-(cpe.+)$",
+                                              replacement = "\\1")
+    df_cpe <- inner_join(x = df_cpe %>% 
+                             group_by(entity) %>% 
+                             summarise(score = mean(score)),
+                         y = df_cpe %>% 
+                             select(entity, word) %>% 
+                             group_by(entity) %>% 
+                             mutate(word = paste(word, collapse = " ")) %>% 
+                             unique() %>% 
+                             as.data.frame(),
+                         by = "entity")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
+
+    return(df_cpe)
+  }
+
+  # Function for CPE creation
+  cpener2cpe23 <- function(df_ner = data.frame()) {
+    part <- "a"
+    vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
+                     yes = df_ner$word[df_ner$entity == "cpe_vendor"],
+                     no = "*")
+    product <- ifelse(test = "cpe_product" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_product"],
+                      no = "*")
+    version <- ifelse(test = "cpe_version" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_version"],
+                      no = "*")
+    vendor <- stringr::str_replace_all(vendor, " ", "_")
+    product <- stringr::str_replace_all(product, " ", "_")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    if (vendor == "*") vendor <- product
+    if (product == "*") product <- vendor
+    cpe <- paste("cpe", "2.3", part, vendor, product, version, "*:*:*:*:*:*:*", sep = ":")
+    cpe <- stringr::str_replace_all(cpe, "_([[:punct:]])_", "\\1")
+    return(cpe)
+  }
+
+  if (!hastitle) {
+    sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
+                      mitre::cpe_wfn_product(df_inventory$name), sep = " ")
+    df_pred <- data.frame(title = sapply(sw_title,
+                                         function(x)
+                                           paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
+                          cpe = rep(NA, length(sw_title)))
+    df_pred$title <- paste(df_pred$title, df_inventory$version)
+  } else {
+    df_pred <- df_inventory
+  }
+
+  df_inventory$cpe <- sapply(df_pred$title,
+                             function(x) {
+                               cpener2cpe23(embed2cpener(textNER(x = x, 
+                                                                 model = model_name, 
+                                                                 device = "gpu",
+                                                                 logging_level = "critical")))
+                             }) %>% as.character()
+  
+  return(df_inventory)
+}
+
+
+```
+
+
+```{r}
+# df_inventory <- df %>% sample_n(5)
+
+df_inventory <- df[df$id %in% df_ubi_sample$id,]
+
 ```
 
 ```{r}
-df_test <- data.frame(id = 1:length(unique(df_sccm$title)), title = unique(df_sccm$title))
+df_inventory <- predict_cpe(df_inventory = df_inventory, hastitle = TRUE)
 
+kbl(df_inventory) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+```{r}
+# replace cpe version (ner prediction) by orginal version
+df_inventory <- df_inventory %>% 
+                separate(col = cpe , sep = ":", extra = "merge", 
+                         into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
+                mutate(cpe = paste(std, v, part, vend, prod, version, tail, sep = ":")) %>%
+                select(names(df_inventory))
+
+
+```
+
+
+```{r}
+cpes <- mitre::cpe_latest_data(remote = T)
+
+cpes_vp <- mitre::getCPEstats(cpes, only_vendor = FALSE)
+cpes_vend <- mitre::getCPEstats(cpes)
+cpes_prod <- cpes %>% group_by(product) %>% summarise(n = n(), .groups = "drop") %>% arrange(desc(n))
+
+df_eval <- df_inventory %>% 
+           separate(col = cpe , sep = ":", extra = "merge", 
+                    into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
+           select(id, vend, prod, vers)
+```
+
+
+```{r}
+vend_eval <- stringdist::stringsimmatrix(df_eval$vend, cpes_vend$vendor)
+vend_eval <- as.data.frame.matrix(vend_eval)
+names(vend_eval) <- cpes_vend$vendor
+
+df_eval$cpe_vend <- names(vend_eval)[apply(vend_eval, 1, which.max)]
+df_eval$cpe_vend_dist <- apply(vend_eval, 1, max)
+```
+
+```{r}
+prod_eval <- stringdist::stringsimmatrix(df_eval$prod, cpes_prod$product)
+prod_eval <- as.data.frame.matrix(prod_eval)
+names(prod_eval) <- cpes_prod$product
+
+df_eval$cpe_prod <- names(prod_eval)[apply(prod_eval, 1, which.max)]
+df_eval$cpe_prod_dist <- apply(prod_eval, 1, max)
+```
+
+```{r}
+cand_vend <- df_eval[((df_eval$cpe_prod_dist == 1) & (df_eval$cpe_vend_dist < 1)), c("id", "vend", "cpe_prod")]
+cand_vend <- left_join(cand_vend %>% rename("product" = "cpe_prod"), 
+                       cpes_vp %>% select(vendor, product), by = "product") %>%
+             select(id, vendor) %>% rename("cand_vend" = "vendor")
+df_eval <- left_join(df_eval, cand_vend, by = "id")
+df_eval$cand_vend[is.na(df_eval$cand_vend)] <- ""
+df_eval$cand_vend_dist <- apply(df_eval, 1, function(x) stringdist::stringsim(x["vend"], x["cand_vend"]))
+```
+
+```{r}
+cand_prod <- df_eval[((df_eval$cpe_vend_dist == 1) & (df_eval$cpe_prod_dist < 1)), c("id", "prod", "cpe_vend")]
+cand_prod <- left_join(cand_prod %>% rename("vendor" = "cpe_vend"), 
+                       cpes_vp %>% select(vendor, product), by = "vendor") %>%
+             # select(id, product) %>% 
+             rename("cand_prod" = "product")
+cand_prod$cand_prod_dist <- apply(cand_prod, 1, function(x) stringdist::stringsim(x["prod"], x["cand_prod"]))
+
+cand_prod <- left_join(cand_prod %>% group_by(id) %>% summarise(cand_prod_dist = max(cand_prod_dist)),
+                cand_prod %>% select(-prod, -vendor), by = (c("id", "cand_prod_dist"))) %>% 
+             group_by(id, cand_prod_dist) %>% 
+             summarise(cand_prod = paste(cand_prod, collapse = ":::"), .groups = "drop") %>%
+             select(id, cand_prod, cand_prod_dist)
+
+
+df_eval <- left_join(df_eval, cand_prod, by = "id")
+df_eval$cand_prod[is.na(df_eval$cand_prod)] <- ""
+df_eval$cand_prod_dist[is.na(df_eval$cand_prod_dist)] <- 0
 
 ```
 

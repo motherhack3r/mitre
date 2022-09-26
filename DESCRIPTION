@@ -32,7 +32,8 @@ Imports:
     utils,
     DescTools,
     stringdist,
-    datawizard
+    datawizard,
+    textclean
 RoxygenNote: 7.2.1
 Suggests: 
     rmarkdown,
