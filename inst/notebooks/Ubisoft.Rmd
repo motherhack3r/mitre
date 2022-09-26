@@ -9,6 +9,7 @@ Load required packages.
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(stringr))
 suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyr))
 ```
 
 Load NLP requirements.
@@ -48,7 +49,7 @@ df_ubi <- df_ubi_raw %>%
           select(id, vendor, product, version, n)
 df_ubi$id <- 1:nrow(df_ubi)
 
-df_ubi_sample <- head(df_ubi, 20)
+df_ubi_sample <- head(df_ubi, 100)
 
 kbl(df_ubi_sample) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
@@ -105,7 +106,10 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
     product <- stringr::str_replace_all(product, " ", "_")
     version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
     version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    if (vendor == "*") vendor <- product
+    if (product == "*") product <- vendor
     cpe <- paste("cpe", "2.3", part, vendor, product, version, "*:*:*:*:*:*:*", sep = ":")
+    cpe <- stringr::str_replace_all(cpe, "_([[:punct:]])_", "\\1")
     return(cpe)
   }
 
@@ -125,9 +129,10 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
                              function(x) {
                                cpener2cpe23(embed2cpener(textNER(x = x, 
                                                                  model = model_name, 
-                                                                 device = "gpu")))
+                                                                 device = "gpu",
+                                                                 logging_level = "critical")))
                              }) %>% as.character()
-
+  
   return(df_inventory)
 }
 
@@ -136,18 +141,91 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 
 
 ```{r}
-df_inventory <- df %>% sample_n(5)
+# df_inventory <- df %>% sample_n(5)
 
-# df_inventory <- df[df$id %in% df_ubi_sample$id,]
+df_inventory <- df[df$id %in% df_ubi_sample$id,]
 
 ```
 
 ```{r}
-suppressMessages(
-  df_inventory <- predict_cpe(df_inventory = df_inventory, hastitle = TRUE)
-)
+df_inventory <- predict_cpe(df_inventory = df_inventory, hastitle = TRUE)
+
+kbl(df_inventory) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+```{r}
+# replace cpe version (ner prediction) by orginal version
+df_inventory <- df_inventory %>% 
+                separate(col = cpe , sep = ":", extra = "merge", 
+                         into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
+                mutate(cpe = paste(std, v, part, vend, prod, version, tail, sep = ":")) %>%
+                select(names(df_inventory))
 
 
+```
+
+
+```{r}
+cpes <- mitre::cpe_latest_data(remote = T)
+
+cpes_vp <- mitre::getCPEstats(cpes, only_vendor = FALSE)
+cpes_vend <- mitre::getCPEstats(cpes)
+cpes_prod <- cpes %>% group_by(product) %>% summarise(n = n(), .groups = "drop") %>% arrange(desc(n))
+
+df_eval <- df_inventory %>% 
+           separate(col = cpe , sep = ":", extra = "merge", 
+                    into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
+           select(id, vend, prod, vers)
+```
+
+
+```{r}
+vend_eval <- stringdist::stringsimmatrix(df_eval$vend, cpes_vend$vendor)
+vend_eval <- as.data.frame.matrix(vend_eval)
+names(vend_eval) <- cpes_vend$vendor
+
+df_eval$cpe_vend <- names(vend_eval)[apply(vend_eval, 1, which.max)]
+df_eval$cpe_vend_dist <- apply(vend_eval, 1, max)
+```
+
+```{r}
+prod_eval <- stringdist::stringsimmatrix(df_eval$prod, cpes_prod$product)
+prod_eval <- as.data.frame.matrix(prod_eval)
+names(prod_eval) <- cpes_prod$product
+
+df_eval$cpe_prod <- names(prod_eval)[apply(prod_eval, 1, which.max)]
+df_eval$cpe_prod_dist <- apply(prod_eval, 1, max)
+```
+
+```{r}
+cand_vend <- df_eval[((df_eval$cpe_prod_dist == 1) & (df_eval$cpe_vend_dist < 1)), c("id", "vend", "cpe_prod")]
+cand_vend <- left_join(cand_vend %>% rename("product" = "cpe_prod"), 
+                       cpes_vp %>% select(vendor, product), by = "product") %>%
+             select(id, vendor) %>% rename("cand_vend" = "vendor")
+df_eval <- left_join(df_eval, cand_vend, by = "id")
+df_eval$cand_vend[is.na(df_eval$cand_vend)] <- ""
+df_eval$cand_vend_dist <- apply(df_eval, 1, function(x) stringdist::stringsim(x["vend"], x["cand_vend"]))
+```
+
+```{r}
+cand_prod <- df_eval[((df_eval$cpe_vend_dist == 1) & (df_eval$cpe_prod_dist < 1)), c("id", "prod", "cpe_vend")]
+cand_prod <- left_join(cand_prod %>% rename("vendor" = "cpe_vend"), 
+                       cpes_vp %>% select(vendor, product), by = "vendor") %>%
+             # select(id, product) %>% 
+             rename("cand_prod" = "product")
+cand_prod$cand_prod_dist <- apply(cand_prod, 1, function(x) stringdist::stringsim(x["prod"], x["cand_prod"]))
+
+cand_prod <- left_join(cand_prod %>% group_by(id) %>% summarise(cand_prod_dist = max(cand_prod_dist)),
+                cand_prod %>% select(-prod, -vendor), by = (c("id", "cand_prod_dist"))) %>% 
+             group_by(id, cand_prod_dist) %>% 
+             summarise(cand_prod = paste(cand_prod, collapse = ":::"), .groups = "drop") %>%
+             select(id, cand_prod, cand_prod_dist)
+
+
+df_eval <- left_join(df_eval, cand_prod, by = "id")
+df_eval$cand_prod[is.na(df_eval$cand_prod)] <- ""
+df_eval$cand_prod_dist[is.na(df_eval$cand_prod_dist)] <- 0
 
 ```
 
