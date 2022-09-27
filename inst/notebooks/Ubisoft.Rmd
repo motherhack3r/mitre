@@ -15,11 +15,11 @@ suppressPackageStartupMessages(library(tidyr))
 Load NLP requirements.
 
 ```{r}
-reticulate::use_condaenv("transf")
+reticulate::use_condaenv("textrpp_condaenv")
 
 library(text)
 
-textrpp_initialize(condaenv = "transf", prompt = FALSE)
+textrpp_initialize(condaenv = "textrpp_condaenv", prompt = FALSE)
 ```
 
 This is an example using [Ubisoft](https://github.com/humbertcostas/vulnmine) data. 
@@ -49,7 +49,7 @@ df_ubi <- df_ubi_raw %>%
           select(id, vendor, product, version, n)
 df_ubi$id <- 1:nrow(df_ubi)
 
-df_ubi_sample <- head(df_ubi, 100)
+df_ubi_sample <- head(df_ubi, 50)
 
 kbl(df_ubi_sample) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
@@ -129,8 +129,7 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
                              function(x) {
                                cpener2cpe23(embed2cpener(textNER(x = x, 
                                                                  model = model_name, 
-                                                                 device = "gpu",
-                                                                 logging_level = "critical")))
+                                                                 device = "gpu")))
                              }) %>% as.character()
   
   return(df_inventory)

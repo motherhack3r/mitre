@@ -47,4 +47,4 @@ inst/notebooks/**/*.png
 inst/notebooks/**/*.html
 inst/notebooks/**/*.h5
 inst/notebooks/**/*.csv
-
+mitre.Rproj

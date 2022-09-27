@@ -416,11 +416,11 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
     if (verbose) print(paste0("[*] ", "Reading CSV file..."))
     df_sccm <- read.csv(path_sccm, header = csv.headr, col.names = c("product", "vendor", "version"))
   }
-  if (!("id" %in% names(df))) {
+  if (!("id" %in% names(df_sccm))) {
     if (verbose) print(paste0("[*] ", "Adding id column..."))
-    df$id <- 1:nrow(df)
+    df_sccm$id <- 1:nrow(df_sccm)
   }
-  df_sccm <- df
+  df <- df_sccm
   if (verbose) print(paste0(" |> ", "Input rows: ", nrow(df)))
 
   # Clean vendor strings
