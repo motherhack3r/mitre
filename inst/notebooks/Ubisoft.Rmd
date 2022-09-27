@@ -3,6 +3,10 @@ title: "Ubisoft Cybersecurity Analysis"
 output: html_notebook
 ---
 
+```{r}
+num_samples <- 50
+```
+
 Load required packages.
 
 ```{r}
@@ -49,7 +53,7 @@ df_ubi <- df_ubi_raw %>%
           select(id, vendor, product, version, n)
 df_ubi$id <- 1:nrow(df_ubi)
 
-df_ubi_sample <- head(df_ubi, 100)
+df_ubi_sample <- head(df_ubi, num_samples)
 
 kbl(df_ubi_sample) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
@@ -161,10 +165,16 @@ df_inventory <- df_inventory %>%
                          into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
                 mutate(cpe = paste(std, v, part, vend, prod, version, tail, sep = ":")) %>%
                 select(names(df_inventory))
-
-
 ```
 
+## Evaluate predictions
+
+### Prepare Official CPE tables
+
+Prepare Official CPE vendor/product tables:  
+ - cpes_vp: group by vendor AND product  
+ - cpes_vend: group by vendor  
+ - cpes_prod: group by prod  
 
 ```{r}
 cpes <- mitre::cpe_latest_data(remote = T)
@@ -172,16 +182,105 @@ cpes <- mitre::cpe_latest_data(remote = T)
 cpes_vp <- mitre::getCPEstats(cpes, only_vendor = FALSE)
 cpes_vend <- mitre::getCPEstats(cpes)
 cpes_prod <- cpes %>% group_by(product) %>% summarise(n = n(), .groups = "drop") %>% arrange(desc(n))
-
-df_eval <- df_inventory %>% 
-           separate(col = cpe , sep = ":", extra = "merge", 
-                    into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
-           select(id, vend, prod, vers)
 ```
 
+### Prepare features for evaluation
+
+Prepare data.frame for evaluation and candidates selection with columns:  
+ - vendor, product, version: Original values  
+ - ner_vendor, ner_product, ner_version: Predicted values with NER model  
+ - ner_cpelite: concatenate ner_vendor:ner_product  
 
 ```{r}
-vend_eval <- stringdist::stringsimmatrix(df_eval$vend, cpes_vend$vendor)
+# prepare data.frame for evaluation and candidates selection
+df_eval <- df_inventory %>% 
+           separate(col = cpe , sep = ":", extra = "merge", 
+                    into = c("std", "v", "part", "ner_vend", "ner_prod", "ner_vers", "tail")) %>%
+           select(id, vendor, product, version, ner_vend, ner_prod, ner_vers) %>%
+           mutate(ner_cpelite = paste(ner_vend, ner_prod, sep = ":"))
+```
+
+### Evaluations tests
+
+Begin detecting vendor perfect match or close similarity with official CPE data.
+For those vendors try to match the product with each vendors official products.
+
+```{r}
+df_match <- data.frame(id = integer(),
+                       vd_vendor = character(),
+                       vd_product = character(),
+                       vd_match_type = character(),
+                       vd_score = numeric(), stringsAsFactors = FALSE)
+```
+
+#### TEST M1: Perfect match for predicted vendor AND product
+
+```{r}
+# Perfect match with vendor using inner_join
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                       cpes_vp %>% select(vendor, product), 
+                       by = c("ner_vend" = "vendor", "ner_prod" = "product")) %>%
+            rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
+            select(id, vd_vendor, vd_product)
+df_test$vd_match_type <- rep("M1", nrow(df_test))
+df_test$vd_score <- rep(1.0, nrow(df_test))
+df_match <- bind_rows(df_match, df_test)
+
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+#### TEST M1A: t(M1) AND predicted product IN CPEs (maybe from other vendor)
+
+```{r}
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                       cpes_vend %>% select(vendor), 
+                       by = c("ner_vend" = "vendor")) %>%
+           inner_join(cpes_prod %>% select(product), by = c("ner_prod" = "product")) %>%
+           rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
+           select(id, vd_vendor, vd_product)
+df_test$vd_match_type <- rep("M1A", nrow(df_test))
+df_test$vd_score <- rep(.95, nrow(df_test))
+
+df_match <- bind_rows(df_match, df_test)
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+#### TEST M1B: t(M1) AND similar product IN CPEs (from same vendor)
+
+```{r}
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                       cpes_vp %>% select(vendor, product), 
+                       by = c("ner_vend" = "vendor")) 
+df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, "_", " ")
+df_test$product <- stringr::str_replace_all(df_test$product, "_", " ")
+df_test$vd_match_type <- rep("M1B", nrow(df_test))
+df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "jw")
+# df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "osa")
+# df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "qgram")
+
+df_test <- inner_join(df_test %>% group_by(id) %>% summarise(vd_score = max(vd_score), .groups = "drop"),
+                        df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
+           select(names(df_test)) %>% 
+           filter(vd_score >= 0.8)
+df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, " ", "_")
+df_test$product <- stringr::str_replace_all(df_test$product, " ", "_")
+
+df_test <- df_test %>% 
+           rename("vd_vendor" = "ner_vend", "vd_product" = "product") %>%
+           select(names(df_match))
+
+df_match <- bind_rows(df_match, df_test)
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+#### TEST M1C: t(M1) AND NOT t(M1A, M1B) similar product IN CPEs (maybe from other vendor)
+
+
+
+----------------
+
+```{r}
+vend_eval <- stringdist::stringsimmatrix(df_eval$ner_vend, cpes_vend$vendor)
 vend_eval <- as.data.frame.matrix(vend_eval)
 names(vend_eval) <- cpes_vend$vendor
 
@@ -190,12 +289,12 @@ df_eval$cpe_vend_dist <- apply(vend_eval, 1, max)
 ```
 
 ```{r}
-prod_eval <- stringdist::stringsimmatrix(df_eval$prod, cpes_prod$product)
-prod_eval <- as.data.frame.matrix(prod_eval)
-names(prod_eval) <- cpes_prod$product
-
-df_eval$cpe_prod <- names(prod_eval)[apply(prod_eval, 1, which.max)]
-df_eval$cpe_prod_dist <- apply(prod_eval, 1, max)
+# prod_eval <- stringdist::stringsimmatrix(df_eval$ner_prod, cpes_prod$product)
+# prod_eval <- as.data.frame.matrix(prod_eval)
+# names(prod_eval) <- cpes_prod$product
+# 
+# df_eval$cpe_prod <- names(prod_eval)[apply(prod_eval, 1, which.max)]
+# df_eval$cpe_prod_dist <- apply(prod_eval, 1, max)
 ```
 
 ```{r}
