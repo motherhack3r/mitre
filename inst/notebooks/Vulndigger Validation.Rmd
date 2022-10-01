@@ -1,0 +1,351 @@
+---
+title: "Vulndigger Cybersecurity Analysis"
+author: "Humbert Costas"
+date: 'r as.character(date())'
+output: html_document
+---
+
+# Configure notebook parameters
+
+```{r}
+num_samples <- 1000
+sccm_path <- "../extdata/sql_software_product.csv"
+predict_path <- "../extdata/vulndigger_2022092718.csv.gz"
+verbose_data <- TRUE
+verbose <- TRUE
+```
+
+# Load required packages
+
+```{r}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(kableExtra))
+suppressPackageStartupMessages(library(tidyr))
+```
+
+# Read data for validation
+
+Read original SCCM export and NER predictions.
+Create a data.frame of `r num_samples` random samples for validation.
+
+```{r}
+# df_sql <- read.csv(paste0("/dbfs", sccm_path), header = TRUE)
+df_sql <- read.csv(paste0(sccm_path), header = TRUE)
+if (verbose) cat(paste0("[",date(), "] > ", nrow(df_sql), " rows read from SCCM SQL export."), "\n")
+
+df_sql <- df_sql %>% 
+          select(ProductId, CompanyName, ProductName, ProductVersion) %>%
+          rename("id" = "ProductId",
+                 "vendor" = "CompanyName", 
+                 "product" = "ProductName", 
+                 "version" = "ProductVersion")
+
+df_ner <- readr::read_csv(predict_path, show_col_types = FALSE) %>% as.data.frame()
+
+# Remove "[PAD]" from predictions
+df_ner$wfn_vendor <- stringr::str_replace_all(df_ner$wfn_vendor, "\\[PAD\\]", "")
+df_ner$wfn_product <- stringr::str_replace_all(df_ner$wfn_product, "\\[PAD\\]", "")
+df_ner$wfn_version <- stringr::str_replace_all(df_ner$wfn_version, "\\[PAD\\]", "")
+df_ner$predicted_cpe_lite <- stringr::str_replace_all(df_ner$predicted_cpe_lite, "\\[PAD\\]", "")
+
+if (verbose) cat(paste0("[",date(), "] > ", nrow(df_ner), " rows read from NER predictions."), "\n")
+
+# Check if all predicted exists in sql export
+if (all(df_ner$id %in% df_sql$id)) {
+  if (verbose) cat(paste0("[",date(), "] > All NER predictions in SCCM export."), "\n")
+} else {
+  df_ner <- df_ner[df_ner$id %in% df_sql$id, ]
+  if (verbose) cat(paste0("[",date(), "] > ", nrow(df_ner), " NER predictions in SCCM export."), "\n")
+}
+if (verbose) cat(paste0("[",date(), "] > ", nrow(df_sql) - nrow(df_ner), " rows ommited from SCCM export."), "\n")
+
+# Select a subset for validation
+df_predict <- df_ner %>% sample_n(num_samples)
+if (verbose) cat(paste0("[",date(), "] > Select random ", nrow(df_predict), " samples for validation."), "\n")
+```
+
+# Prepare data sets
+
+## Prepare sample for validation
+
+NER model does not detect wfn_version very well, that's why wfn_version is created from title:
+Replace wfn_version with original raw version.
+
+```{r}
+df_predict <- left_join(df_predict, 
+                        df_sql %>% select(id, version), 
+                        by = "id") %>% 
+                sample_n(num_samples) %>%
+                select(id, title, wfn_vendor, wfn_product, wfn_version, predicted_cpe_lite)
+df_predict$bad_version <- df_predict$wfn_version
+df_predict$wfn_version <- sapply(df_predict$title, function(x) stringr::str_replace_all(x, "^.*\\s([0-9\\.]+)$", "\\1"))
+
+df_predict$wfn_version2 <- df_predict$wfn_version
+df_predict$wfn_version <- textclean::replace_white(textclean::replace_html(textclean::replace_emoji(df_predict$wfn_version)))
+df_predict$wfn_version[(grepl("\\d+(, \\d+)+", df_predict$wfn_version))] <-
+  gsub("\\, ", "\\.", df_predict$wfn_version[(grepl("\\d+(, \\d+)+", df_predict$wfn_version))])
+df_predict$wfn_version[(grepl("\\d+(,\\d+)+", df_predict$wfn_version))] <-
+  gsub("\\,", "\\.", df_predict$wfn_version[(grepl("\\d+(,\\d+)+", df_predict$wfn_version))])
+df_predict$wfn_version[(grepl("\\d+(\\. \\d+)+", df_predict$wfn_version))] <-
+  gsub("\\. ", "\\.", df_predict$wfn_version[(grepl("\\d+(\\. \\d+)+", df_predict$wfn_version))])
+
+df_predict$wfn_version <- stringr::str_extract(df_predict$wfn_version, "\\d+(\\.\\d+)*")
+df_predict$wfn_version <- tolower(df_predict$wfn_version)
+
+# If any null, replace with "bad_version" from NER
+df_predict$wfn_version[is.na(df_predict$wfn_version)] <- df_predict$bad_version[is.na(df_predict$wfn_version)]
+```
+
+It needs a minor cleansing:
+
+ - remove last extra dot in title  
+ - replace spaces for underscore in wfn_* columns, except when there is a punctuation charater between spaces.  
+ - Fill missing vendor with product and vicebersa  
+
+```{r}
+# Remove last dot in title
+df_predict$title <- stringr::str_replace(pattern="^(.*)\\.$", replacement="\\1", string=df_predict$title)
+# Replace space with _ in vendor and product
+df_predict$wfn_vendor <- sapply(df_predict$wfn_vendor, function(x) stringr::str_replace_all(x, " ", "_"))
+df_predict$wfn_product <- sapply(df_predict$wfn_product, function(x) stringr::str_replace_all(x, " ", "_"))
+
+# Replace _[punctuation]_  with [punctuation] in vendor and product
+df_predict$wfn_vendor <- sapply(df_predict$wfn_vendor, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])_", "\\1"))
+df_predict$wfn_vendor <- sapply(df_predict$wfn_vendor, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])_", "\\1"))
+df_predict$wfn_vendor <- sapply(df_predict$wfn_vendor, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])", "\\1"))
+df_predict$wfn_product <- sapply(df_predict$wfn_product, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])_", "\\1"))
+df_predict$wfn_product <- sapply(df_predict$wfn_product, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])_", "\\1"))
+df_predict$wfn_product <- sapply(df_predict$wfn_product, function(x) stringr::str_replace_all(x, "_([^[:alnum:]])", "\\1"))
+# Fill missing vendor with product and vicebersa
+df_predict$wfn_product[is.na(df_predict$wfn_product)] <- ""
+df_predict$wfn_product[df_predict$wfn_product == ""] <- df_predict$wfn_vendor[df_predict$wfn_product == ""]
+df_predict$wfn_vendor[is.na(df_predict$wfn_vendor)] <- ""
+df_predict$wfn_vendor[df_predict$wfn_vendor == ""] <- df_predict$wfn_product[df_predict$wfn_vendor == ""]
+```
+
+Create clean data.frame `df_inventory`:
+
+  - id: SCCM ProductId
+  - vendor: SCCM CompanyName
+  - product: SCCM ProductName
+  - version: SCCM ProductVersion
+  - title: VulnDigger title composition
+  - cpe: VulnDigger predicted CPE composition
+
+```{r}
+df_inventory <- df_predict %>% 
+                select(id, title, wfn_vendor, wfn_product, wfn_version) %>%
+                left_join(df_sql, by = "id")
+df_inventory$cpe <- paste("cpe", "2.3", "*", 
+                          df_inventory$wfn_vendor, 
+                          df_inventory$wfn_product, 
+                          df_inventory$wfn_version, 
+                          "*:*:*:*:*:*:*", sep = ":")
+df_inventory <- df_inventory %>%
+                select(id, vendor, product, version, title, cpe)
+
+# Remove rows not matched. Reason related to using raw and predicted from different raw
+df_inventory <- df_inventory[!is.na(df_inventory$vendor),]
+df_inventory <- df_inventory[!is.na(df_inventory$product),]
+
+if (verbose_data) 
+  kbl(df_inventory) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+## Prepare Official CPE as as lookup tables
+
+Prepare Official CPE vendor/product data.frames:  
+ - cpes_vp: group by vendor AND product  
+ - cpes_vend: group by vendor  
+ - cpes_prod: group by prod  
+
+```{r}
+cpes <- mitre::cpe_latest_data(remote = T)
+
+cpes_vp <- mitre::getCPEstats(cpes, only_vendor = FALSE)
+cpes_vend <- mitre::getCPEstats(cpes)
+cpes_prod <- cpes %>% group_by(product) %>% summarise(n = n(), .groups = "drop") %>% arrange(desc(n))
+```
+
+## Prepare features for evaluation
+
+Prepare data.frame for evaluation and candidates selection with columns: 
+
+ - vendor, product, version: Original values  
+ - ner_vendor, ner_product, ner_version: Predicted values with NER model  
+ - ner_cpelite: concatenate ner_vendor:ner_product  
+
+```{r}
+# prepare data.frame for evaluation and candidates selection
+df_eval <- df_inventory %>% 
+           separate(col = cpe , sep = ":", extra = "merge", 
+                    into = c("std", "v", "part", "ner_vend", "ner_prod", "ner_vers", "tail")) %>%
+           select(id, vendor, product, version, ner_vend, ner_prod, ner_vers) %>%
+           mutate(ner_cpelite = paste(ner_vend, ner_prod, sep = ":"))
+
+if (verbose_data) 
+  kbl(df_eval) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+# Evaluations tests
+
+Begin detecting vendor perfect match or close similarity with official CPE data.
+For those vendors try to match the product with each vendors official products.
+
+```{r}
+df_match <- data.frame(id = integer(),
+                       vd_vendor = character(),
+                       vd_product = character(),
+                       vd_match_type = character(),
+                       vd_score = numeric(), stringsAsFactors = FALSE)
+```
+
+## TEST M1: Perfect match for predicted vendor AND product
+
+```{r}
+# Perfect match with vendor using inner_join
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                      cpes_vp %>% select(vendor, product), 
+                      by = c("ner_vend" = "vendor", "ner_prod" = "product")) %>%
+           rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
+           select(id, vd_vendor, vd_product)
+df_test$vd_match_type <- rep("M1", nrow(df_test))
+df_test$vd_score <- rep(1.0, nrow(df_test))
+df_match <- bind_rows(df_match, df_test)
+
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+## TEST M1A: t(M1) AND predicted product IN CPEs (maybe from other vendor)
+
+```{r}
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                      cpes_vend %>% select(vendor), 
+                      by = c("ner_vend" = "vendor")) %>%
+           inner_join(cpes_prod %>% select(product), by = c("ner_prod" = "product")) %>%
+           rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
+           select(id, vd_vendor, vd_product)
+df_test$vd_match_type <- rep("M1A", nrow(df_test))
+df_test$vd_score <- rep(.95, nrow(df_test))
+
+df_match <- bind_rows(df_match, df_test)
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+## TEST M1B: t(M1) AND similar product IN CPEs (from same vendor)
+
+```{r}
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                      cpes_vp %>% select(vendor, product), 
+                      by = c("ner_vend" = "vendor")) 
+df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, "_", " ")
+df_test$product <- stringr::str_replace_all(df_test$product, "_", " ")
+df_test$vd_match_type <- rep("M1B", nrow(df_test))
+df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "jw")
+# df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "osa")
+# df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "qgram")
+
+df_test <- inner_join(df_test %>% group_by(id) %>% 
+                                  summarise(vd_score = max(vd_score), .groups = "drop"),
+                      df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
+           select(names(df_test)) %>% 
+           filter(vd_score >= 0.8)
+df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, " ", "_")
+df_test$product <- stringr::str_replace_all(df_test$product, " ", "_")
+
+df_test <- df_test %>% 
+           rename("vd_vendor" = "ner_vend", "vd_product" = "product") %>%
+           select(names(df_match))
+
+df_match <- bind_rows(df_match, df_test)
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+## TEST M1C: t(M1) AND NOT t(M1A, M1B) similar product IN CPEs (maybe from other vendor)
+
+```{r}
+df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
+                      cpes_vp %>% select(vendor, product), 
+                      by = c("ner_prod" = "product"))
+
+df_test$ner_vend <- stringr::str_replace_all(df_test$ner_vend, "_", " ")
+df_test$vendor <- stringr::str_replace_all(df_test$vendor, "_", " ")
+df_test$vd_match_type <- rep("M1C", nrow(df_test))
+df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "jw")
+
+df_test <- inner_join(df_test %>% group_by(id) %>% 
+                                  summarise(vd_score = max(vd_score), .groups = "drop"),
+                      df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
+           select(names(df_test)) %>% 
+           filter(vd_score >= 0.7)
+df_test$ner_vend <- stringr::str_replace_all(df_test$ner_vend, " ", "_")
+df_test$vendor <- stringr::str_replace_all(df_test$vendor, " ", "_")
+
+df_test <- df_test %>% 
+           rename("vd_product" = "ner_prod", "vd_vendor" = "vendor") %>%
+           select(names(df_match))
+
+df_match <- bind_rows(df_match, df_test)
+df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
+```
+
+# Conclusions
+
+## Prepare results data.frame
+
+```{r}
+df_match <- df_match %>% mutate(vd_cpelite = paste(vd_vendor, vd_product, sep = ":"))
+
+df_results <- left_join(df_match, df_inventory %>% select(id, version), by = "id") %>%
+              rename("vd_version" = "version") %>%
+              select(id, vd_vendor, vd_product, vd_version, vd_cpelite, vd_score, vd_match_type)
+
+df_eval$vd_match_type <- rep("NER", nrow(df_eval))
+df_eval <- df_eval %>% rename("vd_vendor" = "ner_vend", 
+                              "vd_product" = "ner_prod", 
+                              "vd_version" = "ner_vers",
+                              "vd_cpelite" = "ner_cpelite") %>%
+           left_join(df_ner %>% select(id, wfn_vendor_acc, wfn_product_acc), by = "id") %>%
+           rowwise() %>%
+           mutate(vd_score = min(wfn_vendor_acc, wfn_product_acc)*0.8) %>%
+           select(names(df_results)) %>%
+           ungroup()
+
+df_results <- bind_rows(df_results, df_eval)
+
+# Select only one candidate
+df_results <- df_results %>% group_by(id) %>% slice_head(n = 1)
+```
+
+Join results with inventory to compare the predictions after and before validation lookup.
+
+```{r}
+df_validation <- left_join(df_inventory, df_results, by = "id") %>%
+                 rename("vd_cpe" = "vd_cpelite") %>%
+                 mutate(vd_cpe = paste("cpe", "2.3", "*", vd_cpe, 
+                                       vd_version, "*:*:*:*:*:*:*", sep = ":"))
+
+```
+
+Final evaluation:
+
+```{r}
+suppressPackageStartupMessages(library(ggplot2))
+
+ggplot(df_validation) +
+  aes(x = vd_score, y = vd_match_type) +
+  geom_boxplot(fill = "#112446") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(df_validation) +
+ aes(x = vd_match_type, weight = vd_score) +
+ geom_bar(fill = "#112446") +
+ theme_minimal()
+
+```
+
