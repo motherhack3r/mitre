@@ -162,16 +162,6 @@ enc_valid_chars <- function(taste = c("char", "dec", "hex")[1],
   return(valid_chars)
 }
 
-#' Transform WFN escaped name to common string
-#'
-#' @param name character vector
-#'
-#' @return character
-#' @export
-wfn2str <- function(name = character()) {
-  return(name)
-}
-
 
 #' Transform the CPEs data frame removing unnecessary columns. Change default parameters
 #' to remove deprecated or those that doesn't follow the WFN definition.

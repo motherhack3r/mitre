@@ -2,11 +2,12 @@
 # library(reticulate)
 # library(here)
 #
-reticulate::use_condaenv("transf")
+reticulate::use_condaenv("textrpp_condaenv")
 #
 # # Install Python package into virtual environment
 # # > conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 # # reticulate::py_install(packages = c("pytorch", "torchvision", "torchaudio", "cudatoolkit"), pip = TRUE)
+# "torch==1.11.0" "transformers==4.19.2" numpy nltk
 #
 # # Retrieve/force initialization of Python
 reticulate::py_config()
@@ -18,7 +19,7 @@ library(text)
 
 # Initialize the installed conda environment.
 # save_profile = TRUE saves the settings so that you don't have to run textrpp_initialize() after restarting R.
-textrpp_initialize(condaenv = "transf", save_profile = TRUE, prompt = FALSE)
+textrpp_initialize(condaenv = "textrpp_condaenv", prompt = FALSE)
 
 # text::textModelsRemove("Neurona/cpener-test")
 

@@ -191,5 +191,5 @@ kk$topred <- row.names(vcands)
 
 
 # pct_encode(invents[16])
-# str2wfn_encode(invents[16])
+# cpe_str2wfn(invents[16])
 
