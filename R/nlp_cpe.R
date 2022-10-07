@@ -1,5 +1,3 @@
-# ONLY NEEDED FOR VULNDIGGER
-
 #' Load CPE data frame from local file or download latest
 #'
 #' @param local_path path to RDS file. NA value implies remote TRUE
@@ -625,6 +623,34 @@ cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
   x <- stringr::str_trim(x)
 
   return(x)
+}
+
+#####
+##### NIST IMPLEMENTATIONS
+
+wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
+                    update = "*", edition = "*", language = "*", sw_edition = "*",
+                    target_sw = "*", target_hw = "*", other = "*",
+                    as_string = FALSE) {
+  cpe <- data.frame(part = part,
+                    vendor = vendor,
+                    product = product,
+                    version = version,
+                    update = update,
+                    edition = edition,
+                    language = language,
+                    sw_edition = sw_edition,
+                    target_sw = target_sw,
+                    target_hw = target_hw,
+                    other = other)
+  if (as_string) {
+    cpe <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
+  }
+  return(cpe)
+}
+
+wfn_compare <- function(source, target) {
+
 }
 
 #' Inspect each character in string s. Certain nonalpha
