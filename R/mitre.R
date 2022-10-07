@@ -25,7 +25,7 @@ getLatestDataSet <- function(verbose = FALSE) {
   #                 load(t, envir = .GlobalEnv)
   #                 file.remove(t)
   #               })
-  rawurl <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/standards.rds"
+  rawurl <- "https://github.com/motherhack3r/mitre-datasets/raw/master/historic/20220416/standards.rds"
   rawfile <- tempfile(fileext = ".rds")
   utils::download.file(url = rawurl, destfile = rawfile, quiet = !verbose)
   standards <- readRDS(rawfile)
