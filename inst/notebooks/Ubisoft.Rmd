@@ -289,7 +289,7 @@ df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
                        by = c("ner_prod" = "product")) 
 df_test$ner_vend <- stringr::str_replace_all(df_test$ner_vend, "_", " ")
 df_test$vendor <- stringr::str_replace_all(df_test$vendor, "_", " ")
-df_test$vd_match_type <- rep("M1B", nrow(df_test))
+df_test$vd_match_type <- rep("M1C", nrow(df_test))
 df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "jw")
 # df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "osa")
 # df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "qgram")
@@ -389,11 +389,39 @@ df_inventory$vd_cpe <- paste("cpe:2.3:a",
 ```
 
 
+Merge multiple cpes as candidates:
+
 ```{r}
-kbl(df_inventory %>% select(id, title, vd_cpe, vd_match_type, vd_score)) %>%
+df_inventory <- left_join(df_inventory2 %>% select(id, title, vendor, product, version),
+                df_inventory %>% unique() %>%
+                  select(id, vd_cpe, vd_score) %>% 
+                  group_by(id) %>% 
+                  mutate(candidates = jsonlite::toJSON(data.frame(cpe = vd_cpe, score = vd_score))) %>% 
+                  select(id, candidates) %>% 
+                  unique(), 
+                by = "id") %>% 
+  rowwise() %>% 
+  mutate(cpe = jsonlite::fromJSON(candidates)[1,1]) %>%
+  mutate(cpe_score = jsonlite::fromJSON(candidates)[1,2]) %>%
+  ungroup() %>%
+  select(id, title, vendor, product, version, cpe, cpe_score, candidates)
+
+```
+
+```{r}
+kbl(df_inventory) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 ```
+
+```{r}
+rm(df_inventory2)
+rm(df_match)
+rm(df_eval)
+rm(df_test)
+
+```
+
 
 ----------------
 
