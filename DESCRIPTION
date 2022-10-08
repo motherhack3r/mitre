@@ -24,14 +24,11 @@ Imports:
     igraph,
     stringr,
     stringi,
-    stringdist,
-    janitor,
     jsonlite,
     RJSONIO,
     xml2,
-    httr,
+    text,
     utils,
-    DescTools,
     rlang
 RoxygenNote: 7.2.1
 Suggests: 
