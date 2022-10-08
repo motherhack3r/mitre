@@ -14,6 +14,8 @@
 /*.Rcheck/
 # RStudio files
 .Rproj.user/
+
+mitre.Rproj
 *.Rproj
 # produced vignettes
 vignettes/*.html
@@ -29,8 +31,6 @@ vignettes/*.html
 .Renviron
 inst/temp
 inst/extdata
-# Temporary raw files to parse
-*.Rproj
 # CRAN-RELEASE 131d5d7
 CRAN-RELEASE
 # Raw files
@@ -41,10 +41,11 @@ data-raw/**/*.zip
 # Data sets
 data
 # notebook outputs and temporal files
+inst/notebooks/**/*.rda
 inst/notebooks/**/*.rds
 inst/notebooks/**/*.bin
 inst/notebooks/**/*.png
 inst/notebooks/**/*.html
 inst/notebooks/**/*.h5
 inst/notebooks/**/*.csv
-mitre.Rproj
+
