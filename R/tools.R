@@ -106,6 +106,8 @@ getInventory <- function(){
     df.sw <- dplyr::arrange(df.sw, "name")
 
     df.sw$name <- stringr::str_conv(df.sw$name, "UTF-8")
+    df.sw$id <- 1:nrow(df.sw)
+    df.sw <- df.sw[, c("id", "vendor", "name", "version")]
 
     return(df.sw)
   }
@@ -116,8 +118,10 @@ getInventory <- function(){
     df.sw <- utils::read.csv(text = sw, sep = ";", header = F,
                       col.names = c("name", "architecture", "version", "mantainer"))
     df.sw$name <- sapply(df.sw$name, function(x) stringr::str_split(x, ":")[[1]][1])
-
     df.sw$name <- stringr::str_conv(df.sw$name, "UTF-8")
+    df.sw$vendor <- df.sw$mantainer
+    df.sw$id <- 1:nrow(df.sw)
+    df.sw <- df.sw[, c("id", "vendor", "name", "version")]
 
     return(df.sw)
   }
