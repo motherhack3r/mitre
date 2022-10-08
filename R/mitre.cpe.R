@@ -1,4 +1,3 @@
-#' @importFrom magrittr %>%
 #' @import dplyr
 
 # Function for processing NER output
@@ -63,8 +62,8 @@ cpener2cpe23 <- function(df_ner = data.frame()) {
 predict_cpe <- function(df_inventory = mitre::getInventory(),
                         model_name = "Neurona/cpener-test") {
   if (!("title" %in% names(df_inventory))) {
-    sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
-                      mitre::cpe_wfn_product(df_inventory$name), sep = " ")
+    sw_title <- paste(cpe_wfn_vendor(df_inventory$vendor),
+                      cpe_wfn_product(df_inventory$name), sep = " ")
     df_pred <- data.frame(title = sapply(sw_title,
                                          function(x)
                                            paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
@@ -96,7 +95,6 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 #' @param x character
 #'
 #' @return character
-#' @export
 cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   # Normalize vendor: First apply translit, then remove bad words and HTML entities
   x <- iconv(x, to = 'ASCII//TRANSLIT', sub = "")
@@ -172,7 +170,6 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
 #' @param x character
 #'
 #' @return character
-#' @export
 cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
   x <- iconv(x, to = 'ASCII//TRANSLIT')
   x <- stringr::str_replace_all(x, "\\(.*$", "")
@@ -237,7 +234,6 @@ wfn_compare <- function(source, target) {
 #' @param s character
 #'
 #' @return character
-#' @export
 cpe_wfn_process_quoted_chars <- function(s = character()) {
   result <- ""
   idx <- 1
@@ -270,7 +266,6 @@ cpe_wfn_process_quoted_chars <- function(s = character()) {
 #' @param s character
 #'
 #' @return character
-#' @export
 cpe_wfn_add_quoting <- function(s = character()) {
   result <- ""
   idx <- 1
@@ -325,7 +320,6 @@ cpe_wfn_add_quoting <- function(s = character()) {
 #' @param name character vector
 #'
 #' @return character
-#' @export
 cpe_wfn2str <- function(name = character()) {
   decode <- function(s = character()) {
     if (s == "") return("ANY")
@@ -433,7 +427,6 @@ cpe_wfn2str <- function(name = character()) {
 #' @param name character vector
 #'
 #' @return character
-#' @export
 cpe_str2wfn <- function(name = c("Notepad++ v8.50", "CTS Projects & Software ClassAd 3.0")) {
   # Ref: NIST IR 7695 (Aug. 2011) section 6.1.2.3, function transform_for_uri
   transform_for_uri <- function(s = "Notepad++ v8.50") {
