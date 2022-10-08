@@ -1,62 +1,68 @@
 #' @importFrom magrittr %>%
 #' @import dplyr
 
+# Function for processing NER output
+embed2cpener <- function(df_ner = data.frame()) {
+  df_cpe <- as.data.frame(df_ner$x_NER)
+  df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
+                                            pattern = "^[BIOLU]\\-(cpe.+)$",
+                                            replacement = "\\1")
+  df_cpe <- dplyr::inner_join(x = df_cpe %>%
+                                group_by(.data$entity) %>%
+                                summarise(score = mean(.data$score)),
+                              y = df_cpe %>%
+                                select(.data$entity, .data$word) %>%
+                                group_by(.data$entity) %>%
+                                mutate(word = paste(.data$word, collapse = " ")) %>%
+                                unique() %>%
+                                as.data.frame(),
+                              by = "entity")
+  df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
+  df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
+  df_cpe$word[df_cpe$entity == "cpe_version"] <-
+    stringr::str_replace_all(df_cpe$word[df_cpe$entity == "cpe_version"], " \\. ", ".")
+  return(df_cpe)
+}
 
+# Function for CPE creation
+cpener2cpe23 <- function(df_ner = data.frame()) {
+  part <- "a"
+  vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
+                   yes = df_ner$word[df_ner$entity == "cpe_vendor"],
+                   no = "*")
+  product <- ifelse(test = "cpe_product" %in% df_ner$entity,
+                    yes = df_ner$word[df_ner$entity == "cpe_product"],
+                    no = "*")
+  version <- ifelse(test = "cpe_version" %in% df_ner$entity,
+                    yes = df_ner$word[df_ner$entity == "cpe_version"],
+                    no = "*")
+  vendor <- stringr::str_replace_all(vendor, " ", "_")
+  product <- stringr::str_replace_all(product, " ", "_")
+  version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+  version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+  # version <- stringr::str_replace_all(version, " \\. ", ".")
+  if (vendor == "*") vendor <- product
+  if (product == "*") product <- vendor
+
+  cpe <- mean(df_ner$score)
+  names(cpe) <- stringr::str_replace_all(paste("cpe", "2.3",
+                                               part, vendor, product, version,
+                                               "*:*:*:*:*:*:*", sep = ":"),
+                                         "_([[:punct:]])_", "\\1")
+  return(cpe)
+}
+
+
+#' Create a CPE for each inventory item.
+#'
+#' @param df_inventory data.frame with columns: vendor, name and version; title is optional
+#' @param model_name huggingface reference, by default: Neurona/cpener-test
+#'
+#' @return data.frame
+#' @export
 predict_cpe <- function(df_inventory = mitre::getInventory(),
-                        model_name = "Neurona/cpener-test",
-                        hastitle = FALSE) {
-  # Function for processing NER output
-  embed2cpener <- function(df_ner = data.frame()) {
-    df_cpe <- as.data.frame(df_ner$x_NER)
-    df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
-                                              pattern = "^[BIOLU]\\-(cpe.+)$",
-                                              replacement = "\\1")
-    df_cpe <- dplyr::inner_join(x = df_cpe %>%
-                                  group_by(.data$entity) %>%
-                                  summarise(score = mean(.data$score)),
-                                y = df_cpe %>%
-                                  select(.data$entity, .data$word) %>%
-                                  group_by(.data$entity) %>%
-                                  mutate(word = paste(.data$word, collapse = " ")) %>%
-                                  unique() %>%
-                                  as.data.frame(),
-                                by = "entity")
-    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
-    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
-    df_cpe$word[df_cpe$entity == "cpe_version"] <-
-      stringr::str_replace_all(df_cpe$word[df_cpe$entity == "cpe_version"], " \\. ", ".")
-    return(df_cpe)
-  }
-
-  # Function for CPE creation
-  cpener2cpe23 <- function(df_ner = data.frame()) {
-    part <- "a"
-    vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
-                     yes = df_ner$word[df_ner$entity == "cpe_vendor"],
-                     no = "*")
-    product <- ifelse(test = "cpe_product" %in% df_ner$entity,
-                      yes = df_ner$word[df_ner$entity == "cpe_product"],
-                      no = "*")
-    version <- ifelse(test = "cpe_version" %in% df_ner$entity,
-                      yes = df_ner$word[df_ner$entity == "cpe_version"],
-                      no = "*")
-    vendor <- stringr::str_replace_all(vendor, " ", "_")
-    product <- stringr::str_replace_all(product, " ", "_")
-    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
-    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
-    # version <- stringr::str_replace_all(version, " \\. ", ".")
-    if (vendor == "*") vendor <- product
-    if (product == "*") product <- vendor
-
-    cpe <- mean(df_ner$score)
-    names(cpe) <- stringr::str_replace_all(paste("cpe", "2.3",
-                                                 part, vendor, product, version,
-                                                 "*:*:*:*:*:*:*", sep = ":"),
-                                           "_([[:punct:]])_", "\\1")
-    return(cpe)
-  }
-
-  if (!hastitle) {
+                        model_name = "Neurona/cpener-test") {
+  if (!("title" %in% names(df_inventory))) {
     sw_title <- paste(mitre::cpe_wfn_vendor(df_inventory$vendor),
                       mitre::cpe_wfn_product(df_inventory$name), sep = " ")
     df_pred <- data.frame(title = sapply(sw_title,
@@ -519,68 +525,3 @@ cpe_str2wfn <- function(name = c("Notepad++ v8.50", "CTS Projects & Software Cla
 
 
 
-############## OLD VERSION
-
-# matchCPE <- function(name = "", version = "", vendor = "") {
-#
-#   # Match part and product
-#   if (nchar(name) > 0) {
-#     name2title <- stringdist::stringdist(tolower(name), tolower(cpe.nist$title), method = "lv")
-#     score <- round(min(name2title)/nchar(name),2)
-#     if (score >= 0.1) {
-#       candidates <- cpe.nist[name2title <= min(name2title), ]
-#       product <- names(sort(table(candidates$product), T)[1])
-#       part <- names(sort(table(cpe.nist$part[cpe.nist$product == product]), T)[1])
-#     } else {
-#       # name2product <- stringdist::stringdist(tolower(name), tolower(cpe.nist$product), method = "lv")
-#       # score2 <- round((min(name2product) + 1)/nchar(name),2)
-#       # candidates2 <- cpe.nist[name2product <= min(name2product) + 1, ]
-#       #
-#       # name2vendor <- stringdist::stringdist(tolower(name), tolower(cpe.nist$vendor), method = "lv")
-#       # score3 <- round((min(name2vendor) + 1)/nchar(name),2)
-#       # candidates3 <- cpe.nist[name2vendor <= min(name2vendor) + 1, ]
-#       product <- janitor::make_clean_names(name)
-#       part <- "a"
-#     }
-#   } else {
-#     product <- "*"
-#     part <- "*"
-#   }
-#
-#   # Match version
-#   # Ref: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-#   if (nchar(version) > 0) {
-#     svs <- '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))*(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$'
-#     versvs <- stringr::str_extract(string = version, pattern = svs)
-#     if (!is.na(versvs)) {
-#       version <- versvs
-#     } else {
-#       version <- janitor::make_clean_names(version)
-#     }
-#   } else {
-#     version <- "*"
-#   }
-#
-#   # Match vendor
-#   if (nchar(vendor) > 0 ) {
-#     if (product != janitor::make_clean_names(name)) {
-#       vendor <- names(sort(table(cpe.nist$vendor[cpe.nist$product == product]), T)[1])
-#     } else {
-#       vendor <- janitor::make_clean_names(vendor)
-#     }
-#   } else {
-#     if (product != janitor::make_clean_names(name)) {
-#       ven <- names(sort(table(cpe.nist$vendor[cpe.nist$product == product]), T)[1])
-#       if (!is.na(ven)) {
-#         vendor <- ven
-#       }
-#     } else {
-#       vendor <- "*"
-#     }
-#   }
-#
-#   wfn <- newWFN(part = part, product = product, vendor = vendor, version = version)
-#
-#   return(wfn)
-# }
-#
