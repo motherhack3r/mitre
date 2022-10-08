@@ -2,7 +2,7 @@
 % Please edit documentation in R/nlp_cpe.R
 \name{cpe_stats}
 \alias{cpe_stats}
-\title{Returns data frame with grouped count by vendor and product.}
+\title{Returns latest Official CPE as data frame grouped by vendor and product.}
 \usage{
 cpe_stats(df = cpe_latest_data(), only_vendor = TRUE)
 }
@@ -15,5 +15,5 @@ cpe_stats(df = cpe_latest_data(), only_vendor = TRUE)
 data.frame
 }
 \description{
-Returns data frame with grouped count by vendor and product.
+Returns latest Official CPE as data frame grouped by vendor and product.
 }

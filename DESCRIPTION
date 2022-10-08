@@ -18,28 +18,30 @@ Encoding: UTF-8
 LazyData: true
 LazyDataCompression: xz
 Imports: 
-    rlang,
     plyr,
+    tidyr,
     dplyr,
     igraph,
     stringr,
     stringi,
+    stringdist,
+    janitor,
     jsonlite,
     RJSONIO,
-    tidyr,
-    janitor,
+    xml2,
     httr,
     utils,
     DescTools,
-    stringdist,
-    datawizard,
-    textclean
+    rlang
 RoxygenNote: 7.2.1
 Suggests: 
     rmarkdown,
     knitr,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    datawizard,
+    textclean
 VignetteBuilder: knitr
 Depends: 
-    R (>= 3.5.0)
+    R (>= 3.5.0),
+    magrittr
 Config/testthat/edition: 3

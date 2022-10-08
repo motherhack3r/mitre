@@ -29,6 +29,3 @@ data.frame
 \description{
 Load CPE data frame from local file or download latest
 }
-\examples{
-cpes <- mitre::cpe_latest_date(local_path = "inst/extdata/cpe.nist.rds")
-}

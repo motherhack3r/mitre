@@ -2,7 +2,7 @@
 % Please edit documentation in R/nlp_cpe.R
 \name{cpe_lstm_dataset}
 \alias{cpe_lstm_dataset}
-\title{Title}
+\title{Prepare CPE data frame valid for LSTM training.}
 \usage{
 cpe_lstm_dataset(df = cpe_latest_data(), verbose = F)
 }
@@ -15,5 +15,5 @@ cpe_lstm_dataset(df = cpe_latest_data(), verbose = F)
 data.frame
 }
 \description{
-Title
+Prepare CPE data frame valid for LSTM training.
 }

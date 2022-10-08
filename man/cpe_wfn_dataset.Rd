@@ -2,7 +2,10 @@
 % Please edit documentation in R/nlp_cpe.R
 \name{cpe_wfn_dataset}
 \alias{cpe_wfn_dataset}
-\title{Title}
+\title{Encode CPE columns ready for LSTM input.
+Title is encoded to 73 valid characters.
+Vendor, product and version are encoded to 49 valid chars.
+If any character encoding fails, the CPE is filtered.}
 \usage{
 cpe_wfn_dataset(df = cpe_latest_data())
 }
@@ -13,5 +16,8 @@ cpe_wfn_dataset(df = cpe_latest_data())
 data.frame
 }
 \description{
-Title
+Encode CPE columns ready for LSTM input.
+Title is encoded to 73 valid characters.
+Vendor, product and version are encoded to 49 valid chars.
+If any character encoding fails, the CPE is filtered.
 }
