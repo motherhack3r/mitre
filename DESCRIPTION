@@ -28,7 +28,6 @@ Imports:
     RJSONIO,
     xml2,
     text,
-    DescTools,
     stringdist,
     utils,
     rlang

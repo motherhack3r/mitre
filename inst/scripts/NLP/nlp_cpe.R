@@ -758,6 +758,50 @@ cpe_str2wfn <- function(name = c("Notepad++ v8.50", "CTS Projects & Software Cla
   return(name)
 }
 
+#' Returns a custom list of valid chars.
+#'
+#' @param taste character, type of output "char", "dec", or "hex"
+#' @param add_tab logical, include tab char
+#' @param add_enter logical, include enter char
+#' @param add_underline logical, include "_"
+#' @param type character, returns valid chars for "input" or "output"
+#'
+#' @return character
+enc_valid_chars <- function(taste = c("char", "dec", "hex")[1],
+                            add_tab = FALSE, add_enter = FALSE,
+                            add_underline = FALSE,
+                            type = c("input", "output")[1]) {
+
+  valid_dec_chars <- c(32,33,38,40,41, 43:58, 65:90, 97:122)
+  if (type == "output")
+    valid_dec_chars <- c(32,33,38,40,41, 43:58, 97:122)
+  if (add_enter) valid_dec_chars <- c(10, valid_dec_chars)
+  if (add_tab) valid_dec_chars <- c(9, valid_dec_chars)
+  if (add_underline) valid_dec_chars <- c(95, valid_dec_chars)
+
+  if (taste == "char") {
+    valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
+  } else if (taste == "hex") {
+    valid_chars <- sapply(valid_dec_chars, DescTools::DecToHex)
+  } else {
+    return(valid_dec_chars)
+  }
+
+  return(valid_chars)
+}
+
+#' Returns a custom list of valid chars.
+#'
+#' @param type character, returns valid chars for "input" or "output"
+#'
+#' @return character
+dec_valid_chars <- function(type = c("input", "output")[1]) {
+  valid_chars <- c(32,33,38,40,41, 43:58, 65:90, 97:122)
+  if (type == "output")
+    valid_chars <- c(32,33,38,40,41, 43:58, 97:122)
+  return(valid_chars)
+}
+
 
 #' Inspect each character in string s. Copy quoted characters,
 #' with their escaping, into the result. Look for unquoted non

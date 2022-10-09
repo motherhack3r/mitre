@@ -36,8 +36,9 @@ wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
 str73enc <- function(name = character(), na_replace = "*") {
   encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
-  valid_dec_chars <- enc_valid_chars(taste = "dec", type = "input")
-  valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
+  # valid_dec_chars <- dec_valid_chars("input")
+  # valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
+  valid_chars <- " !&()+,-./0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
   regex_notvalid <- stringr::fixed(paste0("[^", paste0(valid_chars, collapse = ""), "]"))
 
   # Deal with tabs `\t`
@@ -97,8 +98,9 @@ str73enc <- function(name = character(), na_replace = "*") {
 str49enc <- function(name = character(), na_replace = "*") {
   encname <- iconv(name, to = 'ASCII//TRANSLIT', sub = na_replace)
 
-  valid_dec_chars <- enc_valid_chars(taste = "dec", type = "output")
-  valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
+  # valid_dec_chars <- dec_valid_chars("output")
+  # valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
+  valid_chars <- " !&()+,-./0123456789:abcdefghijklmnopqrstuvwxyz"
   regex_notvalid <- stringr::fixed(paste0("[^", paste0(valid_chars, collapse = ""), "]"))
 
   # To lowercase
@@ -150,38 +152,6 @@ str49enc <- function(name = character(), na_replace = "*") {
   encname <- stringi::stri_replace_all_regex(encname, regex_notvalid, na_replace)
 
   return(encname)
-}
-
-#' Returns a custom list of valid chars.
-#'
-#' @param taste character, type of output "char", "dec", or "hex"
-#' @param add_tab logical, include tab char
-#' @param add_enter logical, include enter char
-#' @param add_underline logical, include "_"
-#' @param type character, returns valid chars for "input" or "output"
-#'
-#' @return character
-enc_valid_chars <- function(taste = c("char", "dec", "hex")[1],
-                            add_tab = FALSE, add_enter = FALSE,
-                            add_underline = FALSE,
-                            type = c("input", "output")[1]) {
-
-  valid_dec_chars <- c(32,33,38,40,41, 43:58, 65:90, 97:122)
-  if (type == "output")
-    valid_dec_chars <- c(32,33,38,40,41, 43:58, 97:122)
-  if (add_enter) valid_dec_chars <- c(10, valid_dec_chars)
-  if (add_tab) valid_dec_chars <- c(9, valid_dec_chars)
-  if (add_underline) valid_dec_chars <- c(95, valid_dec_chars)
-
-  if (taste == "char") {
-    valid_chars <- sapply(valid_dec_chars, DescTools::AscToChar)
-  } else if (taste == "hex") {
-    valid_chars <- sapply(valid_dec_chars, DescTools::DecToHex)
-  } else {
-    return(valid_dec_chars)
-  }
-
-  return(valid_chars)
 }
 
 #' Title
