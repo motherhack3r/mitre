@@ -1,54 +1,25 @@
 #' @import dplyr
 #' @import tidyr
+#' @importFrom utils download.file read.csv
 
-# Function for processing NER output
-embed2cpener <- function(df_ner = data.frame()) {
-  df_cpe <- as.data.frame(df_ner$x_NER)
-  df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
-                                            pattern = "^[BIOLU]\\-(cpe.+)$",
-                                            replacement = "\\1")
-  df_cpe <- dplyr::inner_join(x = df_cpe %>%
-                                group_by(.data$entity) %>%
-                                summarise(score = mean(.data$score)),
-                              y = df_cpe %>%
-                                select(.data$entity, .data$word) %>%
-                                group_by(.data$entity) %>%
-                                mutate(word = paste(.data$word, collapse = " ")) %>%
-                                unique() %>%
-                                as.data.frame(),
-                              by = "entity")
-  df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
-  df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
-  df_cpe$word[df_cpe$entity == "cpe_version"] <-
-    stringr::str_replace_all(df_cpe$word[df_cpe$entity == "cpe_version"], " \\. ", ".")
-  return(df_cpe)
-}
-
-# Function for CPE creation
-cpener2cpe23 <- function(df_ner = data.frame()) {
-  part <- "a"
-  vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
-                   yes = df_ner$word[df_ner$entity == "cpe_vendor"],
-                   no = "*")
-  product <- ifelse(test = "cpe_product" %in% df_ner$entity,
-                    yes = df_ner$word[df_ner$entity == "cpe_product"],
-                    no = "*")
-  version <- ifelse(test = "cpe_version" %in% df_ner$entity,
-                    yes = df_ner$word[df_ner$entity == "cpe_version"],
-                    no = "*")
-  vendor <- stringr::str_replace_all(vendor, " ", "_")
-  product <- stringr::str_replace_all(product, " ", "_")
-  version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
-  version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
-  # version <- stringr::str_replace_all(version, " \\. ", ".")
-  if (vendor == "*") vendor <- product
-  if (product == "*") product <- vendor
-
-  cpe <- mean(df_ner$score)
-  names(cpe) <- stringr::str_replace_all(paste("cpe", "2.3",
-                                               part, vendor, product, version,
-                                               "*:*:*:*:*:*:*", sep = ":"),
-                                         "_([[:punct:]])_", "\\1")
+wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
+                    update = "*", edition = "*", language = "*", sw_edition = "*",
+                    target_sw = "*", target_hw = "*", other = "*",
+                    as_string = TRUE) {
+  cpe <- data.frame(part = part,
+                    vendor = vendor,
+                    product = product,
+                    version = version,
+                    update = update,
+                    edition = edition,
+                    language = language,
+                    sw_edition = sw_edition,
+                    target_sw = target_sw,
+                    target_hw = target_hw,
+                    other = other)
+  if (as_string) {
+    cpe <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
+  }
   return(cpe)
 }
 
@@ -62,12 +33,62 @@ cpener2cpe23 <- function(df_ner = data.frame()) {
 #' @export
 predict_cpe <- function(df_inventory = mitre::getInventory(),
                         model_name = "Neurona/cpener-test") {
+
+  # Function for processing NER output
+  embed2cpener <- function(df_ner = data.frame()) {
+    df_cpe <- as.data.frame(df_ner$x_NER)
+    df_cpe$entity <- stringr::str_replace_all(string = df_cpe$entity,
+                                              pattern = "^[BIOLU]\\-(cpe.+)$",
+                                              replacement = "\\1")
+    df_cpe <- dplyr::inner_join(x = df_cpe %>%
+                                  group_by(.data$entity) %>%
+                                  summarise(score = mean(.data$score)),
+                                y = df_cpe %>%
+                                  select(.data$entity, .data$word) %>%
+                                  group_by(.data$entity) %>%
+                                  mutate(word = paste(.data$word, collapse = " ")) %>%
+                                  unique() %>%
+                                  as.data.frame(),
+                                by = "entity")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "\\s##", replacement = "")
+    df_cpe$word <- stringr::str_replace_all(string = df_cpe$word, pattern = "^\\s*##", replacement = "")
+    df_cpe$word[df_cpe$entity == "cpe_version"] <-
+      stringr::str_replace_all(df_cpe$word[df_cpe$entity == "cpe_version"], " \\. ", ".")
+    return(df_cpe)
+  }
+
+  # Function for CPE creation
+  cpener2cpe23 <- function(df_ner = data.frame()) {
+    part <- "a"
+    vendor <- ifelse(test = "cpe_vendor" %in% df_ner$entity,
+                     yes = df_ner$word[df_ner$entity == "cpe_vendor"],
+                     no = "*")
+    product <- ifelse(test = "cpe_product" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_product"],
+                      no = "*")
+    version <- ifelse(test = "cpe_version" %in% df_ner$entity,
+                      yes = df_ner$word[df_ner$entity == "cpe_version"],
+                      no = "*")
+    vendor <- stringr::str_replace_all(vendor, " ", "_")
+    product <- stringr::str_replace_all(product, " ", "_")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    version <- stringr::str_replace_all(version, "(\\d) (\\d)", "\\1\\.\\2")
+    # version <- stringr::str_replace_all(version, " \\. ", ".")
+    if (vendor == "*") vendor <- product
+    if (product == "*") product <- vendor
+
+    cpe <- mean(df_ner$score)
+    names(cpe) <- stringr::str_replace_all(paste("cpe", "2.3",
+                                                 part, vendor, product, version,
+                                                 "*:*:*:*:*:*:*", sep = ":"),
+                                           "_([[:punct:]])_", "\\1")
+    return(cpe)
+  }
+
   if (!("title" %in% names(df_inventory))) {
     sw_title <- paste(cpe_wfn_vendor(df_inventory$vendor),
                       cpe_wfn_product(df_inventory$name), sep = " ")
-    df_pred <- data.frame(title = sapply(sw_title,
-                                         function(x)
-                                           paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
+    df_pred <- data.frame(title = sapply(sw_title, function(x) paste(unique(unlist(strsplit(x, " "))), collapse = " ")),
                           cpe = rep(NA, length(sw_title)))
     df_pred$title <- paste0(stringr::str_trim(paste(df_pred$title, df_inventory$version)),".")
   } else {
@@ -75,18 +96,17 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
   }
 
   predicted_cpes <- sapply(df_pred$title,
-                           function(x) {
+                           function(x)
                              cpener2cpe23(embed2cpener(text::textNER(x = x,
-                                                               model = model_name,
-                                                               device = "gpu",
-                                                               logging_level = "critical")))
-                           }, USE.NAMES = F)
+                                                                     model = model_name,
+                                                                     device = "gpu",
+                                                                     logging_level = "critical"))),
+                           USE.NAMES = F)
   df_inventory$ner_cpe <- names(predicted_cpes)
   df_inventory$ner_score <- as.numeric(predicted_cpes)
 
   return(df_inventory)
 }
-
 
 #' Title
 #'
@@ -123,10 +143,10 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   ) > 0.2
   df_sccm$bad_vendor[is.na(df_sccm$bad_vendor)] <- TRUE
   df_vendor <- df_sccm[!df_sccm$bad_vendor, c("id", "wfn_vendor")]
-  df_vendor <- dplyr::rename(df_vendor, vendor = wfn_vendor)
+  df_vendor <- dplyr::rename(df_vendor, vendor = .data$wfn_vendor)
   df_vendor$wfn_vendor <- cpe_wfn_vendor(df_vendor$vendor)
   df_vendor <- df_vendor[stringr::str_length(df_vendor$wfn_vendor) > 1, c("id", "wfn_vendor")]
-  df_vendor <- dplyr::rename(df_vendor, vendor = wfn_vendor)
+  df_vendor <- dplyr::rename(df_vendor, vendor = .data$wfn_vendor)
   if (verbose) print(paste0(" |> ", "Good vendor rows: ", nrow(df_vendor)))
 
   # Clean product strings
@@ -140,10 +160,10 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   ) > 0.2
   df_sccm$bad_product[is.na(df_sccm$bad_product)] <- TRUE
   df_product <- df_sccm[!df_sccm$bad_product, c("id", "wfn_product")]
-  df_product <- dplyr::rename(df_product, product = wfn_product)
+  df_product <- dplyr::rename(df_product, product = .data$wfn_product)
   df_product$wfn_product <- cpe_wfn_product(df_product$product)
   df_product <- df_product[stringr::str_length(df_product$wfn_product) > 1, c("id", "wfn_product")]
-  df_product <- dplyr::rename(df_product, product = wfn_product)
+  df_product <- dplyr::rename(df_product, product = .data$wfn_product)
   if (verbose) print(paste0(" |> ", "Good product rows: ", nrow(df_product)))
 
   # Clean version strings
@@ -160,7 +180,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_sccm$wfn_version <- stringr::str_extract(df_sccm$wfn_version, "\\d+(\\.\\d+)*")
   # df_sccm$wfn_version <- stringr::str_replace_all(df_sccm$wfn_version, "(.*)(\\s|,|-)+[vers\\.]*([\\d|\\.]+)(.*)$", "\\3")
   df_version <- df_sccm[, c("id", "wfn_version")]
-  df_version <- dplyr::rename(df_version, version = wfn_version)
+  df_version <- dplyr::rename(df_version, version = .data$wfn_version)
   df_version$version[is.na(df_version$version)] <- ""
   if (verbose) print(paste0(" |> ", "Good version rows: ", nrow(df_version)))
 
@@ -185,9 +205,9 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 
   if (verbose) print(paste0("[|] ", "Removing duplicated vendor in title"))
   df_inv <- dplyr::mutate(df_inv,
-                          title = ifelse(stringr::str_starts(product, stringr::fixed(paste0(vendor, " "))),
-                                         paste(product, version),
-                                         paste(vendor, product, version)))
+                          title = ifelse(stringr::str_starts(.data$product, stringr::fixed(paste0(.data$vendor, " "))),
+                                         paste(.data$product, .data$version),
+                                         paste(.data$vendor, .data$product, .data$version)))
 
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\s+", " ")
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\b(\\w+\\s)\\1\\b(.*)", "\\1\\2")
@@ -406,11 +426,11 @@ cpe_latest_data <- function(local_path = NA, remote = F, keep_deprecated = F, al
 #' @param only_vendor logical
 #'
 #' @return data.frame
-getCPEstats <- function(df = cpe.nist, only_vendor = TRUE, scale_log = FALSE) {
+getCPEstats <- function(df = cpe_latest_data(), only_vendor = TRUE, scale_log = FALSE) {
   if (only_vendor) {
-    sts_cpes <- dplyr::count(df, vendor, sort = TRUE)
+    sts_cpes <- dplyr::count(df, .data$vendor, sort = TRUE)
   } else {
-    sts_cpes <- dplyr::count(df, vendor, product, sort = TRUE)
+    sts_cpes <- dplyr::count(df, .data$vendor, .data$product, sort = TRUE)
   }
   if (scale_log) {
     sts_cpes$n <- log(sts_cpes$n)
@@ -422,10 +442,12 @@ getCPEstats <- function(df = cpe.nist, only_vendor = TRUE, scale_log = FALSE) {
 #' Title
 #'
 #' @param df data.frame
+#' @param verbose logical
 #'
 #' @return data.frame
 #' @export
-cpe_generate <- function(df = getInventory()) {
+cpe_generate <- function(df = getInventory(), verbose = FALSE) {
+  if (verbose) print(paste0("[*] ", "Ready to generate CPEs..."))
 
   df_inventory <- cpe_sccm_inventory(df_sccm = df, verbose = T)
   df$vd_match_type <- rep(NA, nrow(df))
@@ -435,23 +457,28 @@ cpe_generate <- function(df = getInventory()) {
 
   df_inventory2 <- df_inventory
   df_inventory <- df_inventory %>%
-    separate(col = ner_cpe , sep = ":", extra = "merge",
+    separate(col = .data$ner_cpe , sep = ":", extra = "merge",
              into = c("std", "v", "part", "vend", "prod", "vers", "tail")) %>%
-    mutate(ner_cpe = paste(std, v, part, vend, prod, version, tail, sep = ":")) %>%
+    mutate(ner_cpe = paste(.data$std, .data$v, .data$part, .data$vend,
+                           .data$prod, .data$version, .data$tail, sep = ":")) %>%
     select(names(df_inventory))
 
   # Load Official CPEs
   cpes <- cpe_latest_data(remote = T)
   cpes_vp <- getCPEstats(cpes, only_vendor = FALSE)
   cpes_vend <- getCPEstats(cpes)
-  cpes_prod <- cpes %>% group_by(product) %>% summarise(n = n(), .groups = "drop") %>% arrange(desc(n))
+  cpes_prod <- cpes %>%
+    group_by(.data$product) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    arrange(desc(n))
 
   # prepare data.frame for evaluation and candidates selection
   df_eval <- df_inventory %>%
-    separate(col = ner_cpe , sep = ":", extra = "merge",
+    separate(col = .data$ner_cpe , sep = ":", extra = "merge",
              into = c("std", "v", "part", "ner_vend", "ner_prod", "ner_vers", "tail")) %>%
-    select(id, vendor, product, version, ner_vend, ner_prod, ner_vers) %>%
-    mutate(ner_cpelite = paste(ner_vend, ner_prod, sep = ":"))
+    select(.data$id, .data$vendor, .data$product, .data$version,
+           .data$ner_vend, .data$ner_prod, .data$ner_vers) %>%
+    mutate(ner_cpelite = paste(.data$ner_vend, .data$ner_prod, sep = ":"))
 
   df_match <- data.frame(id = integer(),
                          vd_vendor = character(),
@@ -460,11 +487,11 @@ cpe_generate <- function(df = getInventory()) {
                          vd_score = numeric(), stringsAsFactors = FALSE)
 
   # TEST M1 Perfect match with vendor using inner_join
-  df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
-                        cpes_vp %>% select(vendor, product),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$ner_vend, .data$ner_prod),
+                        cpes_vp %>% select(.data$vendor, .data$product),
                         by = c("ner_vend" = "vendor", "ner_prod" = "product")) %>%
     rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
-    select(id, vd_vendor, vd_product)
+    select(.data$id, .data$vd_vendor, .data$vd_product)
   df_test$vd_match_type <- rep("M1", nrow(df_test))
   df_test$vd_score <- rep(1.0, nrow(df_test))
   df_match <- bind_rows(df_match, df_test)
@@ -472,12 +499,12 @@ cpe_generate <- function(df = getInventory()) {
   df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
 
   # TEST M1A
-  df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
-                        cpes_vend %>% select(vendor),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$ner_vend, .data$ner_prod),
+                        cpes_vend %>% select(.data$vendor),
                         by = c("ner_vend" = "vendor")) %>%
-    inner_join(cpes_prod %>% select(product), by = c("ner_prod" = "product")) %>%
+    inner_join(cpes_prod %>% select(.data$product), by = c("ner_prod" = "product")) %>%
     rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
-    select(id, vd_vendor, vd_product)
+    select(.data$id, .data$vd_vendor, .data$vd_product)
   df_test$vd_match_type <- rep("M1A", nrow(df_test))
   df_test$vd_score <- rep(.95, nrow(df_test))
 
@@ -485,8 +512,8 @@ cpe_generate <- function(df = getInventory()) {
   df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
 
   # TEST M1B
-  df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
-                        cpes_vp %>% select(vendor, product),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$ner_vend, .data$ner_prod),
+                        cpes_vp %>% select(.data$vendor, .data$product),
                         by = c("ner_vend" = "vendor"))
   df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, "_", " ")
   df_test$product <- stringr::str_replace_all(df_test$product, "_", " ")
@@ -495,10 +522,11 @@ cpe_generate <- function(df = getInventory()) {
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "osa")
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "qgram")
 
-  df_test <- inner_join(df_test %>% group_by(id) %>% summarise(vd_score = max(vd_score), .groups = "drop"),
+  df_test <- inner_join(df_test %>% group_by(.data$id) %>%
+                          summarise(vd_score = max(.data$vd_score), .groups = "drop"),
                         df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
     select(names(df_test)) %>%
-    filter(vd_score >= 0.8)
+    filter(.data$vd_score >= 0.8)
   df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, " ", "_")
   df_test$product <- stringr::str_replace_all(df_test$product, " ", "_")
 
@@ -510,8 +538,8 @@ cpe_generate <- function(df = getInventory()) {
   df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
 
   # TEST M1C
-  df_test <- inner_join(df_eval %>% select(id, ner_vend, ner_prod),
-                        cpes_vp %>% select(vendor, product),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$ner_vend, .data$ner_prod),
+                        cpes_vp %>% select(.data$vendor, .data$product),
                         by = c("ner_prod" = "product"))
   df_test$ner_vend <- stringr::str_replace_all(df_test$ner_vend, "_", " ")
   df_test$vendor <- stringr::str_replace_all(df_test$vendor, "_", " ")
@@ -520,10 +548,11 @@ cpe_generate <- function(df = getInventory()) {
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "osa")
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_vend, df_test$vendor, method = "qgram")
 
-  df_test <- inner_join(df_test %>% group_by(id) %>% summarise(vd_score = max(vd_score), .groups = "drop"),
+  df_test <- inner_join(df_test %>% group_by(.data$id) %>%
+                          summarise(vd_score = max(.data$vd_score), .groups = "drop"),
                         df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
     select(names(df_test)) %>%
-    filter(vd_score >= 0.8)
+    filter(.data$vd_score >= 0.8)
   df_test$ner_vend <- stringr::str_replace_all(df_test$ner_vend, " ", "_")
   df_test$vendor <- stringr::str_replace_all(df_test$vendor, " ", "_")
 
@@ -535,11 +564,12 @@ cpe_generate <- function(df = getInventory()) {
   df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
 
   # TEST M1F
-  df_test <- inner_join(df_eval %>% select(id, vendor, ner_prod) %>% mutate(vendor = tolower(vendor)),
-                        cpes_vp %>% select(vendor, product),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$vendor, .data$ner_prod) %>%
+                          mutate(vendor = tolower(.data$vendor)),
+                        cpes_vp %>% select(.data$vendor, .data$product),
                         by = c("vendor" = "vendor", "ner_prod" = "product")) %>%
     rename("vd_vendor" = "vendor", "vd_product" = "ner_prod") %>%
-    select(id, vd_vendor, vd_product)
+    select(.data$id, .data$vd_vendor, .data$vd_product)
   df_test$vd_match_type <- rep("M1F", nrow(df_test))
   df_test$vd_score <- rep(1.0, nrow(df_test))
   df_match <- bind_rows(df_match, df_test)
@@ -547,8 +577,9 @@ cpe_generate <- function(df = getInventory()) {
   df_eval <- df_eval[!(df_eval$id %in% df_match$id), ]
 
   # TEST M1G
-  df_test <- inner_join(df_eval %>% select(id, vendor, ner_prod) %>% mutate(vendor = tolower(vendor)),
-                        cpes_vp %>% select(vendor, product),
+  df_test <- inner_join(df_eval %>% select(.data$id, .data$vendor, .data$ner_prod) %>%
+                          mutate(vendor = tolower(.data$vendor)),
+                        cpes_vp %>% select(.data$vendor, .data$product),
                         by = c("vendor" = "vendor"))
   df_test$ner_prod <- stringr::str_replace_all(df_test$ner_prod, "_", " ")
   df_test$product <- stringr::str_replace_all(df_test$product, "_", " ")
@@ -557,10 +588,11 @@ cpe_generate <- function(df = getInventory()) {
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "osa")
   # df_test$vd_score <- stringdist::stringsim(df_test$ner_prod, df_test$product, method = "qgram")
 
-  df_test_match <- inner_join(df_test %>% group_by(id) %>% summarise(vd_score = max(vd_score), .groups = "drop"),
+  df_test_match <- inner_join(df_test %>% group_by(.data$id) %>%
+                                summarise(vd_score = max(.data$vd_score), .groups = "drop"),
                               df_test, by = c("id" = "id", "vd_score" = "vd_score")) %>%
     select(names(df_test)) %>%
-    filter(vd_score >= 0.75)
+    filter(.data$vd_score >= 0.75)
   df_test_match$ner_prod <- stringr::str_replace_all(df_test_match$ner_prod, " ", "_")
   df_test_match$product <- stringr::str_replace_all(df_test_match$product, " ", "_")
   df_test_match$vd_match_type <- rep("M1G", nrow(df_test_match))
@@ -577,8 +609,8 @@ cpe_generate <- function(df = getInventory()) {
   df_test_new <- df_test_new %>%
     rename("vd_vendor" = "vendor", "vd_product" = "ner_prod") %>%
     select(names(df_match)) %>%
-    left_join(df_inventory %>% select(id, ner_score), by = "id") %>%
-    select(-vd_score) %>% rename("vd_score" = "ner_score")
+    left_join(df_inventory %>% select(.data$id, .data$ner_score), by = "id") %>%
+    select(-.data$vd_score) %>% rename("vd_score" = "ner_score")
 
   df_match <- bind_rows(df_match, df_test_match, df_test_new)
 
@@ -587,12 +619,13 @@ cpe_generate <- function(df = getInventory()) {
 
   # Merge
   df_eval <- df_eval %>%
-    left_join(df_inventory %>% select(id, ner_score), by = "id")
+    left_join(df_inventory %>% select(.data$id, .data$ner_score), by = "id")
   df_eval$vd_score <- df_eval$ner_score/2
   df_eval$vd_match_type <- rep("UNK", nrow(df_eval))
   df_eval <- df_eval %>%
     rename("vd_vendor" = "ner_vend", "vd_product" = "ner_prod") %>%
-    select(-vendor, -product, -version, - ner_cpelite, -ner_vers, -ner_score)
+    select(-.data$vendor, -.data$product, -.data$version,
+           -.data$ner_cpelite, -.data$ner_vers, -.data$ner_score)
   df_inventory <- left_join(df_inventory,
                             bind_rows(df_match, df_eval),
                             by = "id")
@@ -603,25 +636,25 @@ cpe_generate <- function(df = getInventory()) {
                                df_inventory$version,
                                "*:*:*:*:*:*:*", sep = ":")
 
-  df_inventory <- left_join(df_inventory2 %>% select(id, title, vendor, product, version),
+  df_inventory <- left_join(df_inventory2 %>% select(.data$id, .data$title, .data$vendor,
+                                                     .data$product, .data$version),
                             df_inventory %>% unique() %>%
-                              select(id, vd_cpe, vd_score) %>%
-                              group_by(id) %>%
-                              mutate(candidates = jsonlite::toJSON(data.frame(cpe = vd_cpe, score = vd_score))) %>%
-                              select(id, candidates) %>%
+                              select(.data$id, .data$vd_cpe, .data$vd_score) %>%
+                              group_by(.data$id) %>%
+                              mutate(candidates = jsonlite::toJSON(data.frame(cpe = .data$vd_cpe,
+                                                                              score = .data$vd_score))) %>%
+                              select(.data$id, .data$candidates) %>%
                               unique(),
                             by = "id") %>%
     rowwise() %>%
-    mutate(cpe = jsonlite::fromJSON(candidates)[1,1]) %>%
-    mutate(cpe_score = jsonlite::fromJSON(candidates)[1,2]) %>%
+    mutate(cpe = jsonlite::fromJSON(.data$candidates)[1,1]) %>%
+    mutate(cpe_score = jsonlite::fromJSON(.data$candidates)[1,2]) %>%
     ungroup() %>%
-    select(id, title, vendor, product, version, cpe, cpe_score, candidates)
+    select(.data$id, .data$title, .data$vendor, .data$product, .data$version,
+           .data$cpe, .data$cpe_score, .data$candidates)
 
   return(df_inventory)
 }
-
-#####
-##### CPE Cleansing
 
 #' Title
 #'
@@ -697,7 +730,6 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
   return(x)
 }
 
-
 #' Title
 #'
 #' @param x character
@@ -726,328 +758,4 @@ cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
 
   return(x)
 }
-
-
-
-
-#####
-##### NIST IMPLEMENTATIONS
-
-wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
-                    update = "*", edition = "*", language = "*", sw_edition = "*",
-                    target_sw = "*", target_hw = "*", other = "*",
-                    as_string = TRUE) {
-  cpe <- data.frame(part = part,
-                    vendor = vendor,
-                    product = product,
-                    version = version,
-                    update = update,
-                    edition = edition,
-                    language = language,
-                    sw_edition = sw_edition,
-                    target_sw = target_sw,
-                    target_hw = target_hw,
-                    other = other)
-  if (as_string) {
-    cpe <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
-  }
-  return(cpe)
-}
-
-wfn_compare <- function(source, target) {
-
-}
-
-#' Inspect each character in string s. Certain nonalpha
-#' characters pass thru without escaping into the result,
-#' but most retain escaping
-#'
-#' REF: NIST IR 7695 (Aug. 2011) section 6.2.2.2
-#'
-#' @param s character
-#'
-#' @return character
-cpe_wfn_process_quoted_chars <- function(s = character()) {
-  result <- ""
-  idx <- 1
-  while (idx <= nchar(s)) {
-    thischar <- stringi::stri_sub(s, idx, idx)
-    if (thischar != "\\") {
-      result <- paste0(result, thischar)
-    } else {
-      nextchar <- stringi::stri_sub(s, idx + 1, idx + 1)
-      if (nextchar %in% c(".", "-", "_")) {
-        result <- paste0(result, nextchar)
-      } else {
-        result <- paste0(result, "\\", nextchar)
-      }
-      idx <- idx + 2
-      next
-    }
-    idx <- idx + 1
-  }
-
-  return(result)
-}
-
-#' Inspect each character in string s. Copy quoted characters,
-#' with their escaping, into the result. Look for unquoted non
-#' alphanumerics and if not "*" or "?", add escaping.
-#'
-#' REF: NIST IR 7695 (Aug. 2011) section 6.2.3.2
-#'
-#' @param s character
-#'
-#' @return character
-cpe_wfn_add_quoting <- function(s = character()) {
-  result <- ""
-  idx <- 1
-  embedded <- FALSE
-  while (idx <= nchar(s)) {
-    thischar <- stringi::stri_sub(s, idx, idx)
-    if ((thischar == "_") | grepl(pattern = "[[:alnum:]]", x = thischar)) {
-      result <- paste0(result, thischar)
-      idx <- idx + 1
-      embedded <- TRUE
-      next
-    }
-    if (thischar == "\\") {
-      result <- paste0(result, stringi::stri_sub(s, idx, idx + 1))
-      idx <- idx + 2
-      embedded <- TRUE
-      next
-    }
-    if (thischar == "*") {
-      if ((idx == 1) | (idx == nchar(s) - 1)) {
-        result <- paste0(result, thischar)
-        idx <- idx + 1
-        embedded <- TRUE
-        next
-      } else {
-        cat(paste0("[!] ERROR adding quoting --> ", result))
-      }
-      result <- paste0(result, stringi::stri_sub(s, idx, idx + 1))
-      idx <- idx + 2
-      embedded <- TRUE
-      next
-    }
-    result <- paste0(result, "\\", thischar)
-    idx <- idx + 1
-    embedded <- TRUE
-  }
-
-  return(result)
-}
-
-#' Transform WFN escaped name to common string
-#' Ref: NIST IR 7695 (Aug. 2011) section 6.1.3.2, function decode
-#'
-#' This function scans the string s and returns a copy
-#' with all percent-encoded characters decoded. This
-#' function is the inverse of pct_encode(s) defined in
-#' Section 6.1.2.3. Only legal percent-encoded forms are
-#' decoded. Others raise an error.
-#' Decode a blank to logical ANY, and hyphen to logical NA.
-
-#'
-#' @param name character vector
-#'
-#' @return character
-cpe_wfn2str <- function(name = character()) {
-  decode <- function(s = character()) {
-    if (s == "") return("ANY")
-    if (s == "-") return(NA)
-    # Start the scanning loop.
-    # Normalize: convert all uppercase letters to lowercase first.
-    s <- tolower(s)
-    result <- ""
-    idx <- 1
-    embedded <- FALSE
-    while (idx <= nchar(s)) {
-      thischar <- stringi::stri_sub(s, idx, idx)
-      if (thischar %in% c(".", "-", "~")) {
-        result <- paste0(result, "\\", thischar)
-        idx <- idx + 1
-        embedded <- TRUE #  a non-%01 encountered.
-        next
-      }
-      if (thischar != "%") {
-        result <- paste0(result, thischar)
-        idx <- idx + 1
-        embedded <- TRUE #  a non-%01 encountered.
-        next
-      }
-      # we get here if we have a substring starting w/ '%'.
-      char_form <- stringi::stri_sub(s, idx, idx + 2) #  get the 3-char sequence
-      switch(char_form,
-             "%01" = {
-               if (
-                 ((idx == 0) | (idx == nchar(s)-3)) |
-                 (!embedded & ("%01" == stringi::stri_sub(s, idx-3, idx-1))) |
-                 (embedded & (nchar(s) >= idx+6) & ("%01" == stringi::stri_sub(s, idx+3, idx+5)))
-               ) {
-                 # A percent-encoded question mark is found
-                 # at the beginning or the end of the string,
-                 # or embedded in sequence as required.
-                 # Decode to unquoted form.
-                 result <- paste0(result, "?")
-                 idx <- idx + 3
-                 next
-               } else {
-                 cat(paste("[!] wrong char encoded ->", char_form))
-               }
-             },
-             "%02" = {
-               if ((idx == 0) | (idx == nchar(s)-3)) {
-                 # Percent-encoded asterisk is at the beginning
-                 # or the end of the string, as required.
-                 # Decode to unquoted form.
-                 result <- paste0(result, "*")
-               } else {
-                 cat(paste("[!] wrong char encoded ->", char_form))
-               }
-             },
-             "%21" = { result <- paste0(result, "\\!") },
-             "%22" = { result <- paste0(result, "\\\"") },
-             "%23" = { result <- paste0(result, "\\#") },
-             "%24" = { result <- paste0(result, "\\$") },
-             "%25" = { result <- paste0(result, "\\%") },
-             "%26" = { result <- paste0(result, "\\&") },
-             "%27" = { result <- paste0(result, "\\'") },
-             "%28" = { result <- paste0(result, "\\(") },
-             "%29" = { result <- paste0(result, "\\)") },
-             "%2a" = { result <- paste0(result, "\\*") },
-             "%2b" = { result <- paste0(result, "\\+") },
-             "%2c" = { result <- paste0(result, "\\,") },
-             "%2f" = { result <- paste0(result, "\\/") },
-             "%3a" = { result <- paste0(result, "\\:") },
-             "%3b" = { result <- paste0(result, "\\;") },
-             "%3c" = { result <- paste0(result, "\\<") },
-             "%3d" = { result <- paste0(result, "\\=") },
-             "%3e" = { result <- paste0(result, "\\>") },
-             "%3f" = { result <- paste0(result, "\\?") },
-             "%40" = { result <- paste0(result, "\\@") },
-             "%5b" = { result <- paste0(result, "\\[") },
-             "%5c" = { result <- paste0(result, "\\\\") },
-             "%5d" = { result <- paste0(result, "\\]") },
-             "%5e" = { result <- paste0(result, "\\^") },
-             "%60" = { result <- paste0(result, "\\`") },
-             "%7b" = { result <- paste0(result, "\\{") },
-             "%7c" = { result <- paste0(result, "\\|") },
-             "%7d" = { result <- paste0(result, "\\}") },
-             "%7e" = { result <- paste0(result, "\\~") },
-             { cat(paste("[!] char not encoded ->", char_form))}
-      )
-      idx <- idx + 3
-      embedded <- TRUE # a non-%01 encountered.
-    }
-    return(result)
-  }
-
-  if (length(name) > 1) {
-    name <- sapply(name, decode)
-  } else if (length(name) == 1) {
-    name <- decode(name)
-  } else {
-    cat("[!] Wrong input length in function cpe_str2wfn.")
-    name <- name
-  }
-  return(name)
-}
-
-#' Transform common string to WFN escaped name
-#'
-#' @param name character vector
-#'
-#' @return character
-cpe_str2wfn <- function(name = c("Notepad++ v8.50", "CTS Projects & Software ClassAd 3.0")) {
-  # Ref: NIST IR 7695 (Aug. 2011) section 6.1.2.3, function transform_for_uri
-  transform_for_uri <- function(s = "Notepad++ v8.50") {
-    s <- tolower(s)
-    result <- ""
-    idx <- 1
-    while (idx <= nchar(s)) {
-      thischar <- stringi::stri_sub(s, idx, idx)
-      if (grepl(pattern = "[[:alnum:]]", x = thischar)) {
-        result <- paste0(result, thischar)
-        idx <- idx + 1
-        next
-      }
-      if (grepl(pattern = "\\\\", x = thischar)) {
-        idx <- idx + 1
-        nxtchar <- stringi::stri_sub(s, idx, idx)
-        result <- paste0(result, pct_encode(nxtchar))
-        idx <- idx + 1
-        next
-      }
-      if (thischar == " ") {
-        thischar <- "_"
-      }
-      if (grepl(pattern = "\\?", x = thischar)) {
-        thischar <- "%01"
-      }
-      if (grepl(pattern = "\\*", x = thischar)) {
-        thischar <- "%02"
-      }
-
-      result <- paste0(result, thischar)
-      idx <- idx + 1
-    }
-
-    return(result)
-  }
-
-  # Character encoding for WFN
-  # Ref: NIST IR 7695 (Aug. 2011) section 6.1.2.3, function pct_encode
-  pct_encode <- function(ch = character()) {
-    if (ch == "!") return("%21")
-    if (ch == '"') return("%22")
-    if (ch == "#") return("%23")
-    if (ch == "$") return("%24")
-    if (ch == "%") return("%25")
-    if (ch == "&") return("%26")
-    if (ch == "'") return("%27")
-    if (ch == "(") return("%28")
-    if (ch == ")") return("%29")
-    if (ch == "*") return("%2a")
-    if (ch == "+") return("%2b")
-    if (ch == ",") return("%2c")
-    if (ch == "-") return(ch)
-    if (ch == ".") return(ch)
-    if (ch == "/") return("%2f")
-    if (ch == ":") return("%3a")
-    if (ch == ";") return("%3b")
-    if (ch == "<") return("%3c")
-    if (ch == "=") return("%3d")
-    if (ch == ">") return("%3e")
-    if (ch == "?") return("%3f")
-    if (ch == "@") return("%40")
-    if (ch == "[") return("%5b")
-    if (ch == "\\") return("%5c")
-    if (ch == "]") return("%5d")
-    if (ch == "^") return("%5e")
-    if (ch == "`") return("%60")
-    if (ch == "{") return("%7b")
-    if (ch == "|") return("%7c")
-    if (ch == "}") return("%7d")
-    if (ch == "~") return("%7e")
-
-    return(ch)
-  }
-
-  if (length(name) > 1) {
-    name <- sapply(name, transform_for_uri)
-  } else if (length(name) == 1) {
-    name <- transform_for_uri(name)
-  } else {
-    cat("[!] Wrong input length in function cpe_str2wfn.")
-    name <- name
-  }
-
-  return(name)
-}
-
-
-
-
 

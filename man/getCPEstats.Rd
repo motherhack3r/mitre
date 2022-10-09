@@ -4,7 +4,7 @@
 \alias{getCPEstats}
 \title{Returns data frame with grouped count by vendor and product.}
 \usage{
-getCPEstats(df = cpe.nist, only_vendor = TRUE, scale_log = FALSE)
+getCPEstats(df = cpe_latest_data(), only_vendor = TRUE, scale_log = FALSE)
 }
 \arguments{
 \item{df}{data.frame}
