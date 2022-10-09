@@ -1,11 +1,15 @@
 #' Return data.frame with installed software name, version and vendor.
+#' Set parameter cpes as TRUE to predict CPEs using ML.
+#'
+#' @param verbose logical
+#' @param predict_cpes logical
 #'
 #' @return data.frame
 #' @export
 #'
 #' @examples
 #' inventory <- getInventory()
-getInventory <- function(){
+getInventory <- function(verbose = FALSE, predict_cpes = FALSE){
   if (.Platform$OS.type == "windows") {
     # Windows with powershell equivalet to Microsoft SCCM inventory
     sw1 <- system("powershell.exe \"Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Format-List\"", intern = T)
@@ -109,6 +113,8 @@ getInventory <- function(){
     df.sw$id <- 1:nrow(df.sw)
     df.sw <- df.sw[, c("id", "vendor", "product", "version")]
 
+    if (predict_cpes)
+      df.sw <- cpe_generate(df = df.sw, verbose = verbose)
     return(df.sw)
   }
 
@@ -123,6 +129,8 @@ getInventory <- function(){
     df.sw$id <- 1:nrow(df.sw)
     df.sw <- df.sw[, c("id", "vendor", "product", "version")]
 
+    if (predict_cpes)
+      df.sw <- cpe_generate(df = df.sw, verbose = verbose)
     return(df.sw)
   }
 

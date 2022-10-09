@@ -313,7 +313,6 @@ getCPEstats <- function(df = cpe_latest_data(), only_vendor = TRUE, scale_log = 
 #' @param csv.headr logical
 #'
 #' @return data.frame
-#' @export
 cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definitions.csv",
                                df_sccm = data.frame(),
                                verbose = FALSE,
@@ -433,7 +432,6 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
 #' @param model_name huggingface reference, by default: Neurona/cpener-test
 #'
 #' @return data.frame
-#' @export
 predict_cpe <- function(df_inventory = mitre::getInventory(),
                         model_name = "Neurona/cpener-test") {
 
@@ -518,7 +516,6 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 #' @param verbose logical
 #'
 #' @return data.frame
-#' @export
 cpe_generate <- function(df = getInventory(), verbose = FALSE) {
   if (verbose) print(paste0("[*] ", "Ready to generate CPEs..."))
 
