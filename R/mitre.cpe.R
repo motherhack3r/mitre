@@ -516,6 +516,7 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 #' @param verbose logical
 #'
 #' @return data.frame
+#' @export
 cpe_generate <- function(df = getInventory(), verbose = FALSE) {
   if (verbose) print(paste0("[*] ", "Ready to generate CPEs..."))
 

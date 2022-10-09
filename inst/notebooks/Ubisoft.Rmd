@@ -6,6 +6,7 @@ output: html_notebook
 ```{r}
 num_samples <- 50
 p_seed <- 43
+verbose <- TRUE
 
 set.seed(p_seed)
 ```
@@ -14,7 +15,7 @@ Load required packages.
 
 ```{r}
 suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(mitre))
+# suppressPackageStartupMessages(library(mitre))
 suppressPackageStartupMessages(library(kableExtra))
 ```
 
