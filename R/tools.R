@@ -1,15 +1,17 @@
 #' Return data.frame with installed software name, version and vendor.
-#' Set parameter cpes as TRUE to predict CPEs using ML.
+#' Set predict_cpes as TRUE to predict CPEs using ML.
+#' Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs
 #'
 #' @param verbose logical
 #' @param predict_cpes logical
+#' @param predict_cves logical
 #'
 #' @return data.frame
 #' @export
 #'
 #' @examples
 #' inventory <- getInventory()
-getInventory <- function(verbose = FALSE, predict_cpes = FALSE){
+getInventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE){
   if (.Platform$OS.type == "windows") {
     # Windows with powershell equivalet to Microsoft SCCM inventory
     sw1 <- system("powershell.exe \"Get-ItemProperty HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* | Select-Object DisplayName, DisplayVersion, Publisher, InstallDate | Format-List\"", intern = T)
@@ -115,6 +117,19 @@ getInventory <- function(verbose = FALSE, predict_cpes = FALSE){
 
     if (predict_cpes)
       df.sw <- cpe_generate(df = df.sw, verbose = verbose)
+      if (predict_cves)
+        df <- left_join(df.sw,
+                        df.sw %>%
+                          filter(cpe_score > 0.5) %>%
+                          separate(col = cpe , sep = ":", extra = "merge",
+                                   into = c("std", "v", "part", "vendor", "product", "version", "tail")) %>%
+                          select(id, vendor, product, version, vendor, product, version) %>%
+                          mutate(cpelite = paste0(":", paste(vendor, product, sep = ":"), ":")) %>%
+                          select(id, cpelite, version) %>%
+                          rowwise() %>%
+                          mutate(cves = cpelite_vulnerable_configs(x = cpelite, x_vers = version, verbose = verbose)) %>%
+                          ungroup() %>% select(id, cves),
+                        by = "id")
     return(df.sw)
   }
 
@@ -131,6 +146,19 @@ getInventory <- function(verbose = FALSE, predict_cpes = FALSE){
 
     if (predict_cpes)
       df.sw <- cpe_generate(df = df.sw, verbose = verbose)
+      if (predict_cves)
+        df <- left_join(df.sw,
+                        df.sw %>%
+                          filter(cpe_score > 0.5) %>%
+                          separate(col = cpe , sep = ":", extra = "merge",
+                                   into = c("std", "v", "part", "vendor", "product", "version", "tail")) %>%
+                          select(id, vendor, product, version, vendor, product, version) %>%
+                          mutate(cpelite = paste0(":", paste(vendor, product, sep = ":"), ":")) %>%
+                          select(id, cpelite, version) %>%
+                          rowwise() %>%
+                          mutate(cves = cpelite_vulnerable_configs(cpelite, version)) %>%
+                          ungroup() %>% select(id, cves),
+                        by = "id")
     return(df.sw)
   }
 

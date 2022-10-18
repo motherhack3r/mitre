@@ -738,3 +738,166 @@ cpe_generate <- function(df = getInventory(), verbose = FALSE) {
   return(df_inventory)
 }
 
+cpe_is_version <- function(x = c("")) {
+  if (is.na(x)) return(FALSE)
+  return(grepl(pattern = "^\\d+([\\.\\-]\\d+)*$", x))
+}
+
+cpe_is_vulnerable <- function(x = c(""), cves = standards$cve$cve.nist) {
+  cpes_iv <- rep(FALSE, length(x))
+
+  return(cpes_iv)
+}
+
+cpelite_check_vers <- function(x_vers, versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding) {
+  k_sex <- if (cpe_is_version(versionStartExcluding)) numeric_version(versionStartExcluding) else versionStartExcluding
+  k_sin <- if (cpe_is_version(versionStartIncluding)) numeric_version(versionStartIncluding) else versionStartIncluding
+  k_eex <- if (cpe_is_version(versionEndExcluding)) numeric_version(versionEndExcluding) else versionEndExcluding
+  k_ein <- if (cpe_is_version(versionEndIncluding)) numeric_version(versionEndIncluding) else versionEndIncluding
+
+  if (is.na(k_sex)) {
+    if (is.na(k_sin)) {
+      if (is.na(k_eex)) {
+        if (is.na(k_ein)) {
+          # NA: Start Excluding, End Excluding, End Including, Start Including
+          TRUE
+        } else {
+          # NA: Start Excluding, End Excluding, End Including, Start Including
+          # OK: End Including
+          ifelse(test = is.numeric_version(k_ein),
+                 yes = (x_vers <= k_ein),
+                 no = NaN)
+        }
+      } else {
+        if (is.na(k_ein)) {
+          # NA: Start Excluding, End Including
+          # OK: Start Including, End Excluding
+          ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_eex),
+                 yes = (k_sin <= x_vers) & (x_vers < k_eex),
+                 no = NaN)
+        } else {
+          # NA: Start Excluding
+          # OK: Start Including, End Excluding, End Including
+          NaN
+        }
+      }
+    } else {
+      # NA: Start Excluding
+      # OK: Start Including
+      if (is.na(k_eex)) {
+        # NA: Start Excluding, End Excluding
+        # OK: Start Including
+        if (is.na(k_ein)) {
+          # NA: Start Excluding, Start Including, End Excluding, End Including
+          TRUE
+        } else {
+          # NA: Start Excluding, Start Including, End Excluding
+          # OK: End Including
+          ifelse(test = is.numeric_version(k_ein),
+                 yes = (x_vers <= k_ein),
+                 no = NaN)
+        }
+      } else {
+        # NA: Start Excluding
+        # OK: Start Including, End Excluding
+        if (is.na(k_ein)) {
+          # NA: Start Excluding, End Including
+          # OK: Start Including, End Excluding
+          ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_eex),
+                 yes = (k_sin <= x_vers) & (x_vers < k_eex),
+                 no = NaN)
+        } else {
+          # NA: Start Excluding
+          # OK: Start Including, End Excluding, End Including
+          NaN
+        }
+      }
+    }
+  } else {
+    # OK: Start Excluding
+    if (is.na(k_sin)) {
+      # NA: Start Including
+      # OK: Start Excluding
+      if (is.na(k_eex)) {
+        # NA: Start Including, End Excluding
+        # OK: Start Excluding
+        if (is.na(k_ein)) {
+          # NA: Start Including, End Excluding, End Including
+          # OK: Start Excluding
+          ifelse(test = is.numeric_version(k_sin),
+                 yes = (k_sin <= x_vers),
+                 no = NaN)
+        } else {
+          # NA: Start Including, End Excluding
+          # OK: Start Excluding, End Including
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_ein),
+                 yes = (k_sex < x_vers) & (x_vers <= k_ein),
+                 no = NaN)
+        }
+      } else {
+        # NA: Start Including
+        # OK: Start Excluding, End Excluding
+        if (is.na(k_ein)) {
+          # NA: Start Including, End Including
+          # OK: Start Excluding, End Excluding
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_eex),
+                 yes = (k_sex < x_vers) & (x_vers < k_eex),
+                 no = NaN)
+        } else {
+          # NA: Start Including
+          # OK: Start Excluding, End Excluding, End Including
+          NaN
+        }
+      }
+    } else {
+      # NA: -
+      # OK: Start Excluding, Start Including
+      NaN
+    }
+  }
+}
+
+cpelite_vulnerable_configs <- function(x, x_vers, cves = cve_latest_data(), verbose = FALSE) {
+  if (length(x) > 1) {
+    rx <- paste0("(", paste(x, collapse = "|"), ")")
+  } else {
+    rx <- x
+  }
+
+  if (verbose) print(paste0("[*] ", "Filter CVEs by CPEs..."))
+  x_vc <- cves[which(grepl(pattern = rx, x = cves$vulnerable.configuration)), c("cve.id", "vulnerable.configuration")]
+
+  if (nrow(x_vc) == 0) return(jsonlite::toJSON(NA))
+
+  if (verbose) print(paste0("[*] ", "Flattening vulnerable configurations..."))
+  vulnerableconfigurations <- data.frame()
+  for (i in 1:nrow(x_vc)) {
+    vulnconf <- cve_flatten_vulnconf(x_vc$vulnerable.configuration[i],
+                                     x_vc$cve.id[i])
+    vulnerableconfigurations <- dplyr::bind_rows(vulnerableconfigurations, vulnconf)
+    if (verbose)
+      if (i %% 10 == 0) print(paste0("[.] ", round(i / 10, 0), "0 vulnerable configurations processed..."))
+  }
+
+  if (verbose) print(paste0("[*] ", "Checking versions..."))
+  k <- vulnerableconfigurations %>%
+    filter(grepl(pattern = rx, x = cpe23Uri)) %>%
+    filter(vulnerable) %>%
+    select(vc_id, versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding)
+
+  x_vers <- if (cpe_is_version(x_vers)) numeric_version(x_vers) else x_vers
+  k_selected <- k %>%
+    rowwise() %>%
+    mutate(mark = cpelite_check_vers(x_vers,
+                                     versionStartExcluding, versionStartIncluding,
+                                     versionEndExcluding, versionEndIncluding)) %>%
+    filter(mark > 0) %>% select(-mark) %>%
+    mutate(cve = stringr::str_extract(string = vc_id, pattern = "CVE\\-\\d+\\-\\d+")) %>%
+    mutate(conditional = stringr::str_detect(string = vc_id, pattern = "\\:AND\\d+")) %>%
+    ungroup() %>%
+    select(cve, conditional) %>%
+    unique()
+
+  return(jsonlite::toJSON(k_selected))
+}
+

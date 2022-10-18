@@ -3,21 +3,25 @@
 \name{getInventory}
 \alias{getInventory}
 \title{Return data.frame with installed software name, version and vendor.
-Set parameter cpes as TRUE to predict CPEs using ML.}
+Set predict_cpes as TRUE to predict CPEs using ML.
+Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs}
 \usage{
-getInventory(verbose = FALSE, predict_cpes = FALSE)
+getInventory(verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE)
 }
 \arguments{
 \item{verbose}{logical}
 
 \item{predict_cpes}{logical}
+
+\item{predict_cves}{logical}
 }
 \value{
 data.frame
 }
 \description{
 Return data.frame with installed software name, version and vendor.
-Set parameter cpes as TRUE to predict CPEs using ML.
+Set predict_cpes as TRUE to predict CPEs using ML.
+Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs
 }
 \examples{
 inventory <- getInventory()
