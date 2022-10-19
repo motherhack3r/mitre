@@ -385,7 +385,7 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_sccm$wfn_product <- stringr::str_replace_all(df_sccm$wfn_product, "\\?", "")
   df_sccm$wfn_product <- stringr::str_trim(df_sccm$wfn_product)
   df_sccm$wfn_product <- textclean::replace_white(textclean::replace_html(textclean::replace_emoji(df_sccm$wfn_product)))
-  df_sccm$bad_product <- (stringr::str_count(df_sccm$wfn_product, "[^a-zA-Z0-9 \\.]")
+  df_sccm$bad_product <- (stringr::str_count(df_sccm$wfn_product, "[^a-zA-Z0-9 \\.\\+]")
                           / sapply(df_sccm$wfn_product, nchar)
   ) > 0.2
   df_sccm$bad_product[is.na(df_sccm$bad_product)] <- TRUE
@@ -442,6 +442,10 @@ cpe_sccm_inventory <- function(path_sccm = "inst/extdata/sccm_component_definiti
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\s+", " ")
   df_inv$title <- stringr::str_replace_all(df_inv$title, "\\b(\\w+\\s)\\1\\b(.*)", "\\1\\2")
   df_inv$title <- stringr::str_trim(df_inv$title)
+
+  if (verbose) print(paste0("[|] ", "Custom common title cleansing ..."))
+  df_inv$title <- stringr::str_replace_all(df_inv$title, "Microsoft vs ", "Microsoft Visual Studio ")
+  df_inv$title <- stringr::str_replace_all(df_inv$title, "Microsoft vcpp ", "Microsoft Visual C++ ")
 
   df <- dplyr::left_join(df, dplyr::select(df_inv, "id", "title"), by = "id")
   df <- df[, c("id", "title", "vendor", "product", "version")]
@@ -550,11 +554,11 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 #' @param verbose logical
 #'
 #' @return data.frame
-#' @export
 cpe_generate <- function(df = getInventory(), verbose = FALSE) {
   if (verbose) print(paste0("[*] ", "Ready to generate CPEs..."))
 
-  df_inventory <- cpe_sccm_inventory(df_sccm = df, verbose = verbose)
+  # df_inventory <- cpe_sccm_inventory(df_sccm = df, verbose = verbose)
+  df_inventory <- df
   df$vd_match_type <- rep(NA, nrow(df))
   df$vd_match_type[!(df$id %in% df_inventory$id)] <- "NONE"
 

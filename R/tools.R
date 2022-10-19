@@ -2,6 +2,7 @@
 #' Set predict_cpes as TRUE to predict CPEs using ML.
 #' Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs
 #'
+#' @param include_libs logical
 #' @param verbose logical
 #' @param predict_cpes logical
 #' @param predict_cves logical
@@ -11,12 +12,13 @@
 #'
 #' @examples
 #' inventory <- getInventory()
-getInventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE) {
+getInventory <- function(include_libs = FALSE, verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE) {
   if (verbose) print(paste0("[*] ", "Checking Operating System ..."))
   switch(Sys.info()[['sysname']],
          Windows = {
            if (verbose) print(paste0("[-] Windows detected."))
-           df_inventory <- get_win_inventory(verbose = verbose,
+           df_inventory <- get_win_inventory(include_libs = include_libs,
+                                             verbose = verbose,
                                              predict_cpes = predict_cpes,
                                              predict_cves = predict_cves)
            },
@@ -32,6 +34,9 @@ getInventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cves = F
                                              predict_cpes = predict_cpes,
                                              predict_cves = predict_cves)
            })
+  df_inventory <- cpe_sccm_inventory(df_sccm = df_inventory, verbose = verbose) %>%
+    arrange(title)
+  df_inventory$id <- 1:nrow(df_inventory)
 
   if (predict_cpes) {
     df_inventory <- cpe_generate(df = df_inventory, verbose = verbose)
@@ -104,12 +109,13 @@ get_unix_inventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cv
 #' Set predict_cpes as TRUE to predict CPEs using ML.
 #' Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs
 #'
+#' @param include_libs logical
 #' @param verbose logical
 #' @param predict_cpes logical
 #' @param predict_cves logical
 #'
 #' @return data.frame
-get_win_inventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE){
+get_win_inventory <- function(include_libs = FALSE, verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE){
   NewSWEntry <- function(name = "", version = "", vendor = "") {
     return(data.frame(name = name,
                       version = version,
@@ -179,36 +185,39 @@ get_win_inventory <- function(verbose = FALSE, predict_cpes = FALSE, predict_cve
   df.sw2 <- df.sw2[!apply(df.sw2 == "", 1, all),]
 
   # SW3
-  if (verbose) print(paste0("[-] ", "Searching installed software in WMI objects ..."))
-  sw3 <- system("powershell.exe \"Get-WmiObject Win32_Product | Sort-Object Name | Format-List Name, Version, Vendor\"", intern = T)
-  sw3 <- stringi::stri_conv(sw3, from = "CP850", to = "UTF-8")
+  if (include_libs) {
+    if (verbose) print(paste0("[-] ", "Searching installed software in WMI objects ..."))
+    sw3 <- system("powershell.exe \"Get-WmiObject Win32_Product | Sort-Object Name | Format-List Name, Version, Vendor\"", intern = T)
+    sw3 <- stringi::stri_conv(sw3, from = "CP850", to = "UTF-8")
 
-  df.sw3 <- NewSWEntry()
-  for (linia in sw3) {
-    new.sw <- NewSWEntry()
-    new.row <- lapply(stringr::str_split(linia, ":"), stringr::str_trim)[[1]]
-    switch(new.row[1],
-           "Name" = {
-             new.sw.name <- new.row[2]
-           },
-           "Version" = {
-             new.sw.version <- new.row[2]
-           },
-           "Vendor" = {
-             new.sw.publisher <- new.row[2]
-             new.sw <- NewSWEntry(new.sw.name, new.sw.version, new.sw.publisher)
-             new.sw.name <- new.sw.version <- new.sw.publisher <- ""
-             df.sw3 <- dplyr::bind_rows(df.sw3, new.sw)
-           },
-           {
-             # Default
-           }
-    )
+    df.sw3 <- NewSWEntry()
+    for (linia in sw3) {
+      new.sw <- NewSWEntry()
+      new.row <- lapply(stringr::str_split(linia, ":"), stringr::str_trim)[[1]]
+      switch(new.row[1],
+             "Name" = {
+               new.sw.name <- new.row[2]
+             },
+             "Version" = {
+               new.sw.version <- new.row[2]
+             },
+             "Vendor" = {
+               new.sw.publisher <- new.row[2]
+               new.sw <- NewSWEntry(new.sw.name, new.sw.version, new.sw.publisher)
+               new.sw.name <- new.sw.version <- new.sw.publisher <- ""
+               df.sw3 <- dplyr::bind_rows(df.sw3, new.sw)
+             },
+             {
+               # Default
+             }
+      )
+    }
+    df.sw3 <- df.sw3[!apply(df.sw3 == "", 1, all),]
+    df.sw2 <- dplyr::bind_rows(df.sw2, df.sw3)
   }
-  df.sw3 <- df.sw3[!apply(df.sw3 == "", 1, all),]
 
   if (verbose) print(paste0("[-] ", "Merge and normalize inventory ..."))
-  df.sw <- dplyr::bind_rows(df.sw1, df.sw2, df.sw3)
+  df.sw <- dplyr::bind_rows(df.sw1, df.sw2)
   df.sw <- df.sw[!duplicated(df.sw),]
   df.sw <- dplyr::arrange(df.sw, "name")
 

@@ -6,9 +6,16 @@
 Set predict_cpes as TRUE to predict CPEs using ML.
 Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs}
 \usage{
-getInventory(verbose = FALSE, predict_cpes = FALSE, predict_cves = FALSE)
+getInventory(
+  include_libs = FALSE,
+  verbose = FALSE,
+  predict_cpes = FALSE,
+  predict_cves = FALSE
+)
 }
 \arguments{
+\item{include_libs}{logical}
+
 \item{verbose}{logical}
 
 \item{predict_cpes}{logical}
