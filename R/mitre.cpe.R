@@ -160,43 +160,75 @@ str49enc <- function(name = character(), na_replace = "*") {
 #'
 #' @return character
 cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
-  # Normalize vendor: First apply translit, then remove bad words and HTML entities
-  x <- iconv(x, to = 'ASCII//TRANSLIT', sub = "")
+  # Remove (c) (tm) (r)
   x <- stringr::str_replace_all(x, "(?i)\\([c|tm|r]\\)", "")
+  x <- stringr::str_replace_all(x, "\\u00AE", "")
+  x <- stringr::str_replace_all(x, "\\u00A9", "")
+
+    # Normalize vendor: First apply translit, then remove bad words and HTML entities
+  x <- iconv(x, to = 'ASCII//TRANSLIT', sub = "")
+
+  # CUSTOM MODIFICATORS
+  # R Core Team --> r_project
+  x <- stringr::str_replace_all(x, "(?i)R Core Team", "r_project")
+  # The R Foundation --> r_foundation
+  x <- stringr::str_replace_all(x, "(?i)The R Foundation", "r_foundation")
+
+  # If starts with (, remove parenthesis and keep text until end or )
   x <- stringr::str_replace_all(x, "(?i)^\\(([^\\)]+)\\){0,1}", "\\1")
+  # Extract text inside parenthesis
   x <- stringr::str_replace_all(x, "\\(([^\\)]+)\\)", "")
+  # Remove any combination of development|core and team|company, separated by space, comma or -
   x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)*(team|company){0,1}$", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
+  # Remove any text equal or equivalent to: corporation, incorporated, international, etc.
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|corporations|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
+  # Extract word software or soft
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(software|soft)(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+s\\.(a|l)\\.(\\s|,){0,1}", " ")
+  # Remove S.A. and S.L. variants
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+s\\.(a|l)\\.(\\s|\\,){0,1}", " ")
   x <- stringr::str_trim(x)
+  # Remove L.P. variants
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+l\\.p\\.(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  # Remove word foundation
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+foundation(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  # Remove word systems
   # x <- stringr::str_replace_all(x, "(?i)(\\s|,)+systems(\\s|,){0,1}", " ")
   # x <- stringr::str_trim(x)
+  # Remove word technologies
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+technologies(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  # Remove word limited
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+limited(\\s|,){0,1}", " ")
   x <- stringr::str_trim(x)
+  # Remove words with only numbers or -
   x <- stringr::str_replace_all(x, "(?i)(\\s|,)+[\\d\\-]+(\\s)*", " ")
   x <- stringr::str_trim(x)
+  # Again remove any combination of development|core and team|company, separated by space, comma or -
   x <- stringr::str_replace_all(x, "(?i)(\\s|,|-)*(development|core){0,1}(\\s|,|-)*(team|company){0,1}$", " ")
   x <- stringr::str_trim(x)
-  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
+  # Again remove any text equal or equivalent to: corporation, incorporated, international, etc.
+  x <- stringr::str_replace_all(x, "(?i)(\\s|,)+(co|corp|corporation|corporations|ltd|llc|cc|inc|incorporated|company|international)\\.{0,1}$", "")
   x <- stringr::str_trim(x)
+  # Extract text inside HTML tags
   x <- sapply(x, function(y) xml2::xml_text(xml2::read_html(paste0("<x>",y,"</x>"))))
 
   x <- stringr::str_replace_all(x, "^[^a-zA-Z0-9]+$", "")
   x <- stringr::str_replace_all(x, "^[^a-zA-Z0-9]+\\s([a-zA-Z0-9].+)$", "\\1")
+  # Extract text inside ${}
   x <- stringr::str_replace_all(x, "^\\${0,1}\\{(.+)\\}$", "")
+  # Extract text between $
   x <- stringr::str_replace_all(x, "^\\$(.+)\\$$", "")
+  # Remove ()
   x <- stringr::str_replace_all(x, "\\(\\)", "")
+  # Text finishing with () --> remove ()
   x <- stringr::str_replace_all(x, "\\(([^\\)]+)$", "")
+  # Remove []
   x <- stringr::str_replace_all(x, "\\[\\]", "")
+  # Extract text between '' or ""
   x <- stringr::str_replace_all(x, "^'([^']+)'$", "\\1")
   x <- stringr::str_replace_all(x, "^\"([^']+)\"$", "\\1")
 
@@ -234,6 +266,8 @@ cpe_wfn_vendor <- function(x = "Microsoft Corporation") {
 #'
 #' @return character
 cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
+  x <- stringr::str_replace_all(x, "\\u00AE", "")
+  x <- stringr::str_replace_all(x, "\\u00A9", "")
   x <- iconv(x, to = 'ASCII//TRANSLIT')
   x <- stringr::str_replace_all(x, "\\(.*$", "")
   x <- stringr::str_trim(x)
@@ -743,11 +777,11 @@ cpe_is_version <- function(x = c("")) {
   return(grepl(pattern = "^\\d+([\\.\\-]\\d+)*$", x))
 }
 
-cpe_is_vulnerable <- function(x = c(""), cves = standards$cve$cve.nist) {
-  cpes_iv <- rep(FALSE, length(x))
-
-  return(cpes_iv)
-}
+# cpe_is_vulnerable <- function(x = c(""), cves = cve_latest_data()) {
+#   cpes_iv <- rep(FALSE, length(x))
+#
+#   return(cpes_iv)
+# }
 
 cpelite_check_vers <- function(x_vers, versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding) {
   k_sex <- if (cpe_is_version(versionStartExcluding)) numeric_version(versionStartExcluding) else versionStartExcluding
@@ -756,103 +790,155 @@ cpelite_check_vers <- function(x_vers, versionStartExcluding, versionStartInclud
   k_ein <- if (cpe_is_version(versionEndIncluding)) numeric_version(versionEndIncluding) else versionEndIncluding
 
   if (is.na(k_sex)) {
+    # OK:
+    # NA: Start Excluding
     if (is.na(k_sin)) {
+      # OK:
+      # NA: Start Excluding, Start Including
       if (is.na(k_eex)) {
+        # OK:
+        # NA: Start Excluding, Start Including, End Excluding
         if (is.na(k_ein)) {
-          # NA: Start Excluding, End Excluding, End Including, Start Including
-          TRUE
+          # OK:
+          # NA: Start Excluding, Start Including, End Excluding, End Including
+          FALSE
         } else {
-          # NA: Start Excluding, End Excluding, End Including, Start Including
           # OK: End Including
+          # NA: Start Excluding, Start Including, End Excluding
           ifelse(test = is.numeric_version(k_ein),
                  yes = (x_vers <= k_ein),
-                 no = NaN)
+                 no = FALSE)
         }
       } else {
+        # OK: End Excluding
+        # NA: Start Excluding, Start Including
         if (is.na(k_ein)) {
-          # NA: Start Excluding, End Including
-          # OK: Start Including, End Excluding
-          ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_eex),
-                 yes = (k_sin <= x_vers) & (x_vers < k_eex),
-                 no = NaN)
+          # OK: End Excluding
+          # NA: Start Excluding, Start Including, End Including
+          ifelse(test = is.numeric_version(k_eex),
+                 yes = (x_vers < k_eex),
+                 no = FALSE)
         } else {
-          # NA: Start Excluding
-          # OK: Start Including, End Excluding, End Including
-          NaN
+          # OK: End Excluding, End Including
+          # NA: Start Excluding, Start Including
+          ifelse(test = is.numeric_version(k_eex) & is.numeric_version(k_ein),
+                 yes = (x_vers < k_eex) & (x_vers <= k_ein),
+                 no = FALSE)
         }
       }
     } else {
-      # NA: Start Excluding
       # OK: Start Including
+      # NA: Start Excluding
       if (is.na(k_eex)) {
-        # NA: Start Excluding, End Excluding
         # OK: Start Including
+        # NA: Start Excluding, End Excluding
         if (is.na(k_ein)) {
-          # NA: Start Excluding, Start Including, End Excluding, End Including
-          TRUE
+          # OK: Start Including
+          # NA: Start Excluding, End Excluding, End Including
+          ifelse(test = is.numeric_version(k_sin),
+                 yes = (k_sin <= x_vers),
+                 no = FALSE)
         } else {
-          # NA: Start Excluding, Start Including, End Excluding
-          # OK: End Including
-          ifelse(test = is.numeric_version(k_ein),
-                 yes = (x_vers <= k_ein),
-                 no = NaN)
+          # OK: Start Including, End Including
+          # NA: Start Excluding, End Excluding
+          ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_ein),
+                 yes = (k_sin <= x_vers) & (x_vers <= k_ein),
+                 no = FALSE)
         }
       } else {
-        # NA: Start Excluding
         # OK: Start Including, End Excluding
+        # NA: Start Excluding
         if (is.na(k_ein)) {
-          # NA: Start Excluding, End Including
           # OK: Start Including, End Excluding
+          # NA: Start Excluding, End Including
           ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_eex),
                  yes = (k_sin <= x_vers) & (x_vers < k_eex),
-                 no = NaN)
+                 no = FALSE)
         } else {
-          # NA: Start Excluding
           # OK: Start Including, End Excluding, End Including
-          NaN
+          # NA: Start Excluding
+          ifelse(test = is.numeric_version(k_sin) & is.numeric_version(k_eex) & is.numeric_version(k_ein),
+                 yes = (k_sin <= x_vers) & (x_vers < k_eex) & (x_vers <= k_ein),
+                 no = FALSE)
         }
       }
     }
   } else {
     # OK: Start Excluding
+    # NA:
     if (is.na(k_sin)) {
-      # NA: Start Including
       # OK: Start Excluding
+      # NA: Start Including
       if (is.na(k_eex)) {
-        # NA: Start Including, End Excluding
         # OK: Start Excluding
+        # NA: Start Including, End Excluding
         if (is.na(k_ein)) {
-          # NA: Start Including, End Excluding, End Including
           # OK: Start Excluding
-          ifelse(test = is.numeric_version(k_sin),
-                 yes = (k_sin <= x_vers),
-                 no = NaN)
+          # NA: Start Including, End Excluding, End Including
+          ifelse(test = is.numeric_version(k_sex),
+                 yes = (k_sex < x_vers),
+                 no = FALSE)
         } else {
-          # NA: Start Including, End Excluding
           # OK: Start Excluding, End Including
+          # NA: Start Including, End Excluding
           ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_ein),
                  yes = (k_sex < x_vers) & (x_vers <= k_ein),
-                 no = NaN)
+                 no = FALSE)
         }
       } else {
-        # NA: Start Including
         # OK: Start Excluding, End Excluding
+        # NA: Start Including
         if (is.na(k_ein)) {
-          # NA: Start Including, End Including
           # OK: Start Excluding, End Excluding
+          # NA: Start Including, End Including
           ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_eex),
                  yes = (k_sex < x_vers) & (x_vers < k_eex),
-                 no = NaN)
+                 no = FALSE)
+
         } else {
-          # NA: Start Including
           # OK: Start Excluding, End Excluding, End Including
-          NaN
+          # NA: Start Including
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_eex) & is.numeric_version(k_ein),
+                 yes = (k_sex < x_vers) & (x_vers < k_eex) & (x_vers <= k_ein),
+                 no = FALSE)
         }
       }
     } else {
-      # NA: -
       # OK: Start Excluding, Start Including
-      NaN
+      # NA:
+      if (is.na(k_eex)) {
+        # OK: Start Excluding, Start Including
+        # NA: End Excluding
+        if (is.na(k_ein)) {
+          # OK: Start Excluding, Start Including
+          # NA: End Excluding, End Including
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_sin),
+                 yes = (k_sex < x_vers) & (k_sin <= x_vers),
+                 no = FALSE)
+        } else {
+          # OK: Start Excluding, Start Including, End Including
+          # NA: End Excluding
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_sin) & is.numeric_version(k_ein),
+                 yes = (k_sex < x_vers) & (k_sin <= x_vers) & (x_vers <= k_ein),
+                 no = FALSE)
+        }
+      } else {
+        # OK: Start Excluding, Start Including, End Excluding
+        # NA:
+        if (is.na(k_ein)) {
+          # OK: Start Excluding, Start Including, End Excluding
+          # NA: End Including
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_sin) & is.numeric_version(k_eex),
+                 yes = (k_sex < x_vers) & (k_sin <= x_vers) & (x_vers < k_eex),
+                 no = FALSE)
+        } else {
+          # OK: Start Excluding, Start Including, End Excluding, End Including
+          # NA:
+          ifelse(test = is.numeric_version(k_sex) & is.numeric_version(k_sin) & is.numeric_version(k_eex) & is.numeric_version(k_ein),
+                 yes = (k_sex < x_vers) & (k_sin <= x_vers) & (x_vers < k_eex) & (x_vers <= k_ein),
+                 no = FALSE)
+        }
+      }
     }
   }
 }
@@ -864,7 +950,7 @@ cpelite_vulnerable_configs <- function(x, x_vers, cves = cve_latest_data(), verb
     rx <- x
   }
 
-  if (verbose) print(paste0("[*] ", "Filter CVEs by CPEs..."))
+  if (verbose) print(paste0("[*] ", "Searching CVEs for ", x, "..."))
   x_vc <- cves[which(grepl(pattern = rx, x = cves$vulnerable.configuration)), c("cve.id", "vulnerable.configuration")]
 
   if (nrow(x_vc) == 0) return(jsonlite::toJSON(NA))
@@ -882,8 +968,15 @@ cpelite_vulnerable_configs <- function(x, x_vers, cves = cve_latest_data(), verb
   if (verbose) print(paste0("[*] ", "Checking versions..."))
   k <- vulnerableconfigurations %>%
     filter(grepl(pattern = rx, x = cpe23Uri)) %>%
-    filter(vulnerable) %>%
-    select(vc_id, versionStartExcluding, versionStartIncluding, versionEndExcluding, versionEndIncluding)
+    filter(vulnerable)
+  k_nas <- which(is.na(k$versionStartExcluding) & is.na(k$versionStartIncluding) & is.na(k$versionEndExcluding) & is.na(k$versionEndIncluding))
+
+  # Fill empty ranges
+  k$versionStartIncluding[k_nas] <- sapply(k$cpe23Uri[k_nas], function(x) stringr::str_split(x, ":", 7, T)[6])
+  k$versionEndIncluding[k_nas] <- sapply(k$cpe23Uri[k_nas], function(x) stringr::str_split(x, ":", 7, T)[6])
+
+  k <- k %>% select(vc_id, versionStartExcluding, versionStartIncluding,
+                    versionEndExcluding, versionEndIncluding)
 
   x_vers <- if (cpe_is_version(x_vers)) numeric_version(x_vers) else x_vers
   k_selected <- k %>%
