@@ -17,6 +17,7 @@ cpe_find_vulnerabilities <- function(df_inventory = cpe_make_title(), verbose = 
                               mutate(cves = cpelite_vulnerable_configs(x = cpelite, x_vers = version, verbose = verbose)) %>%
                               ungroup() %>% select(id, cves),
                             by = "id")
+  df_inventory$cves[which((df_inventory$cves == "[null]") | (is.na(df_inventory$cves)))] <- "[]"
 
   return(df_inventory)
 }
