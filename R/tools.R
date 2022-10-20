@@ -1,3 +1,17 @@
+#' Title
+#'
+#' @param df_inventory
+#' @param verbose
+#'
+#' @return
+#' @export
+#'
+#' @examples
+cpe_make_title <- function(df_inventory = df, verbose = verbose) {
+  df_inventory <- cpe_sccm_inventory(df_sccm = df_inventory, verbose = verbose)
+  return(df_inventory)
+}
+
 #' Return data.frame with installed software name, version and vendor.
 #' Set predict_cpes as TRUE to predict CPEs using ML.
 #' Set predict_cves as TRUE to predict CPEs and its vulnerabilities as CVEs
@@ -34,7 +48,7 @@ getInventory <- function(include_libs = FALSE, verbose = FALSE, predict_cpes = F
                                              predict_cpes = predict_cpes,
                                              predict_cves = predict_cves)
            })
-  df_inventory <- cpe_sccm_inventory(df_sccm = df_inventory, verbose = verbose) %>%
+  df_inventory <- cpe_make_title(df_sccm = df_inventory, verbose = verbose) %>%
     arrange(title)
   df_inventory$id <- 1:nrow(df_inventory)
 
