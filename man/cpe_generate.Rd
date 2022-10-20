@@ -4,10 +4,10 @@
 \alias{cpe_generate}
 \title{Title}
 \usage{
-cpe_generate(df = getInventory(), verbose = FALSE)
+cpe_generate(df_inventory = getInventory(), verbose = FALSE)
 }
 \arguments{
-\item{df}{data.frame}
+\item{df_inventory}{data.frame}
 
 \item{verbose}{logical}
 }

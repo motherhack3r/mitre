@@ -1,11 +1,34 @@
 #' Title
 #'
 #' @param df_inventory data.frame
+#'
+#' @return data.frame
+#' @export
+cpe_find_vulnerabilities <- function(df_inventory = cpe_make_title(), verbose = FALSE) {
+  df_inventory <- left_join(df_inventory,
+                            df_inventory %>%
+                              filter(cpe_score > 0.5) %>%
+                              separate(col = cpe , sep = ":", extra = "merge",
+                                       into = c("std", "v", "part", "vendor", "product", "version", "tail")) %>%
+                              select(id, vendor, product, version, vendor, product, version) %>%
+                              mutate(cpelite = paste0(":", paste(vendor, product, sep = ":"), ":")) %>%
+                              select(id, cpelite, version) %>%
+                              rowwise() %>%
+                              mutate(cves = cpelite_vulnerable_configs(x = cpelite, x_vers = version, verbose = verbose)) %>%
+                              ungroup() %>% select(id, cves),
+                            by = "id")
+
+  return(df_inventory)
+}
+
+#' Title
+#'
+#' @param df_inventory data.frame
 #' @param verbose logical
 #'
 #' @return data.frame
 #' @export
-cpe_make_title <- function(df_inventory = df, verbose = verbose) {
+cpe_make_title <- function(df_inventory = getInventory(), verbose = FALSE) {
   df_inventory <- cpe_sccm_inventory(df_sccm = df_inventory, verbose = verbose)
   return(df_inventory)
 }
@@ -51,7 +74,7 @@ getInventory <- function(include_libs = FALSE, verbose = FALSE, predict_cpes = F
   df_inventory$id <- 1:nrow(df_inventory)
 
   if (predict_cpes) {
-    df_inventory <- cpe_generate(df = df_inventory, verbose = verbose)
+    df_inventory <- cpe_generate(df_inventory = df_inventory, verbose = verbose)
     if (predict_cves) {
       df_inventory <- left_join(df_inventory,
                                 df_inventory %>%

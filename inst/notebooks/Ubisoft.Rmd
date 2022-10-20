@@ -65,7 +65,7 @@ kbl(df_ubi_sample) %>%
 
 ```{r}
 df_inventory <- mitre::cpe_make_title(df_inventory = df_ubi_sample, verbose = verbose)
-df_inventory <- mitre::cpe_generate(df = df_ubi_sample, verbose = verbose)
+df_inventory <- mitre::cpe_generate(df_inventory = df_inventory, verbose = verbose)
 ```
 
 ```{r}

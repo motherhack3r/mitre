@@ -550,16 +550,15 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
 
 #' Title
 #'
-#' @param df data.frame
+#' @param df_inventory data.frame
 #' @param verbose logical
 #'
 #' @return data.frame
 #' @export
-cpe_generate <- function(df = getInventory(), verbose = FALSE) {
+cpe_generate <- function(df_inventory = getInventory(), verbose = FALSE) {
   if (verbose) print(paste0("[*] ", "Ready to generate CPEs..."))
 
-  # df_inventory <- cpe_sccm_inventory(df_sccm = df, verbose = verbose)
-  df_inventory <- df
+  df <- df_inventory
   df$vd_match_type <- rep(NA, nrow(df))
   df$vd_match_type[!(df$id %in% df_inventory$id)] <- "NONE"
 
