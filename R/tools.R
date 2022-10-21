@@ -1,10 +1,12 @@
 #' Title
 #'
 #' @param df_inventory data.frame
+#' @param cves data.frame
+#' @param verbose logical
 #'
 #' @return data.frame
 #' @export
-cpe_find_vulnerabilities <- function(df_inventory = cpe_make_title(), verbose = FALSE) {
+cpe_find_vulnerabilities <- function(df_inventory = cpe_make_title(), cves = cve_latest_data(), verbose = FALSE) {
   df_inventory <- left_join(df_inventory,
                             df_inventory %>%
                               filter(cpe_score > 0.5) %>%

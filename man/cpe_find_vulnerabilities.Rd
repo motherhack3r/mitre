@@ -4,10 +4,18 @@
 \alias{cpe_find_vulnerabilities}
 \title{Title}
 \usage{
-cpe_find_vulnerabilities(df_inventory = cpe_make_title(), verbose = FALSE)
+cpe_find_vulnerabilities(
+  df_inventory = cpe_make_title(),
+  cves = cve_latest_data(),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{df_inventory}{data.frame}
+
+\item{cves}{data.frame}
+
+\item{verbose}{logical}
 }
 \value{
 data.frame
