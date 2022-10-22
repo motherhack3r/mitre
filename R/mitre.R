@@ -33,9 +33,9 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' }
 build_network <- function(standards = standards, verbose = FALSE, as_igraph = TRUE) {
   if (verbose) print(paste0("[NET] Building nodes ..."))
-  nodes <- build_nodes(verbose)
+  nodes <- build_nodes(standards, verbose)
   if (verbose) print(paste0("[NET] Building edges ..."))
-  edges <- build_edges(verbose)
+  edges <- build_edges(standards, verbose)
 
   if (verbose) print(paste0("[NET] Cleaning network ..."))
   edges <- dplyr::left_join(edges, nodes[, c("id", "standard")],
