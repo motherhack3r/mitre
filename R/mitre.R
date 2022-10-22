@@ -22,6 +22,7 @@ getLatestDataSet <- function(verbose = FALSE) {
 #'
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
 #' @param as_igraph logical, TRUE by default. Change it to get list of nodes and edges.
+#' @param standards list of data.frames
 #'
 #' @return list, containing nodes and edges as data frames
 #' @export
@@ -30,7 +31,7 @@ getLatestDataSet <- function(verbose = FALSE) {
 #' \dontrun{
 #' mitrenet <- mitre::build_network(as_igraph = FALSE)
 #' }
-build_network <- function(verbose = FALSE, as_igraph = TRUE) {
+build_network <- function(standards = standards, verbose = FALSE, as_igraph = TRUE) {
   if (verbose) print(paste0("[NET] Building nodes ..."))
   nodes <- build_nodes(verbose)
   if (verbose) print(paste0("[NET] Building edges ..."))
@@ -75,12 +76,13 @@ build_network <- function(verbose = FALSE, as_igraph = TRUE) {
 #' \code{mass} : Default to 1. The barnesHut physics model (which is enabled by default) is based on an inverted gravity model. By increasing the mass of a node, you increase it's repulsion. Values lower than 1 are not recommended.
 #' \code{description} : Description could include extra information or nested data which include other columns from original data frame observation.
 #'
+#' @param standards list of data.frames
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
 #'
 #' @importFrom rlang .data
 #'
 #' @return data.frame
-build_nodes <- function(verbose = FALSE) {
+build_nodes <- function(standards = standards, verbose = FALSE) {
   nodes <- newNode()
 
   ### CPE
@@ -541,10 +543,11 @@ build_nodes <- function(verbose = FALSE) {
 #' \code{color} : Color for the node.
 #' \code{hidden} : When true, the node will not be shown. It will still be part of the physics simulation though!
 #'
+#' @param standards list of data.frames
 #' @param verbose logical, FALSE by default. Change it to see the process messages.
 #'
 #' @return data.frame
-build_edges <- function(verbose = FALSE) {
+build_edges <- function(standards = standards, verbose = FALSE) {
   edges <- newEdge()
 
   ### CPE -> CVE

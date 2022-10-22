@@ -4,9 +4,11 @@
 \alias{build_edges}
 \title{Extract relationships between standards as edges in a data frame.}
 \usage{
-build_edges(verbose = FALSE)
+build_edges(standards = standards, verbose = FALSE)
 }
 \arguments{
+\item{standards}{list of data.frames}
+
 \item{verbose}{logical, FALSE by default. Change it to see the process messages.}
 }
 \value{
