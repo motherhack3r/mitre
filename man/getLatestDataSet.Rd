@@ -4,7 +4,7 @@
 \alias{getLatestDataSet}
 \title{Download latest R data sets from Github previously parsed with this package.}
 \usage{
-getLatestDataSet(verbose = FALSE)
+getLatestDataSet(name = "all", verbose = FALSE)
 }
 \arguments{
 \item{verbose}{default is FALSE}

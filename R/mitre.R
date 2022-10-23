@@ -9,11 +9,49 @@
 #' \dontrun{
 #' standards <- mitre::getLatestDataSet(TRUE)
 #' }
-getLatestDataSet <- function(verbose = FALSE) {
-  rawurl <- "https://github.com/motherhack3r/mitre-datasets/raw/master/historic/20220416/standards.rds"
-  rawfile <- tempfile(fileext = ".rds")
-  utils::download.file(url = rawurl, destfile = rawfile, quiet = !verbose)
-  standards <- readRDS(rawfile)
+getLatestDataSet <- function(name = "all", verbose = FALSE) {
+  if (name == "all") {
+    rawurl <- "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/standards.rda"
+    rawfile <- tempfile(fileext = ".rds")
+    utils::download.file(url = rawurl, destfile = rawfile, quiet = !verbose)
+    x <- load(rawfile)
+    standards <- get(x)
+    rm(x)
+  } else {
+    standards <- list()
+    if ("cpe" %in% name) {
+      cpe.nist <- cpe_latest_data(verbose = verbose)
+      standards[["cpe"]] <- list(cpe.nist = cpe.nist)
+    }
+    if ("cve" %in% name) {
+      cve.nist <- cve_latest_data(verbose = verbose)
+      standards[["cve"]] <- list(cve.nist = cve.nist)
+    }
+    if ("cwe" %in% name) {
+      cwe <- cwe_latest_data(verbose = verbose)
+      standards[["cwe"]] <- cwe
+    }
+    if ("capec" %in% name) {
+      capec <- capec_latest_data(verbose = verbose)
+      standards[["capec"]] <- capec
+    }
+    if ("attck" %in% name) {
+      attck <- attck_latest_data(verbose = verbose)
+      standards[["attck"]] <- attck
+    }
+    if ("shield" %in% name) {
+      shield <- shield_latest_data(verbose = verbose)
+      standards[["shield"]] <- shield
+    }
+    if ("engage" %in% name) {
+      engage <- engage_latest_data(verbose = verbose)
+      standards[["engage"]] <- engage
+    }
+    if ("car" %in% name) {
+      car <- engage_latest_data(verbose = verbose)
+      standards[["car"]] <- car
+    }
+  }
 
   return(standards)
 }
