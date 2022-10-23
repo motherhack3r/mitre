@@ -30,7 +30,7 @@ to_neo4j <- function(mitrenet = getLatestDataSet()[["mitrenet"]],
   try(neo2R::cypher(graph, 'CREATE INDEX IF NOT EXISTS FOR (m:MITRE) ON (m.type)'))
 
   ntype <- unique(mitrenet$nodes$group)
-  tdef <- grep(pattern = "^(shield|car)$", ntype, value = T)
+  tdef <- grep(pattern = "^(engage|shield|car)$", ntype, value = T)
   toff <- grep(pattern = "^(attck|capec)$", ntype, value = T)
   for (g in ntype) {
     if (verbose) print(paste("Adding", g, "nodes"))
