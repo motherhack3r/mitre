@@ -17,22 +17,21 @@ if (!file.exists("data-raw/cpe/nist-cpe.xml.zip"))
 
 doc <- xml2::read_xml("data-raw/cpe/cpe-nist.xml.zip")
 
-cpes <- data.frame(title = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/*[@xml:lang='en-US'][1]")),
-                   cpe.22 = xml2::xml_text(xml2::xml_find_all(doc, "//*[cpe-23:cpe23-item]/@name")),
-                   cpe.23 = xml2::xml_text(xml2::xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
+cpes <- data.frame(title  = xml_text(xml_find_all(doc, "//d1:cpe-item/d1:title[1]")),
+                   cpe.23 = xml_text(xml_find_all(doc, "//cpe-23:cpe23-item/@name")),
                    stringsAsFactors = F)
-nodes <- xml2::xml_find_all(doc, ".//cpe-23:cpe23-item")
 
-cpes$refs <- unlist(lapply(xml2::xml_find_first(nodes, ".//ancestor::d1:cpe-item/d1:references"),
-                           function(x) {
-                             z <- lapply(xml2::as_list(x), function(y) as.character(attributes(y)))
-                             names(z) <- as.character(sapply(xml2::as_list(x), as.character))
-                             jsonlite::toJSON(z, pretty = T)
-                           }))
+nodes <- xml2::xml_find_all(doc, "//cpe-23:cpe23-item")
+cpes$refs <- unlist(lapply(xml_find_first(nodes, "ancestor::d1:cpe-item/d1:references"),
+                    function(x) {
+                      z <- lapply(as_list(x), function(y) as.character(attributes(y)))
+                      names(z) <- as.character(sapply(as_list(x), as.character))
+                      toJSON(z)
+                    }))
 
-cpes$deprecated <- !is.na(as.logical(xml2::xml_attr(xml2::xml_find_first(nodes,
-                                                                         ".//ancestor::d1:cpe-item"),
-                                                    "deprecated")))
+cpes$deprecated <- !is.na(as.logical(xml_attr(xml_find_first(nodes,
+                                                             ".//ancestor::d1:cpe-item"),
+                                              "deprecated")))
 
 rm(nodes)
 
@@ -42,11 +41,9 @@ new.cols <- c("std", "std.v", "part", "vendor", "product",
 cpes$cpe.23 <- stringr::str_replace_all(cpes$cpe.23, "\\\\:", ";")
 cpes <- tidyr::separate(data = cpes, col = "cpe.23", into = new.cols, sep = ":", remove = F)
 cpes$id <- 1:nrow(cpes)
-cpes <- dplyr::select(.data = cpes, -"std", -"std.v")
-
-cpe.nist <- cpes
-
-usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
+cpe.nist <- dplyr::select(.data = cpes, "id", "title", "cpe.23", "part", "vendor", "product", "version", "refs", "deprecated")
 
 rm(cpes, new.cols, doc)
+usethis::use_data(cpe.nist, compress = "xz", overwrite = TRUE)
+
 
