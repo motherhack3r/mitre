@@ -1,26 +1,28 @@
-#' @import dplyr
-#' @import tidyr
-#' @importFrom utils download.file read.csv
-
-wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
-                    update = "*", edition = "*", language = "*", sw_edition = "*",
-                    target_sw = "*", target_hw = "*", other = "*",
-                    as_string = TRUE) {
-  cpe <- data.frame(part = part,
-                    vendor = vendor,
-                    product = product,
-                    version = version,
-                    update = update,
-                    edition = edition,
-                    language = language,
-                    sw_edition = sw_edition,
-                    target_sw = target_sw,
-                    target_hw = target_hw,
-                    other = other)
-  if (as_string) {
-    cpe <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
+#' Load CPE data frame from local file or download latest
+#'
+#' @param local_path path to RDS file. NA value implies remote TRUE
+#' @param remote logical
+#' @param keep_deprecated logical
+#' @param allcols logical
+#' @param verbose logical
+#'
+#' @return data.frame
+cpe_latest_data <- function(local_path = NA, remote = F, keep_deprecated = F, allcols = F, verbose = F) {
+  if (is.na(local_path) | remote) {
+    local_path <- tempfile(fileext = ".rds")
+    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
+                  destfile = local_path, quiet = !verbose)
   }
-  return(cpe)
+  cpes <- readRDS(local_path)
+  if (!keep_deprecated) {
+    cpes <- cpes[!cpes$deprecated, ]
+  }
+
+  if (!allcols) {
+    cpes <- cpes[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
+  }
+
+  return(cpes)
 }
 
 #' Encode strings to only 73 accepted characters for custom WFN.
@@ -152,6 +154,31 @@ str49enc <- function(name = character(), na_replace = "*") {
   encname <- stringi::stri_replace_all_regex(encname, regex_notvalid, na_replace)
 
   return(encname)
+}
+
+#' @import dplyr
+#' @import tidyr
+#' @importFrom utils download.file read.csv
+
+wfn_new <- function(part = "*", vendor = "*", product = "*", version = "*",
+                    update = "*", edition = "*", language = "*", sw_edition = "*",
+                    target_sw = "*", target_hw = "*", other = "*",
+                    as_string = TRUE) {
+  cpe <- data.frame(part = part,
+                    vendor = vendor,
+                    product = product,
+                    version = version,
+                    update = update,
+                    edition = edition,
+                    language = language,
+                    sw_edition = sw_edition,
+                    target_sw = target_sw,
+                    target_hw = target_hw,
+                    other = other)
+  if (as_string) {
+    cpe <- paste("cpe", "2.3", paste(cpe, collapse = ":"), sep = ":")
+  }
+  return(cpe)
 }
 
 #' Title
@@ -291,33 +318,6 @@ cpe_wfn_product <- function(x = "Oracle VM VirtualBox 6.1.34") {
   return(x)
 }
 
-#' Load CPE data frame from local file or download latest
-#'
-#' @param local_path path to RDS file. NA value implies remote TRUE
-#' @param remote logical
-#' @param keep_deprecated logical
-#' @param allcols logical
-#' @param verbose logical
-#'
-#' @return data.frame
-cpe_latest_data <- function(local_path = NA, remote = F, keep_deprecated = F, allcols = F, verbose = F) {
-  if (is.na(local_path) | remote) {
-    local_path <- tempfile(fileext = ".rds")
-    download.file(url = "https://github.com/motherhack3r/mitre-datasets/raw/master/latest/simple/cpe.rds",
-                  destfile = local_path, quiet = !verbose)
-  }
-  cpes <- readRDS(local_path)
-  if (!keep_deprecated) {
-    cpes <- cpes[!cpes$deprecated, ]
-  }
-
-  if (!allcols) {
-    cpes <- cpes[, c("id", "title", "cpe.23", "part", "vendor", "product", "version")]
-  }
-
-  return(cpes)
-}
-
 #' Returns data frame with grouped count by vendor and product.
 #'
 #' @param df data.frame
@@ -337,7 +337,6 @@ getCPEstats <- function(df = cpe_latest_data(), only_vendor = TRUE, scale_log = 
 
   return(sts_cpes)
 }
-
 
 #' Title
 #'
@@ -547,8 +546,9 @@ predict_cpe <- function(df_inventory = mitre::getInventory(),
   return(df_inventory)
 }
 
-
-#' Title
+#' This function complements the inventory data.frame generating CPEs using
+#' heuristics and NER transformer. It adds columns with predicted CPE, the
+#' scoring and possible CPE candidates.
 #'
 #' @param df_inventory data.frame
 #' @param verbose logical
@@ -947,6 +947,14 @@ cpelite_check_vers <- function(x_vers, versionStartExcluding, versionStartInclud
   }
 }
 
+#' Find vulnerabilities related to a CPE defined as cpelite (vendor:product) and version
+#'
+#' @param x character cpelite as vendor:product
+#' @param x_vers character cpe version
+#' @param cves data.frame
+#' @param verbose logical
+#'
+#' @return character
 cpelite_vulnerable_configs <- function(x, x_vers, cves = cve_latest_data(), verbose = FALSE) {
   if (length(x) > 1) {
     rx <- paste0("(", paste(x, collapse = "|"), ")")

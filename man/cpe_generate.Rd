@@ -2,7 +2,9 @@
 % Please edit documentation in R/mitre.cpe.R
 \name{cpe_generate}
 \alias{cpe_generate}
-\title{Title}
+\title{This function complements the inventory data.frame generating CPEs using
+heuristics and NER transformer. It adds columns with predicted CPE, the
+scoring and possible CPE candidates.}
 \usage{
 cpe_generate(df_inventory = getInventory(), verbose = FALSE)
 }
@@ -15,5 +17,7 @@ cpe_generate(df_inventory = getInventory(), verbose = FALSE)
 data.frame
 }
 \description{
-Title
+This function complements the inventory data.frame generating CPEs using
+heuristics and NER transformer. It adds columns with predicted CPE, the
+scoring and possible CPE candidates.
 }

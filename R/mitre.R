@@ -136,7 +136,7 @@ build_nodes <- function(standards = standards, verbose = FALSE) {
   nodes <- dplyr::bind_rows(nodes, cwe.nodes)
 
   ## ATT&CK MITRE
-  attck.nodes <- build_cwe_nodes(standards$attck, verbose)
+  attck.nodes <- build_attck_nodes(standards$attck, verbose)
   nodes <- dplyr::bind_rows(nodes, attck.nodes)
 
   ## CAPEC MITRE
@@ -144,15 +144,15 @@ build_nodes <- function(standards = standards, verbose = FALSE) {
   nodes <- dplyr::bind_rows(nodes, capec.nodes)
 
   ## SHIELD MITRE
-  shield.nodes <- build_capec_nodes(standards$shield, verbose)
+  shield.nodes <- build_shield_nodes(standards$shield, verbose)
   nodes <- dplyr::bind_rows(nodes, shield.nodes)
 
   ## MITRE ENGAGE
-  engage.nodes <- build_capec_nodes(standards$engage, verbose)
+  engage.nodes <- build_engage_nodes(standards$engage, verbose)
   nodes <- dplyr::bind_rows(nodes, engage.nodes)
 
   ## CAR MITRE
-  car.nodes <- build_capec_nodes(standards$car, verbose)
+  car.nodes <- build_car_nodes(standards$car, verbose)
   nodes <- dplyr::bind_rows(nodes, car.nodes)
 
   ## Tidy nodes data.frame
@@ -186,6 +186,7 @@ build_cpe_nodes <- function(cpes = data.frame(), verbose = FALSE) {
 
 build_cve_nodes <- function(cves = data.frame(), verbose = FALSE) {
   if (verbose) print(paste0("[NET][CVE] extracting nodes ..."))
+  nodes <- newNode()
   cve.nodes <- cves$cve.nist[, c("cve.id", "description", "cvss3.score", "cvss2.score", "references")]
   cve.nodes$id <- rep(NA, nrow(cve.nodes))
   cve.nodes$label <- cve.nodes$cve.id
@@ -207,6 +208,7 @@ build_cve_nodes <- function(cves = data.frame(), verbose = FALSE) {
 }
 
 build_cwe_nodes <- function(cwes = data.frame(), verbose = FALSE) {
+  nodes <- newNode()
   if (verbose) print(paste0("[NET][CWE] extracting nodes ..."))
   cwe.nodes <- dplyr::bind_rows(cwes$cwe.weaknesses,
                                 cwes$cwe.categories,
@@ -350,6 +352,7 @@ build_attck_nodes <- function(attck = data.frame(), verbose = FALSE) {
 }
 
 build_capec_nodes <- function(capec = data.frame(), verbose = FALSE) {
+  nodes <- newNode()
   if (verbose) print(paste0("[NET][CAPEC] extracting nodes ..."))
   capec.p <- standards$capec$capec.patterns
   capec.p$type <- rep("pattern", nrow(capec.p))
@@ -645,48 +648,56 @@ build_edges <- function(standards = standards, verbose = FALSE) {
   edges <- newEdge()
 
   ### CPE -> CVE
-  cpe.edges <- build_cpe2cve_edges(standards$cpe, verbose = FALSE)
+  cpe.edges <- build_cpe2cve_edges(standards$cpe, verbose = verbose)
+  edges <- dplyr::bind_rows(edges, cpe.edges)
+
+  ### CPE -> CVE
+  cpe.edges <- build_cpe2cwe_edges(standards$cpe, verbose = verbose)
   edges <- dplyr::bind_rows(edges, cpe.edges)
 
   ### CVE -> CWE
-  cve.edges <- build_cve2cwe_edges(standards$cve, verbose = FALSE)
-  edges <- dplyr::bind_rows(edges, cve.edges)
-
-  ### CVE -> CPE
-  cve.edges <- build_cve2cpe_edges(standards$cve, verbose = FALSE)
+  cve.edges <- build_cve2cwe_edges(standards$cve, verbose = verbose)
   edges <- dplyr::bind_rows(edges, cve.edges)
 
   ### CWE -> CVE
-  cwe.edges <- build_cwe2cve_edges(standards$cwe, verbose = FALSE)
+  cwe.edges <- build_cwe2cve_edges(standards$cwe, verbose = verbose)
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CAPEC
-  cwe.edges <- build_cwe2capec_edges(standards$cwe, verbose = FALSE)
+  cwe.edges <- build_cwe2capec_edges(standards$cwe, verbose = verbose)
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CWE -> CWE
-  cwe.edges <- build_cwe2cwe_edges(standards$cwe, verbose = FALSE)
+  cwe.edges <- build_cwe2cwe_edges(standards$cwe, verbose = verbose)
   edges <- dplyr::bind_rows(edges, cwe.edges)
 
   ### CAPEC multiple relations
-  capec.edges <- build_capec2any_edges(standards$capec, verbose = FALSE)
+  capec.edges <- build_capec2any_edges(standards$capec, verbose = verbose)
   edges <- dplyr::bind_rows(edges, capec.edges)
 
   ### ATTCK multiple relations
-  attck.edges <- build_attck2any_edges(standards$attck, verbose = FALSE)
+  attck.edges <- build_attck2any_edges(standards$attck, verbose = verbose)
   edges <- dplyr::bind_rows(edges, attck.edges)
 
   ### SHIELD multiple relations
-  shield.edges <- build_shield2any_edges(standards$shield, verbose = FALSE)
+  shield.edges <- build_shield2any_edges(standards$shield, verbose = verbose)
   edges <- dplyr::bind_rows(edges, shield.edges)
 
   ### ENGAGE multiple relations
-  engage.edges <- build_shield2any_edges(standards$engage, verbose = FALSE)
+  engage.edges <- build_engage2any_edges(standards$engage, verbose = verbose)
   edges <- dplyr::bind_rows(edges, engage.edges)
 
   ### CAR multiple relations
-  car.edges <- build_car2any_edges(standards$car, verbose = FALSE)
+  car.edges <- build_car2any_edges(standards$car, verbose = verbose)
   edges <- dplyr::bind_rows(edges, car.edges)
+
+  ### CVE -> CPE
+  cve.edges <- build_cve2vulnconf_edges(standards$cve$cve.nist, standards$cpe$cpe.nist, verbose = verbose)
+  edges <- dplyr::bind_rows(edges, cve.edges)
+
+  # ### CVE -> CPE
+  # cve.edges <- build_cve2cpe_edges(standards$cve, verbose = FALSE)
+  # edges <- dplyr::bind_rows(edges, cve.edges)
 
   edges$label <- gsub(pattern = "(\\s|-)", "_", edges$label)
   edges$title <- gsub(pattern = "(\\s|-)", "_", edges$title)
@@ -703,7 +714,7 @@ build_cpe2cve_edges <- function(cpe = data.frame(), verbose = FALSE) {
   if (verbose) print(paste0("[NET] Adding relationships CPE -> CVE ..."))
   cpe.edges <- lapply(cpe$cpe.nist$refs, function(x) stringr::str_extract_all(x, "CVE-\\d+-\\d+"))
   cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
-  cpe.edges <- data.frame(from_std = standards$cpe$cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
+  cpe.edges <- data.frame(from_std = cpe$cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
   cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
   cpe.edges$to_std <- as.character(cpe.edges$to_std)
   cpe.edges$to_std <- stringr::str_replace_all(cpe.edges$to_std,"'","")
@@ -712,6 +723,32 @@ build_cpe2cve_edges <- function(cpe = data.frame(), verbose = FALSE) {
   cpe.edges$title <- rep("is_vulnerable", nrow(cpe.edges))
   cpe.edges$value <- rep(1, nrow(cpe.edges))
   cpe.edges$label <- rep("is_vulnerable", nrow(cpe.edges))
+  cpe.edges$arrows <- rep("to", nrow(cpe.edges))
+  cpe.edges$dashes <- rep(FALSE, nrow(cpe.edges))
+  cpe.edges$hidden <- rep(FALSE, nrow(cpe.edges))
+  cpe.edges$color <- rep("red", nrow(cpe.edges))
+
+  cpe.edges <- cpe.edges[, names(edges)]
+  edges <- dplyr::bind_rows(edges, cpe.edges)
+
+  return(edges)
+}
+
+build_cpe2cwe_edges <- function(cpe = data.frame(), verbose = FALSE) {
+  edges <- newEdge()
+
+  if (verbose) print(paste0("[NET] Adding relationships CPE -> CWE ..."))
+  cpe.edges <- lapply(cpe$cpe.nist$refs, function(x) stringr::str_extract_all(x, "CWE-\\d+"))
+  cpe.edges <- sapply(cpe.edges, function(x) ifelse(identical(x[[1]], character(0)), NA, x[[1]]))
+  cpe.edges <- data.frame(from_std = cpe$cpe.nist$cpe.23, to_std = cpe.edges, stringsAsFactors = FALSE)
+  cpe.edges <- cpe.edges[stats::complete.cases(cpe.edges), ]
+  cpe.edges$to_std <- as.character(cpe.edges$to_std)
+  cpe.edges$to_std <- stringr::str_replace_all(cpe.edges$to_std,"'","")
+  cpe.edges$from <- as.character(rep(NA, nrow(cpe.edges)))
+  cpe.edges$to <- as.character(rep(NA, nrow(cpe.edges)))
+  cpe.edges$title <- rep("has_weakness", nrow(cpe.edges))
+  cpe.edges$value <- rep(1, nrow(cpe.edges))
+  cpe.edges$label <- rep("has_weakness", nrow(cpe.edges))
   cpe.edges$arrows <- rep("to", nrow(cpe.edges))
   cpe.edges$dashes <- rep(FALSE, nrow(cpe.edges))
   cpe.edges$hidden <- rep(FALSE, nrow(cpe.edges))
@@ -750,10 +787,54 @@ build_cve2cwe_edges <- function(cve = data.frame(), verbose = FALSE) {
   return(edges)
 }
 
+build_cve2vulnconf_edges <- function(cve = data.frame(), cpe = data.frame(), verbose = FALSE) {
+  edges <- newEdge()
+  if (verbose) print(paste0("[NET] Adding relationships CVE -> CPE configurations ..."))
+  vulnerableconfigurations <- data.frame()
+  ltemp <- list()
+
+  if (verbose) print(paste0("[*] ", "Flattening vulnerable configurations..."))
+  tini <- Sys.time()
+  num_vcs <- 0
+  for (i in 1:nrow(cve)) {
+    vulnconf <- cve_flatten_vulnconf(cve$vulnerable.configuration[i],
+                                     cve$cve.id[i])
+    ltemp <- append(ltemp, list(vulnconf))
+    num_vcs <- num_vcs + nrow(vulnconf)
+    if (verbose)
+      if (i %% 1000 == 0) {
+        print(paste0("[.] Added ", num_vcs," configurations in ", round(Sys.time() - tini), " sec. ", round(i / 1000, 0), "k processed CVEs."))
+        tini <- Sys.time()
+        num_vcs <- 0
+      }
+  }
+  vulnerableconfigurations <- dplyr::bind_rows(ltemp)
+  cpematches <- inner_join(cpe[, c("id", "cpe.23")], vulnerableconfigurations,
+                           by = c("cpe.23" = "cpe23Uri")) %>%
+    filter(vulnerable) %>%
+    group_by(cpe.23, cve) %>%
+    summarise(num_edges = n(), .groups = "drop") %>%
+    rename("from_std" = "cve", "to_std" = "cpe.23", "value" = "num_edges")
+
+  cpematches$from <- as.character(rep(NA, nrow(cpematches)))
+  cpematches$to <- as.character(rep(NA, nrow(cpematches)))
+  cpematches$title <- rep("vulnerable_configuration", nrow(cpematches))
+  cpematches$label <- rep("is_vulnerable", nrow(cpematches))
+  cpematches$arrows <- rep("to", nrow(cpematches))
+  cpematches$dashes <- rep(FALSE, nrow(cpematches))
+  cpematches$hidden <- rep(FALSE, nrow(cpematches))
+  cpematches$color <- rep("red", nrow(cpematches))
+
+  edges <- cpematches[, names(edges)]
+
+  return(edges)
+}
+
 build_cve2cpe_edges <- function(cve = data.frame(), verbose = FALSE) {
   edges <- newEdge()
   if (verbose) print(paste0("[NET] Adding relationships CVE -> CPE ..."))
   cve.edges <- dplyr::select(cve$cve.nist, c("cve.id", "vulnerable.configuration"))
+  cve.edges <- cve.edges[cve.edges$vulnerable.configuration != "[]", ]
   cpematch <- lapply(cve.edges$vulnerable.configuration,
                      function(x)
                        unique(jsonlite::fromJSON(x)$cpe_match[[1]]$cpe23Uri))

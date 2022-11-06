@@ -24,7 +24,6 @@ cve_latest_data <- function(local_path = NA, remote = F, allcols = F, verbose = 
   return(cves)
 }
 
-
 cve_flatten_cpematch_or <- function(cpe_match = "", cve_id = "", numid = 1, parentid = 1) {
   df <- dplyr::bind_rows(lapply(cpe_match,
                                 function(x) {
