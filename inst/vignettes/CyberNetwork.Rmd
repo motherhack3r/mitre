@@ -1,0 +1,378 @@
+---
+title: "DiagrammeR Test"
+output: html_document
+---
+
+```{r, echo=FALSE}
+suppressPackageStartupMessages(library(dplyr))
+
+cygraph <- readRDS("C:/DEVEL/code/rpackages/mitre/inst/extdata/mitrenet.rds")
+
+cygmatrix <- left_join(x = cygraph$edges,
+                       y = cygraph$nodes %>% select(id, group, type),
+                       by = c("from"="id"))
+cygmatrix$from_group <- cygmatrix$group
+cygmatrix$from_type <- cygmatrix$type
+cygmatrix$group <- NULL
+cygmatrix$type <- NULL
+
+cygmatrix <- left_join(x = cygmatrix,
+                       y = cygraph$nodes %>% select(id, group, type),
+                       by = c("to"="id"))
+cygmatrix$to_group <- cygmatrix$group
+cygmatrix$to_type <- cygmatrix$type
+cygmatrix$group <- NULL
+cygmatrix$type <- NULL
+
+cygmatrix <- cygmatrix %>%
+  select(from_group, to_group, from_type, to_type, label) %>%
+  group_by(from_group, to_group, from_type, to_type, label) %>%
+  summarise(value = n(), .groups = "drop")
+cygmatrix$value <- as.numeric(cygmatrix$value)
+
+```
+
+Testing DigraphViz for standards diagram network.
+
+```{r, echo=FALSE}
+DiagrammeR::grViz(paste0('
+digraph rmarkdown {
+  subgraph cluster_capec {
+    label = "Common Attack Patterns";
+    CAPEC;
+  };
+  subgraph cluster_p {
+    label = "NIST & MITRE: SYSTEM";
+    CPE;
+    CVE;
+    subgraph cluster_cwe {
+        label = "CWE";
+        CWE_View;
+        CWE_Category;
+        CWE_Weakness;
+      };
+    CPE -> CVE [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cpe", to_group == "cve") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cpe", to_group == "cve") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CPE -> CWE_Weakness [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cpe", to_group == "cwe") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cpe", to_group == "cwe") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CVE -> CWE_Weakness [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cwe", to_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cwe", to_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CVE -> CWE_Category [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cwe", to_type == "category") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cwe", to_type == "category") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CVE -> CPE [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cpe") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cve", to_group == "cpe") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CWE_Weakness -> CVE [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cve", from_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cve", from_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CWE_View -> CWE_Category [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "view", to_type == "category") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "view", to_type == "category") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CWE_View -> CWE_Weakness [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "view", to_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "view", to_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CWE_Weakness -> CWE_Weakness [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "weakness", to_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "cwe", from_type == "weakness", to_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CWE_Weakness -> CAPEC [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "capec", from_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "cwe", to_group == "capec", from_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CAPEC -> CVE [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "cve") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "cve") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CAPEC -> CWE_Weakness [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "cwe", to_type == "weakness") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "cwe", to_type == "weakness") %>% 
+  select(label) %>% as.character(), 
+'"];
+
+  };
+  subgraph cluster_attck {
+    label = "MITRE ATT&CK";
+    ATTCK_tactic;
+    ATTCK_technique;
+    ATTCK_software_malware;
+    ATTCK_group;
+    ATTCK_mitigation;
+    ATTCK_software_tool;
+    ATTCK_data_source;
+    ATTCK_adversary_vulnerability;
+    CAPEC -> ATTCK_technique [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "attck", to_type == "technique") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "capec", to_group == "attck", to_type == "technique") %>% 
+  select(label) %>% as.character(), 
+'"];
+  };
+  subgraph cluster_shield {
+    label = "MITRE SHIELD";
+    SHIELD_tactic;
+    SHIELD_technique;
+    SHIELD_opportunity;
+    SHIELD_procedure;
+    SHIELD_use_case;
+    SHIELD_technique -> ATTCK_tactic [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "attck", from_type == "technique", to_type == "tactic") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "attck", from_type == "technique", to_type == "tactic") %>% 
+  select(label) %>% as.character(), 
+'"];
+    SHIELD_technique -> ATTCK_technique [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "attck", from_type == "technique", to_type == "technique") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "attck", from_type == "technique", to_type == "technique") %>% 
+  select(label) %>% as.character(), 
+'"];
+    SHIELD_tactic -> SHIELD_technique [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "tactic", to_type == "technique") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "tactic", to_type == "technique") %>% 
+  select(label) %>% as.character(), 
+'"];
+    SHIELD_technique -> SHIELD_opportunity [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "opportunity") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "opportunity") %>% 
+  select(label) %>% as.character(), 
+'"];
+    SHIELD_technique -> SHIELD_procedure [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "procedure") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "procedure") %>% 
+  select(label) %>% as.character(), 
+'"];
+    SHIELD_technique -> SHIELD_use_case [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "use_case") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "shield", to_group == "shield", from_type == "technique", to_type == "use_case") %>% 
+  select(label) %>% as.character(), 
+'"];
+  };
+  subgraph cluster_engage {
+    label = "MITRE ENGAGE";
+    ENGAGE_approaches;
+    ENGAGE_activities;
+    ENGAGE_goals;
+    ENGAGE_adversary_vulnerability;
+    ENGAGE_approaches -> ENGAGE_activities [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "approaches", to_type == "activities") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "approaches", to_type == "activities") %>% 
+  select(label) %>% as.character(), 
+'"];
+    ENGAGE_goals -> ENGAGE_approaches [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "goals", to_type == "approaches") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "goals", to_type == "approaches") %>% 
+  select(label) %>% as.character(), 
+'"];
+    ENGAGE_adversary_vulnerability -> ENGAGE_activities [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "adversary_vulnerability", to_type == "activities") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "engage", to_group == "engage", from_type == "adversary_vulnerability", to_type == "activities") %>% 
+  select(label) %>% as.character(), 
+'"];
+  };
+  subgraph cluster_car {
+    label = "CAR";
+    CAR_analytic;
+    CAR_data_model;
+    CAR_analytic -> ATTCK_tactic [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "attck", from_type == "analytic", to_type == "tactic") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "attck", from_type == "analytic", to_type == "tactic") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CAR_analytic -> ATTCK_technique [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "attck", from_type == "analytic", to_type == "technique") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "attck", from_type == "analytic", to_type == "technique") %>% 
+  select(label) %>% as.character(), 
+'"];
+    CAR_analytic -> CAR_data_model [xlabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "car", from_type == "analytic", to_type == "data_model") %>% 
+  select(value) %>% as.character(), 
+'", fontsize=10, taillabel="', 
+cygmatrix %>% 
+  filter(from_group == "car", to_group == "car", from_type == "analytic", to_type == "data_model") %>% 
+  select(label) %>% as.character(), 
+'"];
+  };
+}
+                  '), height = 800, width = 800)
+```
+
+Testing graphViz for standards diagram network.
+
+```{r, echo=FALSE}
+# DiagrammeR::grViz("
+# digraph rmarkdown {
+# CVE -> CPE [penwidth=3, labeltooltip='is_vulnerable']
+# CPE -> CVE [penwidth=1, xlabel='has_vulnerability']
+# }
+#                   ", height = 200)
+```
+
+Testing mermaid for standards diagram network.
+
+```{r, echo=FALSE}
+# DiagrammeR::mermaid("
+# graph LR 
+# A --> B
+#                   ", height = 200)
+```
+
+Sankey realtionships...
+
+```{r}
+# 
+# kkk <- kk %>%
+#   select(from_group, to_group) %>%
+#   group_by(from_group, to_group) %>%
+#   summarise(value = n(), .groups = "drop")
+# kkk$value <- as.numeric(kkk$value)
+# 
+# lite_nodes = data.frame(name = unique(c(kkk$from_group, kkk$to_group)))
+# lite_nodes$id = as.integer(row.names(lite_nodes)) - 1
+# 
+# kkk <- kkk %>% left_join(lite_nodes, by = c("from_group" = "name"))
+# kkk$source <- kkk$id
+# kkk$id <- NULL
+# 
+# kkk <- kkk %>% left_join(lite_nodes, by = c("to_group" = "name"))
+# kkk$target <- kkk$id
+# kkk$id <- NULL
+# 
+# lite_links <-  kkk %>% ungroup() %>% select(source, target, value) %>% as.data.frame()
+# lite_nodes <- lite_nodes %>% select(name) %>% as.data.frame()
+# 
+# # remove self-relations
+# lite_links <- lite_links[-which(lite_links$source == lite_links$target),]
+# 
+# # join bidirectional
+# ll <- data.frame(head(lite_links, 0))
+# for(r in 1:nrow(lite_links)) {
+#   # if (any((lite_links$source == lite_links$target[r]) & (lite_links$target == lite_links$source[r]))) {
+#   #   lite_links$value <- lite_links$value + lite_links[(lite_links$source == lite_links$target[r]) & (lite_links$target == lite_links$source[r]), "value"]
+#   #   lite_links$value[((lite_links$source == lite_links$target[r]) & (lite_links$target == lite_links$source[r]))] <- 0
+#   # }
+#   e <- data.frame(source = 0, target = 0, value = 0)
+#   ll <- bind_rows(ll, e)
+# }
+# 
+# networkD3::sankeyNetwork(Links = lite_links, Nodes = lite_nodes,
+#                          Source = "source", Target = "target", Value = "value",
+#                          units = "TWh", fontSize = 12, nodeWidth = 30)
+
+```
