@@ -53,8 +53,9 @@ enc4cat <- function(df = data.frame(char = "")) {
 Load full standard as data.frame `cpes`, remove deprecated and select name, vendor, product and version.
 
 ```{r cpes, cache=TRUE}
-cpes <- mitre::cpe.nist
-cpes <- cpes %>% filter(!deprecated) %>% select(title, vendor, product, version)
+cpes <- mitre::getLatestDataSet(name = "cpe")
+cpes <- cpes$cpe$cpe.nist
+cpes <- cpes %>% select(title, vendor, product, version)
 
 ```
 
@@ -277,6 +278,28 @@ catable(enc4cat(cpe_wfncharsout))
 
 ```
 
+```{r}
+valid_chars <- " *-\\!\"#$%&'()+,/:;<=>@[]^`{|}~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+valid_hexachars <- paste0("[", paste0(sapply(DescTools::DecToHex(sort(DescTools::CharToAsc(valid_chars))), 
+                                 function(x) paste0("\x5c","x",x)), collapse = ""), "]")
+valid_hexachars <- "([\x20-\x2d]|[\x2f-\x3e]|[\x40-\x5e]|[\x60-\x7e])"
+regex_notvalid <- stringr::fixed(paste0("[^", paste0(valid_chars, collapse = ""), "]"))
+regex_notvalidhexa <- stringr::fixed(paste0("[^", paste0(valid_hexachars, collapse = ""), "]"))
+
+
+selected_rows <- stringr::str_detect(cpe_chars$char, regex_notvalid)
+
+tfm_titles <- cpes$title
+
+
+stringr::str_detect(tokenizers::tokenize_characters("askjdgask"), valid_hexachars)
+
+tfm_cpes <- cpes[which(sapply(tokenizers::tokenize_characters(cpe_titles), 
+                                    function(x) 
+                                      any(stringr::str_detect(string = x, 
+                                                              pattern = regex_notvalid, 
+                                                              negate = TRUE)))), ]
+```
 Now, we need functions to encode/decode inputs and outputs to fit strings with the model.
 
 ## Encode and Decode functions
